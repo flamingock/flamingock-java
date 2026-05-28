@@ -33,6 +33,15 @@ public interface ExecutableChange extends ChangeDescriptor {
 
     void rollback(ExecutionRuntime executionRuntime);
 
+    /**
+     * Returns {@code true} when this change declares a rollback (annotated method on a code-based
+     * change, or {@code @Rollback}-bearing template). Callers must gate any invocation of
+     * {@link #rollback(ExecutionRuntime)} on this — invoking rollback when no rollback method is
+     * declared is an invariant violation. Every implementation must answer it explicitly so the
+     * decision is never left to a silent default.
+     */
+    boolean hasRollback();
+
     String getRollbackMethodName();
 
     boolean isAlreadyApplied();

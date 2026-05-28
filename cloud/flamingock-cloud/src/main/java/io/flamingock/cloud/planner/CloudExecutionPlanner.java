@@ -22,6 +22,7 @@ import io.flamingock.internal.util.StopWatch;
 import io.flamingock.internal.util.ThreadSleeper;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
@@ -35,6 +36,7 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.LockException;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -102,6 +104,12 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 }
 
                 if (response.isContinue()) {
+                    //TODO temporally. Remove this
+                    // Server's CONTINUE is authoritative: nothing left to apply for any stage in
+                    // the pipeline. Stamp the planner's UP_TO_DATE verdict on every stage the
+                    // planner hasn't already evaluated this run. No per-change records — the
+                    // server's CONTINUE doesn't carry per-change data and we don't synthesize.
+                    markRemainingStagesUpToDate(pipelineRun);
                     return ExecutionPlan.CONTINUE();
 
                 } else if (response.isExecute()) {
@@ -198,6 +206,22 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 lock,
                 CloudExecutionPlanMapper.getExecutableStages(response, loadedStages)
         );
+    }
+
+    /**
+     * Stamps {@link PlannerVerdict#UP_TO_DATE} on every still-{@code NOT_EVALUATED} stage in the
+     * pipeline. Called when the cloud server returns {@code CONTINUE} — its verdict is authoritative
+     * for the whole pipeline. No per-change records are added; the server's CONTINUE payload doesn't
+     * carry per-change data and we don't synthesize.
+     */
+    private static void markRemainingStagesUpToDate(PipelineRun pipelineRun) {
+        for (StageRun stageRun : pipelineRun.getStageRuns()) {
+            if (stageRun.getResult().getPlannerVerdict() == PlannerVerdict.NOT_EVALUATED
+                    && !stageRun.getState().isFailed()
+                    && !stageRun.getState().isCompleted()) {
+                pipelineRun.markStageVerdict(stageRun.getName(), PlannerVerdict.UP_TO_DATE);
+            }
+        }
     }
 
     static class AuditMarkSnapshot {

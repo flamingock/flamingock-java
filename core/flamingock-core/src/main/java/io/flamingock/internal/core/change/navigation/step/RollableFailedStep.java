@@ -17,9 +17,18 @@ package io.flamingock.internal.core.change.navigation.step;
 
 import io.flamingock.internal.core.change.navigation.step.afteraudit.RollableStep;
 
+import java.util.Optional;
+
 public interface RollableFailedStep extends FailedStep {
 
-    RollableStep getRollbackStep();
+    /**
+     * Returns the rollback step when the failed change declares a rollback, or {@link Optional#empty()}
+     * when it doesn't. {@code @RollbackExecution} is optional, so a non-transactional change that fails
+     * without declaring one has no rollback to invoke. Callers must branch on the Optional and skip the
+     * rollback path (and the manual-rollback audit entry) when absent — the upstream {@code FAILED}
+     * audit entry is the truth, and recovery follows the configured {@code RecoveryStrategy}.
+     */
+    Optional<RollableStep> getRollbackStep();
 
 
 }

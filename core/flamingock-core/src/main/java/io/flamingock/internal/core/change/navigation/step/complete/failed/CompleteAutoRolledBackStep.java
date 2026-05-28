@@ -21,6 +21,8 @@ import io.flamingock.internal.core.change.navigation.step.afteraudit.RollableSte
 import io.flamingock.internal.core.change.navigation.step.rolledback.RolledBackStep;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 
+import java.util.Optional;
+
 public class CompleteAutoRolledBackStep extends RolledBackStep implements SuccessableStep, RollableFailedStep {
     public CompleteAutoRolledBackStep(ExecutableChange change, boolean rollbackSuccess) {
         super(change, rollbackSuccess);
@@ -28,7 +30,11 @@ public class CompleteAutoRolledBackStep extends RolledBackStep implements Succes
 
 
     @Override
-    public final RollableStep getRollbackStep() {
-        return new RollableStep(getChange());
+    public final Optional<RollableStep> getRollbackStep() {
+        // Mirrors FailedAfterExecutionAuditStep.getRollbackStep(): absent when the change has no
+        // @RollbackExecution method, so callers can skip the rollback path without NPE'ing.
+        return getChange().hasRollback()
+                ? Optional.of(new RollableStep(getChange()))
+                : Optional.empty();
     }
 }

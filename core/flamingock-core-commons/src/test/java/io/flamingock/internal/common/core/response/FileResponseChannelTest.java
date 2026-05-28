@@ -63,7 +63,7 @@ class FileResponseChannelTest {
                 .completedStages(1)
                 .totalChanges(3)
                 .appliedChanges(2)
-                .skippedChanges(1)
+                .alreadyAppliedChanges(1)
                 .failedChanges(0)
                 .totalDurationMs(500)
                 .build();

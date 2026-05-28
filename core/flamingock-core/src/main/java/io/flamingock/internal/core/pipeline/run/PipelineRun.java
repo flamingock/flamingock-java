@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
@@ -33,6 +34,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,8 +164,19 @@ public class PipelineRun {
     }
 
     public void markStageCompleted(String stageName, StageResult result) {
-        // Incoming result from the executor already carries state=COMPLETED.
-        lookupOrThrow(stageName).setResult(result);
+        // Incoming result from the executor already carries state=COMPLETED. Merge per-change
+        // records by ID: the executor's records win for the IDs it processed; records for
+        // changes the executor didn't process (i.e. NOT_REACHED records from PipelineRun
+        // construction) survive. Also preserve totalChanges / plannerVerdict — the executor
+        // doesn't know about them.
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        List<ChangeResult> merged = mergeChangeRecords(current.getChanges(), result.getChanges());
+        run.setResult(StageResult.builder(result)
+                .changes(merged)
+                .totalChanges(current.getTotalChanges())
+                .plannerVerdict(current.getPlannerVerdict())
+                .build());
     }
 
     public void markStageFailed(String stageName, StageExecutionException exception) {
@@ -174,9 +187,44 @@ public class PipelineRun {
                 resultFromExecutor.getStageId()
         );
         StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        // Same merge semantics as markStageCompleted: executor's records win for processed
+        // IDs; NOT_REACHED records for changes the executor never reached (stage stopped on
+        // a failure) stay intact.
+        List<ChangeResult> merged = mergeChangeRecords(current.getChanges(), resultFromExecutor.getChanges());
         run.setResult(StageResult.builder(resultFromExecutor)
                 .state(StageState.failed(errorInfo))
+                .changes(merged)
+                .totalChanges(current.getTotalChanges())
+                .plannerVerdict(current.getPlannerVerdict())
                 .build());
+    }
+
+    /**
+     * Merges two per-change record lists keyed by change ID. Incoming records (typically from
+     * the executor) take precedence for the IDs they carry; existing records (e.g. initial
+     * NOT_REACHED entries from {@code StageRun} construction) for any other ID survive. Order
+     * follows the first occurrence — existing entries keep their position; new IDs from
+     * {@code incoming} are appended.
+     */
+    private static List<ChangeResult> mergeChangeRecords(List<ChangeResult> existing,
+                                                          List<ChangeResult> incoming) {
+        LinkedHashMap<String, ChangeResult> byId = new LinkedHashMap<>();
+        if (existing != null) {
+            for (ChangeResult r : existing) {
+                if (r != null && r.getChangeId() != null) {
+                    byId.put(r.getChangeId(), r);
+                }
+            }
+        }
+        if (incoming != null) {
+            for (ChangeResult r : incoming) {
+                if (r != null && r.getChangeId() != null) {
+                    byId.put(r.getChangeId(), r);
+                }
+            }
+        }
+        return new ArrayList<>(byId.values());
     }
 
     /**
@@ -203,6 +251,98 @@ public class PipelineRun {
                 .build());
     }
 
+    // -------------------------------------------------------------------------
+    //  Planner-side writers
+    // -------------------------------------------------------------------------
+    //
+    //  These methods are owned by the planner — they reflect facts the planner reads from audit
+    //  (community) or the cloud server. Conflict resolution rule: operation wins, planner fills
+    //  gaps. Both methods enforce that here so callers don't have to be careful.
+
+    /**
+     * Records the planner's verdict on a stage. Monotone forward through the chain
+     * NOT_EVALUATED → NEEDS_WORK → UP_TO_DATE:
+     * <ul>
+     *   <li>NOT_EVALUATED → anything: always allowed.</li>
+     *   <li>NEEDS_WORK → UP_TO_DATE: allowed (subsequent snapshot reads see new applies).</li>
+     *   <li>UP_TO_DATE → anything: rejected (UP_TO_DATE is terminal).</li>
+     *   <li>Any → NOT_EVALUATED: rejected (never move back to default).</li>
+     * </ul>
+     * Designed to be safe across the iterative {@code getNextExecution} loop where the planner
+     * re-walks the snapshot each iteration.
+     */
+    public void markStageVerdict(String stageName, PlannerVerdict verdict) {
+        if (verdict == null || verdict == PlannerVerdict.NOT_EVALUATED) {
+            return; // monotone-forward; never move back to default
+        }
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        PlannerVerdict currentVerdict = current.getPlannerVerdict();
+        if (currentVerdict == PlannerVerdict.UP_TO_DATE) {
+            return; // UP_TO_DATE is terminal — no further transitions
+        }
+        if (currentVerdict == PlannerVerdict.NEEDS_WORK && verdict == PlannerVerdict.NEEDS_WORK) {
+            return; // no-op
+        }
+        run.setResult(StageResult.builder(current)
+                .plannerVerdict(verdict)
+                .build());
+    }
+
+    /**
+     * Upgrades {@link ChangeStatus#NOT_REACHED} records to {@link ChangeStatus#ALREADY_APPLIED}
+     * for the given change IDs. Defensive merge: only upgrades records currently at NOT_REACHED;
+     * any record the operation (or a prior writer) has already populated with positive info
+     * (APPLIED / FAILED / ROLLED_BACK / ALREADY_APPLIED) is left untouched.
+     *
+     * <p>This codifies "operation wins, planner fills gaps" against the fully-populated record
+     * set that {@code StageRun} initializes with NOT_REACHED entries. As a fallback, IDs without
+     * an existing record (shouldn't happen — every loaded change starts with one — but defensive)
+     * get appended as fresh ALREADY_APPLIED.
+     */
+    public void markStageAlreadyAppliedFromAudit(String stageName, List<String> changeIds) {
+        if (changeIds == null || changeIds.isEmpty()) {
+            return;
+        }
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        List<ChangeResult> merged = current.getChanges() != null
+                ? new ArrayList<>(current.getChanges())
+                : new ArrayList<>();
+        Map<String, Integer> indexById = new HashMap<>();
+        for (int i = 0; i < merged.size(); i++) {
+            ChangeResult c = merged.get(i);
+            if (c != null && c.getChangeId() != null) {
+                indexById.put(c.getChangeId(), i);
+            }
+        }
+        for (String id : changeIds) {
+            if (id == null) {
+                continue;
+            }
+            Integer idx = indexById.get(id);
+            if (idx == null) {
+                // No existing record (defensive): append.
+                merged.add(ChangeResult.builder()
+                        .changeId(id)
+                        .status(ChangeStatus.ALREADY_APPLIED)
+                        .build());
+                indexById.put(id, merged.size() - 1);
+                continue;
+            }
+            if (merged.get(idx).isNotReached()) {
+                merged.set(idx, ChangeResult.builder()
+                        .changeId(id)
+                        .status(ChangeStatus.ALREADY_APPLIED)
+                        .build());
+            }
+            // else: operation (or prior planner write) has positive info — respect it.
+        }
+        run.setResult(StageResult.builder(current)
+                .changes(merged)
+                .build());
+    }
+
     private StageRun lookupOrThrow(String stageName) {
         StageRun run = byName.get(stageName);
         if (run == null) {
@@ -212,50 +352,93 @@ public class PipelineRun {
     }
 
     /**
-     * Builds the response data view derived purely from per-stage state. Status is FAILED iff any
-     * stage failed, else SUCCESS. Pipeline-wide errors (e.g., LockException) that aren't reflected
-     * in any stage state are signalled by the operation post-loop via
-     * {@code ExecuteResponseData.setStatus(FAILED)} after {@code toResponse()} returns.
+     * Builds the response data view from per-stage state.
+     *
+     * <p>Per-stage buckets are derived from the two-dimensional model:
+     * <ul>
+     *   <li>{@code completedStages} / {@code failedStages} — execution dimension (operation-owned).</li>
+     *   <li>{@code upToDateStages} — verdict dimension (planner confirmed up to date while state
+     *       was still NOT_STARTED).</li>
+     *   <li>{@code notReachedStages} — remaining stages (NOT_STARTED + no UP_TO_DATE verdict).</li>
+     * </ul>
+     *
+     * <p>Status is {@code FAILED} iff any stage failed, {@code NO_CHANGES} iff no work happened
+     * (no applies, no failures), else {@code SUCCESS}. Pipeline-wide errors (e.g., LockException)
+     * are signalled by the operation post-loop via {@code ExecuteResponseData.setStatus(FAILED)} after
+     * {@code toResponse()} returns.
      */
     public ExecuteResponseData toResponse() {
         List<StageResult> stages = new ArrayList<>();
         int totalStages = 0;
+        int upToDateStages = 0;
+        int notReachedStages = 0;
         int completedStages = 0;
         int failedStages = 0;
         int totalChanges = 0;
         int appliedChanges = 0;
-        int skippedChanges = 0;
+        int alreadyAppliedChanges = 0;
         int failedChanges = 0;
+        int notReachedChanges = 0;
         boolean anyFailed = false;
 
         for (StageRun stageRun : stageRuns) {
             StageResult stageResult = stageRun.getResult();
+            // Stamp the structural change count on the per-stage result so the formatter can
+            // render "(N changes)" for unreached / up-to-date stages where the per-change list
+            // may be empty.
+            int loadedChangeCount = stageRun.getLoadedStage().getChanges() != null
+                    ? stageRun.getLoadedStage().getChanges().size()
+                    : 0;
+            stageResult.setTotalChanges(loadedChangeCount);
             stages.add(stageResult);
             totalStages++;
+            totalChanges += loadedChangeCount;
 
+            // Per-stage bucketing: state is operation-owned, plannerVerdict is planner-owned.
+            // Operation wins when present; planner verdict applies only while state is NOT_STARTED.
             StageState state = stageResult.getState();
-            if (state.isCompleted()) {
-                completedStages++;
-            } else if (state.isFailed()) {
+            if (state.isFailed()) {
                 failedStages++;
                 anyFailed = true;
+            } else if (state.isCompleted()) {
+                completedStages++;
+            } else if (state.isNotStarted()
+                    && stageResult.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE) {
+                upToDateStages++;
+            } else {
+                // NOT_STARTED + verdict != UP_TO_DATE (NEEDS_WORK or NOT_EVALUATED), or rare STARTED.
+                notReachedStages++;
             }
 
             if (stageResult.getChanges() != null) {
                 for (ChangeResult change : stageResult.getChanges()) {
-                    totalChanges++;
                     if (change.getStatus() == ChangeStatus.APPLIED) {
                         appliedChanges++;
                     } else if (change.getStatus() == ChangeStatus.ALREADY_APPLIED) {
-                        skippedChanges++;
-                    } else if (change.getStatus() == ChangeStatus.FAILED) {
+                        alreadyAppliedChanges++;
+                    } else if (change.getStatus() == ChangeStatus.FAILED
+                            || change.getStatus() == ChangeStatus.ROLLED_BACK) {
+                        // ROLLED_BACK counts as a failed attempt for the user-facing aggregate.
+                        // The per-change record retains the precise status for downstream consumers.
                         failedChanges++;
+                    } else if (change.getStatus() == ChangeStatus.NOT_REACHED) {
+                        notReachedChanges++;
                     }
                 }
             }
         }
 
-        ExecutionStatus status = anyFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        ExecutionStatus status;
+        if (anyFailed) {
+            status = ExecutionStatus.FAILED;
+        } else if (appliedChanges == 0 && failedChanges == 0) {
+            // No work happened (no applies, no failures). Could be: every stage was up to date,
+            // or pipeline was empty. Either way → NO_CHANGES for the headline.
+            status = ExecutionStatus.NO_CHANGES;
+        } else {
+            status = ExecutionStatus.SUCCESS;
+        }
+
         long durationMs = (startedAt != null && stoppedAt != null)
                 ? Duration.between(startedAt, stoppedAt).toMillis()
                 : 0L;
@@ -266,12 +449,15 @@ public class PipelineRun {
                 .endTime(stoppedAt)
                 .totalDurationMs(durationMs)
                 .totalStages(totalStages)
+                .upToDateStages(upToDateStages)
+                .notReachedStages(notReachedStages)
                 .completedStages(completedStages)
                 .failedStages(failedStages)
                 .totalChanges(totalChanges)
                 .appliedChanges(appliedChanges)
-                .skippedChanges(skippedChanges)
+                .alreadyAppliedChanges(alreadyAppliedChanges)
                 .failedChanges(failedChanges)
+                .notReachedChanges(notReachedChanges)
                 .stages(stages)
                 .build();
     }

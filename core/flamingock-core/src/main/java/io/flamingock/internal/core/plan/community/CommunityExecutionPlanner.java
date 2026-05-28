@@ -18,7 +18,8 @@ package io.flamingock.internal.core.plan.community;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
-import io.flamingock.internal.common.core.response.data.StageResult;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLock;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
@@ -40,13 +41,12 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static io.flamingock.internal.common.core.response.data.StageState.COMPLETED;
 
 public class CommunityExecutionPlanner extends ExecutionPlanner {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("LocalExecution");
@@ -131,13 +131,18 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      */
     @Override
     public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
-        // Inner loop: skip past blocks whose stages have no work to do per audit (e.g., legacy
-        // stages whose changes were already applied in a previous run). Such blocks are not
-        // marked Completed by the runtime — there's no executor invocation — so we mark them
-        // here, then re-run block selection to advance to the next block. The loop terminates
-        // either when we find work (return newExecution) or when block selection yields
-        // CONTINUE / ABORT.
+        // Always-walk: every iteration starts by stamping the planner's view onto every stage in
+        // the pipeline (not just the active block). The result is that the final report carries
+        // authoritative info for every stage the planner could evaluate — even on ABORT, future
+        // blocks render as [UP TO DATE] when the audit confirms them, rather than [NOT REACHED].
+        //
+        // Defensive merge in the writer methods means re-walking each iteration never overwrites
+        // operation-written state or duplicates per-change records.
         while (true) {
+            Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
+            logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
+            stampSnapshotFacts(pipelineRun, initialSnapshot);
+
             BlockSelection selection = selectActiveBlock(pipelineRun);
             if (selection.isAborted()) {
                 return ExecutionPlan.ABORT();
@@ -148,17 +153,12 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
             StageRunBlock activeBlock = selection.getActiveBlock().get();
             List<AbstractLoadedStage> loadedStages = eligibleLoadedStagesFor(activeBlock);
-            Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
-            logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
-
             List<ExecutableStage> initialStages = buildExecutableStages(loadedStages, initialSnapshot);
 
             if (!hasExecutableStages(initialStages)) {
-                // Optimistic view says no work in the active block. The block's stages are
-                // effectively done per audit — mark them Completed (synthetically) and advance to
-                // the next block. Trust the optimistic view; the two-phase dance below is only
-                // needed when we actually have work to do under the lock.
-                markBlockSyntheticallyCompleted(pipelineRun, activeBlock);
+                // Defensive — should be unreachable: stampSnapshotFacts already marked the
+                // active block UP_TO_DATE if it had no executable work, and selectActiveBlock
+                // would have advanced past it.
                 continue;
             }
 
@@ -240,19 +240,82 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
     }
 
     /**
-     * Marks every non-failed, non-completed stage in the block as Completed. Used when the
-     * planner detects that the active block has no executable work per audit — its stages are
-     * already done from the runtime's perspective, so we reflect that in {@link PipelineRun} and
-     * advance to the next block.
+     * Walks every stage in the pipeline and reflects the audit's view onto the {@link PipelineRun}
+     * via the planner-side writers:
+     * <ul>
+     *   <li>Per-change: for each change whose audit entry is in a successfully-applied terminal
+     *       status, add an {@code ALREADY_APPLIED} {@link io.flamingock.internal.common.core.response.data.ChangeResult}.
+     *       Defensive merge in {@code markStageAlreadyAppliedFromAudit} ensures we never overwrite
+     *       an operation-written record (it skips IDs the operation has already recorded for,
+     *       regardless of that record's status).</li>
+     *   <li>Per-stage verdict: {@code UP_TO_DATE} when every loaded change has a record (any
+     *       writer) and every record is {@code ALREADY_APPLIED} or {@code APPLIED}; otherwise
+     *       {@code NEEDS_WORK}. Verdict transitions are monotone-forward.</li>
+     * </ul>
+     *
+     * <p>Walks <strong>every</strong> stage on every iteration — including stages whose state has
+     * moved off {@code NOT_STARTED}. The defensive merge plus monotone-verdict invariants make
+     * this safe, and it picks up audit information the operation doesn't know about: external
+     * CLI marking ({@code mark-as-applied}) during a run, third-party audit-tool writes, and the
+     * upcoming parallel-stage feature where multiple instances apply different (non-dependent)
+     * changes from the same stage concurrently — the audit carries the full picture even though
+     * this instance's {@link PipelineRun} only knows what it applied.
      */
-    private static void markBlockSyntheticallyCompleted(PipelineRun pipelineRun, StageRunBlock block) {
-        for (StageRun stageRun : block.getStageRuns()) {
-            if (stageRun.getState().isFailed() || stageRun.getState().isCompleted()) {
+    private static void stampSnapshotFacts(PipelineRun pipelineRun, Map<String, AuditEntry> auditSnapshot) {
+        for (StageRun stageRun : pipelineRun.getStageRuns()) {
+            List<String> alreadyAppliedIds = alreadyAppliedChangeIds(stageRun, auditSnapshot);
+            if (!alreadyAppliedIds.isEmpty()) {
+                pipelineRun.markStageAlreadyAppliedFromAudit(stageRun.getName(), alreadyAppliedIds);
+            }
+            PlannerVerdict verdict = computeVerdict(stageRun);
+            pipelineRun.markStageVerdict(stageRun.getName(), verdict);
+        }
+    }
+
+    /**
+     * Returns the change IDs declared on the loaded stage whose audit entries indicate a
+     * "successfully applied" terminal status. The planner uses this list to populate
+     * {@code ALREADY_APPLIED} per-change records.
+     */
+    private static List<String> alreadyAppliedChangeIds(StageRun stageRun, Map<String, AuditEntry> auditSnapshot) {
+        List<String> ids = new ArrayList<>();
+        for (AbstractLoadedChange change : stageRun.getLoadedStage().getChanges()) {
+            AuditEntry entry = auditSnapshot.get(change.getId());
+            if (entry == null) {
                 continue;
             }
-            StageResult completed = StageResult.builder(stageRun.getResult()).state(COMPLETED).build();
-            pipelineRun.markStageCompleted(stageRun.getName(), completed);
+            AuditEntry.Status status = entry.getState();
+            if (status == AuditEntry.Status.APPLIED
+                    || status == AuditEntry.Status.MANUAL_MARKED_AS_APPLIED) {
+                ids.add(change.getId());
+            }
         }
+        return ids;
+    }
+
+    /**
+     * Computes the planner's verdict for a stage based on its current per-change records vs the
+     * loaded change count. {@code UP_TO_DATE} when every loaded change has a record and every
+     * record is in an applied terminal status; {@code NEEDS_WORK} otherwise.
+     */
+    private static PlannerVerdict computeVerdict(StageRun stageRun) {
+        int loadedCount = stageRun.getLoadedStage().getChanges() != null
+                ? stageRun.getLoadedStage().getChanges().size()
+                : 0;
+        List<io.flamingock.internal.common.core.response.data.ChangeResult> records =
+                stageRun.getResult().getChanges();
+        if (records == null || records.size() < loadedCount) {
+            return PlannerVerdict.NEEDS_WORK;
+        }
+        for (io.flamingock.internal.common.core.response.data.ChangeResult c : records) {
+            if (c == null) {
+                return PlannerVerdict.NEEDS_WORK;
+            }
+            if (!c.isApplied() && !c.isAlreadyApplied()) {
+                return PlannerVerdict.NEEDS_WORK;
+            }
+        }
+        return PlannerVerdict.UP_TO_DATE;
     }
 
     /**

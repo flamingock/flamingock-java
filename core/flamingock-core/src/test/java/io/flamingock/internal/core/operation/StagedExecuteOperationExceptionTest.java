@@ -62,15 +62,18 @@ class StagedExecuteOperationExceptionTest {
     }
 
     @Test
-    void toStringReturnsMultiLineReport() {
+    void toStringIsSingleLineSummaryAndCarriesGetMessage() {
         ExecuteResponseData result = failureResult();
         StagedExecuteOperationException ex = new StagedExecuteOperationException(result);
 
         String rendered = ex.toString();
-        assertTrue(rendered.contains(System.lineSeparator()),
-                "toString must be multi-line: " + rendered);
-        assertTrue(rendered.contains("Flamingock execution report"), rendered);
-        assertTrue(rendered.contains("[FAILED]"), rendered);
+        // Default Throwable.toString() = "ClassName: message" — never the multi-line report,
+        // which lives in the FK-Report listener and would otherwise duplicate via printStackTrace.
+        assertTrue(rendered.contains(ex.getMessage()), rendered);
+        assertFalse(rendered.contains("Flamingock execution report"),
+                "toString must NOT carry the multi-line report banner: " + rendered);
+        assertFalse(rendered.contains("[FAILED]"),
+                "toString must NOT carry per-stage report rows: " + rendered);
     }
 
     private static ExecuteResponseData failureResult() {

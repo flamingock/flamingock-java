@@ -101,12 +101,20 @@ public class ChangeResult {
         return status == ChangeStatus.FAILED;
     }
 
+    public boolean isRolledBack() {
+        return status == ChangeStatus.ROLLED_BACK;
+    }
+
     public boolean isApplied() {
         return status == ChangeStatus.APPLIED;
     }
 
     public boolean isAlreadyApplied() {
         return status == ChangeStatus.ALREADY_APPLIED;
+    }
+
+    public boolean isNotReached() {
+        return status == ChangeStatus.NOT_REACHED;
     }
 
     public static Builder builder() {
