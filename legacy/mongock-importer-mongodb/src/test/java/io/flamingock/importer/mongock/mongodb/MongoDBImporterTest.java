@@ -22,9 +22,13 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.common.test.mongock.MongockChangeEntry;
+import io.flamingock.common.test.mongock.MongockChangeState;
+import io.flamingock.common.test.mongock.MongockTestHelper;
 import io.flamingock.store.mongodb.sync.MongoDBSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
@@ -47,12 +51,16 @@ import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.auditEntry;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Testcontainers
@@ -374,6 +382,52 @@ public class MongoDBImporterTest {
     }
 
     @Test
+    @DisplayName("GIVEN Mongock v4 style audit entries without type, errorTrace and systemChange " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the history using v4 compatibility defaults")
+    void GIVEN_mongockV4StyleAuditEntries_WHEN_migratingToFlamingockCommunity_THEN_shouldImportWithCompatibilityDefaults() {
+        mongockTestHelper.writeAll(buildMongockV4ExecutedEntries());
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .build();
+
+        flamingock.run();
+
+        auditHelper.verifyAuditSequenceStrict(
+                auditEntry().withChangeId("mongock-change-1")
+                        .withState(AuditEntry.Status.APPLIED)
+                        .withType(AuditEntry.ChangeType.MONGOCK_EXECUTION)
+                        .withSystemChange(false),
+                auditEntry().withChangeId("mongock-change-2")
+                        .withState(AuditEntry.Status.APPLIED)
+                        .withType(AuditEntry.ChangeType.MONGOCK_EXECUTION)
+                        .withSystemChange(false),
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+
+        AuditEntry importedChange1 = getAuditEntryByChangeId("mongock-change-1");
+        AuditEntry importedChange2 = getAuditEntryByChangeId("mongock-change-2");
+
+        assertNotNull(importedChange1);
+        assertEquals(AuditEntry.ChangeType.MONGOCK_EXECUTION, importedChange1.getType());
+        assertFalse(importedChange1.getSystemChange());
+        assertNull(importedChange1.getErrorTrace());
+
+        assertNotNull(importedChange2);
+        assertEquals(AuditEntry.ChangeType.MONGOCK_EXECUTION, importedChange2.getType());
+        assertFalse(importedChange2.getSystemChange());
+        assertNull(importedChange2.getErrorTrace());
+    }
+
+    @Test
     @DisplayName("GIVEN Mongock audit history contains unknown entries " +
             "AND relaxed import flag is not provided " +
             "WHEN migrating to Flamingock Community " +
@@ -494,6 +548,54 @@ public class MongoDBImporterTest {
                 .flatMap(s -> s.getState().getErrorInfo())
                 .map(ErrorInfo::getMessage)
                 .orElseThrow(() -> new AssertionError("Expected a failed stage with ErrorInfo"));
+    }
+
+    private List<MongockChangeEntry> buildMongockV4ExecutedEntries() {
+        try {
+            List<MongockChangeEntry> entries = new ArrayList<>();
+            entries.add(new MongockChangeEntry(
+                    "v4-execution-1",
+                    "mongock-change-1",
+                    "mongock",
+                    MongockTestHelper.DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.132Z"),
+                    MongockChangeState.EXECUTED,
+                    null,
+                    "io.mongock.examples.mongodb.standalone.mondogb.sync.migration.initializer.ClientInitializerChangeUnit",
+                    "apply",
+                    null,
+                    23L,
+                    MongockTestHelper.DEFAULT_HOSTNAME,
+                    null,
+                    null,
+                    null
+            ));
+            entries.add(new MongockChangeEntry(
+                    "v4-execution-1",
+                    "mongock-change-2",
+                    "mongock",
+                    MongockTestHelper.DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.169Z"),
+                    MongockChangeState.EXECUTED,
+                    null,
+                    "io.mongock.examples.mongodb.standalone.mondogb.sync.migration.updater.ClientUpdaterChangeUnit",
+                    "apply",
+                    null,
+                    20L,
+                    MongockTestHelper.DEFAULT_HOSTNAME,
+                    null,
+                    null,
+                    null
+            ));
+            return entries;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to build Mongock v4 test entries", e);
+        }
+    }
+
+    private AuditEntry getAuditEntryByChangeId(String changeId) {
+        return auditHelper.getAuditEntriesSorted().stream()
+                .filter(entry -> changeId.equals(entry.getChangeId()))
+                .findFirst()
+                .orElse(null);
     }
 
 

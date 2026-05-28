@@ -55,16 +55,22 @@ public class MongoDBMongockTestHelper implements MongockTestHelper {
         document.put("changeId", entry.getChangeId());
         document.put("author", entry.getAuthor());
         document.put("timestamp", entry.getTimestamp());
-        document.put("state", entry.getState() != null ? entry.getState().toString() : null);
-        document.put("type", entry.getType() != null ? entry.getType().toString() : null);
-        document.put("changeLogClass", entry.getChangeLogClass());
-        document.put("changeSetMethod", entry.getChangeSetMethod());
-        document.put("metadata", entry.getMetadata());
+        putIfNotNull(document, "state", entry.getState() != null ? entry.getState().toString() : null);
+        putIfNotNull(document, "type", entry.getType() != null ? entry.getType().toString() : null);
+        putIfNotNull(document, "changeLogClass", entry.getChangeLogClass());
+        putIfNotNull(document, "changeSetMethod", entry.getChangeSetMethod());
+        putIfNotNull(document, "metadata", entry.getMetadata());
         document.put("executionMillis", entry.getExecutionMillis());
-        document.put("executionHostname", entry.getExecutionHostname());
-        document.put("errorTrace", entry.getErrorTrace());
-        document.put("systemChange", entry.getSystemChange());
-        document.put("originalTimestamp", entry.getOriginalTimestamp());
+        putIfNotNull(document, "executionHostname", entry.getExecutionHostname());
+        putIfNotNull(document, "errorTrace", entry.getErrorTrace());
+        putIfNotNull(document, "systemChange", entry.getSystemChange());
+        putIfNotNull(document, "originalTimestamp", entry.getOriginalTimestamp());
         return document;
+    }
+
+    private void putIfNotNull(Document document, String key, Object value) {
+        if (value != null) {
+            document.put(key, value);
+        }
     }
 }
