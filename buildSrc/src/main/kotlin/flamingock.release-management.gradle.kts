@@ -148,6 +148,18 @@ if (isReleasing && projectsToRelease.contains(project.name)) {
     }
 }
 
+// Defensive gate against unqualified `./gradlew jreleaserDeploy` fan-out. The org.jreleaser
+// plugin is applied to every subproject that consumes this convention plugin, so every one of
+// them registers a jreleaserDeploy task. Without this onlyIf, Gradle 8.5's strict input
+// validation fails the task on subprojects whose build/jreleaser directory was never primed
+// (e.g. flamingock-gradle-plugin, which is published via publishPlugins and has no deploy
+// config). Skipping cleanly preserves the script-level qualification fix as belt-and-suspenders.
+tasks.matching { it.name == "jreleaserDeploy" }.configureEach {
+    onlyIf("project not in projectsToRelease") {
+        project == rootProject || projectsToRelease.contains(project.name)
+    }
+}
+
 // Utility functions
 fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val mavenUsername: String? = System.getenv("JRELEASER_MAVENCENTRAL_USERNAME")
