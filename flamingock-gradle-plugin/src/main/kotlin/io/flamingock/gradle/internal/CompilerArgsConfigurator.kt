@@ -23,6 +23,8 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
+import java.lang.reflect.Array
+import java.lang.reflect.Method
 
 /**
  * Passes Gradle's authoritative source/resource roots to the Flamingock annotation processor
@@ -126,6 +128,7 @@ internal object CompilerArgsConfigurator {
                     && it.parameterCount == 1
                     && Function1::class.java.isAssignableFrom(it.parameterTypes[0])
         } ?: return
+        argumentsMethod.ensureAccessible()
 
         val action: (Any) -> Unit = { argsObj ->
             invokeArg(argsObj, SOURCES_OPTION, sourcesArg)
@@ -166,6 +169,7 @@ internal object CompilerArgsConfigurator {
                     && it.parameterTypes[1] == String::class.java
         }
         if (stringString != null) {
+            stringString.ensureAccessible()
             stringString.invoke(target, name, value)
             return
         }
@@ -174,7 +178,19 @@ internal object CompilerArgsConfigurator {
                     && it.parameterTypes[1].isArray
         }
         if (vararg != null) {
-            vararg.invoke(target, name, arrayOf<Any>(value))
+            vararg.ensureAccessible()
+            vararg.invoke(target, name, singleElementArray(vararg.parameterTypes[1], value))
+        }
+    }
+
+    private fun Method.ensureAccessible() {
+        isAccessible = true
+    }
+
+    private fun singleElementArray(arrayType: Class<*>, value: String): Any {
+        val componentType = arrayType.componentType ?: return arrayOf(value)
+        return Array.newInstance(componentType, 1).also { array ->
+            Array.set(array, 0, value)
         }
     }
 }

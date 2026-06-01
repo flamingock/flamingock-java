@@ -26,12 +26,20 @@ internal object DependencyConfigurator {
     fun configure(project: Project, extension: FlamingockExtension, version: String) {
         val group = FlamingockConstants.GROUP
         val dependencies = project.dependencies
+        val kaptEnabled = project.plugins.hasPlugin("org.jetbrains.kotlin.kapt")
+                || project.configurations.findByName("kapt") != null
 
         // Always add the annotation processor
         dependencies.add(
             "annotationProcessor",
             "$group:flamingock-processor:$version"
         )
+        if (kaptEnabled) {
+            dependencies.add(
+                "kapt",
+                "$group:flamingock-processor:$version"
+            )
+        }
 
         // Always add BOM for version management
         dependencies.add(
@@ -62,6 +70,12 @@ internal object DependencyConfigurator {
                 "annotationProcessor",
                 "$group:mongock-support:$version"
             )
+            if (kaptEnabled) {
+                dependencies.add(
+                    "kapt",
+                    "$group:mongock-support:$version"
+                )
+            }
         }
 
         // Spring Boot integration
