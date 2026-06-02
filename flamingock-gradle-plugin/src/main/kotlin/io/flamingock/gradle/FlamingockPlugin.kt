@@ -57,8 +57,14 @@ class FlamingockPlugin : Plugin<Project> {
 
         // Kotlin projects need KAPT so the Flamingock annotation processor runs on Kotlin
         // sources. Apply it automatically to preserve the plugin's zero-boilerplate intent.
+        // Users who want to manage kapt themselves (or who plan to migrate to KSP) can opt
+        // out via -Pflamingock.autoApplyKapt=false. The opt-out has to be a Gradle property
+        // and not a `flamingock { … }` DSL setting because the `plugins { }` block (where
+        // the user applies kotlin.jvm) evaluates before the `flamingock { }` block, so any
+        // DSL setter would fire too late to influence the auto-apply that already happened.
         project.plugins.withId(KOTLIN_JVM_PLUGIN_ID) {
-            if (!project.plugins.hasPlugin(FlamingockConstants.KAPT_PLUGIN_ID)) {
+            if (shouldAutoApplyKapt(project)
+                    && !project.plugins.hasPlugin(FlamingockConstants.KAPT_PLUGIN_ID)) {
                 project.pluginManager.apply(FlamingockConstants.KAPT_PLUGIN_ID)
             }
         }
@@ -84,6 +90,19 @@ class FlamingockPlugin : Plugin<Project> {
             validateConfiguration(extension)
             DependencyConfigurator.configure(project, extension, FlamingockConstants.FLAMINGOCK_VERSION)
         }
+    }
+
+    /**
+     * Decides whether the plugin should auto-apply `org.jetbrains.kotlin.kapt`. Defaults to
+     * `true`; users opt out by setting [FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY] to a
+     * value equal (case-insensitively) to `"false"`. Any other value — including unset —
+     * preserves the auto-apply behaviour. Read at `withId`-fire time so the decision is
+     * available before kapt would otherwise be applied. Visible to the same module so tests
+     * can exercise the property handling directly.
+     */
+    internal fun shouldAutoApplyKapt(project: Project): Boolean {
+        val raw = project.findProperty(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY) as? String
+        return raw == null || !raw.equals("false", ignoreCase = true)
     }
 
     private fun validateConfiguration(extension: FlamingockExtension) {
