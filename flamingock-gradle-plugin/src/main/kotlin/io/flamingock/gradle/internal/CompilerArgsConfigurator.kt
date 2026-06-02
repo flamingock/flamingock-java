@@ -23,6 +23,8 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
+import java.lang.reflect.Array
+import java.lang.reflect.Method
 
 /**
  * Passes Gradle's authoritative source/resource roots to the Flamingock annotation processor
@@ -52,11 +54,7 @@ import java.io.File
  */
 internal object CompilerArgsConfigurator {
 
-    private const val SOURCES_OPTION = "flamingock.sources"
-    private const val RESOURCES_OPTION = "flamingock.resources"
 
-    private const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
-    private const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
 
     fun configure(project: Project) {
         val sourceSets = project.extensions.findByType(SourceSetContainer::class.java) ?: return
@@ -70,9 +68,9 @@ internal object CompilerArgsConfigurator {
 
             project.tasks.named(ss.compileJavaTaskName, JavaCompile::class.java)
                 .configure(Action<JavaCompile> {
-                    options.compilerArgs.add("-A$SOURCES_OPTION=$sourcesArg")
+                    options.compilerArgs.add("-A${FlamingockConstants.SOURCES_OPTION}=$sourcesArg")
                     if (resourcesArg != null) {
-                        options.compilerArgs.add("-A$RESOURCES_OPTION=$resourcesArg")
+                        options.compilerArgs.add("-A${FlamingockConstants.RESOURCES_OPTION}=$resourcesArg")
                     }
                 })
 
@@ -81,10 +79,10 @@ internal object CompilerArgsConfigurator {
             // plugins.withId so the configuration kicks in regardless of plugin-application
             // order; if a plugin is never applied, the callback never fires.
             if (ss.name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                project.plugins.withId(KAPT_PLUGIN_ID) {
+                project.plugins.withId(FlamingockConstants.KAPT_PLUGIN_ID) {
                     configureKapt(project, ss)
                 }
-                project.plugins.withId(KSP_PLUGIN_ID) {
+                project.plugins.withId(FlamingockConstants.KSP_PLUGIN_ID) {
                     configureKsp(project, ss)
                 }
             }
@@ -126,10 +124,11 @@ internal object CompilerArgsConfigurator {
                     && it.parameterCount == 1
                     && Function1::class.java.isAssignableFrom(it.parameterTypes[0])
         } ?: return
+        argumentsMethod.ensureAccessible()
 
         val action: (Any) -> Unit = { argsObj ->
-            invokeArg(argsObj, SOURCES_OPTION, sourcesArg)
-            if (resourcesArg != null) invokeArg(argsObj, RESOURCES_OPTION, resourcesArg)
+            invokeArg(argsObj, FlamingockConstants.SOURCES_OPTION, sourcesArg)
+            if (resourcesArg != null) invokeArg(argsObj, FlamingockConstants.RESOURCES_OPTION, resourcesArg)
         }
         argumentsMethod.invoke(kaptExt, action)
     }
@@ -143,8 +142,8 @@ internal object CompilerArgsConfigurator {
         val resourcesArg = ss.resources.srcDirs.firstOrNull()?.absolutePath
 
         val kspExt = project.extensions.findByName("ksp") ?: return
-        invokeArg(kspExt, SOURCES_OPTION, sourcesArg)
-        if (resourcesArg != null) invokeArg(kspExt, RESOURCES_OPTION, resourcesArg)
+        invokeArg(kspExt, FlamingockConstants.SOURCES_OPTION, sourcesArg)
+        if (resourcesArg != null) invokeArg(kspExt, FlamingockConstants.RESOURCES_OPTION, resourcesArg)
     }
 
     private fun sourcesArgFor(ss: SourceSet): String? {
@@ -166,6 +165,7 @@ internal object CompilerArgsConfigurator {
                     && it.parameterTypes[1] == String::class.java
         }
         if (stringString != null) {
+            stringString.ensureAccessible()
             stringString.invoke(target, name, value)
             return
         }
@@ -174,7 +174,23 @@ internal object CompilerArgsConfigurator {
                     && it.parameterTypes[1].isArray
         }
         if (vararg != null) {
-            vararg.invoke(target, name, arrayOf<Any>(value))
+            vararg.ensureAccessible()
+            vararg.invoke(target, name, singleElementArray(vararg.parameterTypes[1], value))
+        }
+    }
+
+    private fun Method.ensureAccessible() {
+        isAccessible = true
+    }
+
+    // Visible for testing: the helper bridges Kotlin's `arrayOf<Any>(value)` (which produces
+    // `Object[]`) and the reflective `vararg.invoke(...)` call against a method whose array
+    // parameter has a more specific component type (typically `String[]`). Wrong array type
+    // here is exactly the silent regression the test guards against.
+    internal fun singleElementArray(arrayType: Class<*>, value: String): Any {
+        val componentType = arrayType.componentType ?: return arrayOf(value)
+        return Array.newInstance(componentType, 1).also { array ->
+            Array.set(array, 0, value)
         }
     }
 }
