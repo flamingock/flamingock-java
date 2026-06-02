@@ -22,6 +22,12 @@ internal object FlamingockConstants {
     const val GROUP = "io.flamingock"
     const val EXTENSION_NAME = "flamingock"
 
+    const val SOURCES_OPTION = "flamingock.sources"
+    const val RESOURCES_OPTION = "flamingock.resources"
+
+    const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
+    const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
+
     val FLAMINGOCK_VERSION: String by lazy {
         FlamingockConstants::class.java.classLoader
             .getResourceAsStream("flamingock-plugin.properties")

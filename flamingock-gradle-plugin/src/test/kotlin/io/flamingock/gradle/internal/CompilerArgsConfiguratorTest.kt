@@ -198,6 +198,53 @@ class CompilerArgsConfiguratorTest {
             args.firstOrNull { it.startsWith("-Aflamingock.sources=") }
                     ?.removePrefix("-Aflamingock.sources=")
 
+    @Test
+    fun `singleElementArray returns a typed array matching the requested component type`() {
+        // The original bug: `arrayOf<Any>(value)` produces `Object[]`, which fails reflection
+        // invocation against a `String[]`-typed vararg parameter (the typical case in real
+        // Kotlin/Gradle plugin signatures). The helper must build an array whose component
+        // type matches the parameter so reflection can dispatch.
+        val stringArray = CompilerArgsConfigurator.singleElementArray(Array<String>::class.java, "v")
+        assertTrue(stringArray is Array<*>, "Helper must return an array")
+        assertEquals(String::class.java, stringArray.javaClass.componentType,
+                "Component type must be String, got ${stringArray.javaClass.componentType}")
+        assertEquals(1, (stringArray as Array<*>).size, "Array must contain exactly one element")
+        assertEquals("v", stringArray[0])
+    }
+
+    @Test
+    fun `singleElementArray falls back to Object array when componentType is null`() {
+        // Defensive path for the rare case where the reflected parameter type does not report
+        // a componentType (e.g. `Object` declared as the array slot). Keeps the helper safe
+        // against degenerate signatures rather than NPE'ing.
+        val fallback = CompilerArgsConfigurator.singleElementArray(Object::class.java, "v")
+        assertTrue(fallback is Array<*>, "Fallback must still produce an array")
+        assertEquals(1, (fallback as Array<*>).size)
+        assertEquals("v", fallback[0])
+    }
+
+    @Test
+    fun `configureKapt reflectively dispatches against a String-typed vararg parameter`() {
+        // Regression guard for the precise signature shape that motivated the fix: a stub
+        // KaptArguments whose `arg(name, vararg values: String)` declares the values as
+        // `String[]` at the JVM level — which is what real Kotlin libraries typically expose.
+        // Before the fix, `arrayOf<Any>(value)` would throw IllegalArgumentException on the
+        // reflective invocation here because the actual argument was an `Object[]`.
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        project.plugins.apply("java")
+
+        val kapt = StubKaptExtensionWithStringVararg()
+        project.extensions.add(StubKaptExtensionWithStringVararg::class.java, "kapt", kapt)
+
+        val main = project.extensions.getByType(SourceSetContainer::class.java).getByName("main")
+        CompilerArgsConfigurator.configureKapt(project, main)
+
+        assertEquals(srcDir(project, "main", "java"),
+                kapt.arguments.collected["flamingock.sources"])
+        assertEquals(srcDir(project, "main", "resources"),
+                kapt.arguments.collected["flamingock.resources"])
+    }
+
     private fun resourcesArg(args: List<String>): String? =
             args.firstOrNull { it.startsWith("-Aflamingock.resources=") }
                     ?.removePrefix("-Aflamingock.resources=")
@@ -241,6 +288,26 @@ class CompilerArgsConfiguratorTest {
         val collected = mutableMapOf<String, String>()
         fun arg(k: String, v: String) {
             collected[k] = v
+        }
+    }
+
+    /**
+     * Like [StubKaptArguments] but with the vararg parameter typed `String...` (i.e. JVM
+     * signature `String[]`) instead of `Object...`. This is the more demanding shape that the
+     * production reflective dispatch has to support — it's the precise reason the
+     * `singleElementArray` helper exists.
+     */
+    open class StubKaptArgumentsWithStringVararg {
+        val collected = mutableMapOf<String, String>()
+        fun arg(name: Any, vararg values: String) {
+            collected[name.toString()] = values.joinToString(" ")
+        }
+    }
+
+    open class StubKaptExtensionWithStringVararg {
+        val arguments = StubKaptArgumentsWithStringVararg()
+        fun arguments(action: StubKaptArgumentsWithStringVararg.() -> Unit) {
+            arguments.action()
         }
     }
 }
