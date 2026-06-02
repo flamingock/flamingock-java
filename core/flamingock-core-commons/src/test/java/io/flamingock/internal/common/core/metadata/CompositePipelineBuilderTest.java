@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Unit tests for {@code MetadataLoader.CompositePipelineBuilder}, focused on the
