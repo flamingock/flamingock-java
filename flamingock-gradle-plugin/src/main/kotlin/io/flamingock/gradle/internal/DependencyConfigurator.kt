@@ -26,7 +26,7 @@ internal object DependencyConfigurator {
     fun configure(project: Project, extension: FlamingockExtension, version: String) {
         val group = FlamingockConstants.GROUP
         val dependencies = project.dependencies
-        val kaptEnabled = project.plugins.hasPlugin("org.jetbrains.kotlin.kapt")
+        val kaptEnabled = project.plugins.hasPlugin(FlamingockConstants.KAPT_PLUGIN_ID)
                 || project.configurations.findByName("kapt") != null
 
         // Always add the annotation processor

@@ -47,7 +47,6 @@ class FlamingockPlugin : Plugin<Project> {
 
     companion object {
         private const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
-        private const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
     }
 
     override fun apply(project: Project) {
@@ -59,8 +58,8 @@ class FlamingockPlugin : Plugin<Project> {
         // Kotlin projects need KAPT so the Flamingock annotation processor runs on Kotlin
         // sources. Apply it automatically to preserve the plugin's zero-boilerplate intent.
         project.plugins.withId(KOTLIN_JVM_PLUGIN_ID) {
-            if (!project.plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
-                project.pluginManager.apply(KOTLIN_KAPT_PLUGIN_ID)
+            if (!project.plugins.hasPlugin(FlamingockConstants.KAPT_PLUGIN_ID)) {
+                project.pluginManager.apply(FlamingockConstants.KAPT_PLUGIN_ID)
             }
         }
 
