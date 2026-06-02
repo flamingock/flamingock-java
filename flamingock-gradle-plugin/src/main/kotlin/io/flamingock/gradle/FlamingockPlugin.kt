@@ -101,8 +101,8 @@ class FlamingockPlugin : Plugin<Project> {
      * can exercise the property handling directly.
      */
     internal fun shouldAutoApplyKapt(project: Project): Boolean {
-        val raw = project.findProperty(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY) as? String
-        return raw == null || !raw.equals("false", ignoreCase = true)
+        val raw = project.findProperty(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY) ?: return true
+        return !raw.toString().equals("false", ignoreCase = true)
     }
 
     private fun validateConfiguration(extension: FlamingockExtension) {
