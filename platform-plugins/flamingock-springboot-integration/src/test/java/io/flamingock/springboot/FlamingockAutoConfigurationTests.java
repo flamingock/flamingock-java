@@ -91,6 +91,40 @@ class FlamingockAutoConfigurationTests {
     }
 
     @Test
+    void whenEnabledIsFalse_thenNoBeansExist() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(FlamingockAutoConfiguration.class))
+                .withUserConfiguration(TestConfiguration.class)
+                .withPropertyValues(
+                        "spring.profiles.active=" + PROFILE,
+                        "flamingock.enabled=false"
+                )
+                .run(ctx -> {
+                    assertThat(ctx).doesNotHaveBean(FlamingockAutoConfiguration.class);
+                    assertThat(ctx).doesNotHaveBean("flamingock-runner");
+                    assertThat(ctx).doesNotHaveBean("flamingock-builder");
+                });
+    }
+
+    @Test
+    void whenEnabledIsTrue_thenBeansExist() {
+        contextRunner()
+                .withPropertyValues("flamingock.enabled=true")
+                .run(ctx -> {
+                    assertThat(ctx).hasBean("flamingock-builder");
+                    assertThat(ctx).hasBean("flamingock-runner");
+                });
+    }
+
+    @Test
+    void whenEnabledIsMissing_thenBeansExist() {
+        contextRunner().run(ctx -> {
+            assertThat(ctx).hasBean("flamingock-builder");
+            assertThat(ctx).hasBean("flamingock-runner");
+        });
+    }
+
+    @Test
     void whenModeIsUnmanaged_thenNoBeansExist() {
         // When UNMANAGED, the entire auto-configuration class should not load
         new ApplicationContextRunner()

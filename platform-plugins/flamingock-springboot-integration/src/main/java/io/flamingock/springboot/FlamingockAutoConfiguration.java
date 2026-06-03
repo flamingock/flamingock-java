@@ -54,6 +54,7 @@ import java.util.List;
 @Configuration
 @ConditionalOnClass(name = "org.springframework.boot.SpringApplication")
 @ConditionalOnExpression("!'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('UNMANAGED')")
+@ConditionalOnProperty(prefix = "flamingock", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SpringbootProperties.class)
 public class FlamingockAutoConfiguration {
 
