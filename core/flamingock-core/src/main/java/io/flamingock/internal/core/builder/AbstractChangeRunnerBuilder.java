@@ -51,6 +51,7 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
+import io.flamingock.internal.core.builder.runner.DisabledRunner;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.builder.runner.RunnerFactory;
@@ -191,6 +192,15 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      */
     @Override
     public final Runner build() {
+        FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
+
+        // Kill switch for the auto-execution path: when `flamingock.enabled=false` and we're
+        // not in CLI mode, return a no-op runner before any side-effectful setup runs (no
+        // template scan, no plugin init, no audit-store connection, no lock attempt, no
+        // pipeline load). Explicitly-invoked CLI commands ignore the flag — user intent wins.
+        if (!flamingockArgs.isCliMode() && !coreConfiguration.isEnabled()) {
+            return new DisabledRunner();
+        }
 
         ChangeTemplateManager.loadTemplates();
         pluginManager.initialize(context);
@@ -220,8 +230,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         // incremental rounds can produce temporarily-empty stages without failing the build.
         pipeline.validate();
         pipeline.contributeToContext(hierarchicalContext);
-
-        FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
 
         OperationResolver operationResolver = new OperationResolver(
                 runnerId,
