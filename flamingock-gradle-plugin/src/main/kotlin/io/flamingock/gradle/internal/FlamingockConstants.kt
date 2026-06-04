@@ -28,6 +28,14 @@ internal object FlamingockConstants {
     const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
     const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
 
+    /**
+     * Gradle property that, when set to `false`, suppresses the auto-application of
+     * `org.jetbrains.kotlin.kapt` in Kotlin projects. Default behaviour (property unset or
+     * any value other than literal `false`, case-insensitive) is to auto-apply kapt so the
+     * Flamingock annotation processor runs against Kotlin sources.
+     */
+    const val AUTO_APPLY_KAPT_PROPERTY = "flamingock.autoApplyKapt"
+
     val FLAMINGOCK_VERSION: String by lazy {
         FlamingockConstants::class.java.classLoader
             .getResourceAsStream("flamingock-plugin.properties")
