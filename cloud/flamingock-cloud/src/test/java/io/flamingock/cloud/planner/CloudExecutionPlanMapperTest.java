@@ -38,9 +38,12 @@ import org.junit.jupiter.api.Test;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.request.StageRequest;
+import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
@@ -215,6 +218,44 @@ class CloudExecutionPlanMapperTest {
 
         assertEquals(CloudTargetSystemAuditMarkType.APPLIED, marksByChangeId.get(change1.getId()));
         assertEquals(CloudTargetSystemAuditMarkType.NONE, marksByChangeId.get(change2.getId()));
+    }
+
+    @Test
+    @DisplayName("toRequest() populates ChangeRequest.currentStatus from the operation's recorded ChangeResult statuses")
+    void shouldMapCurrentStatusFromPipelineRun() {
+        // Two changes in one stage; the operation has applied change1 and left change2
+        // at NOT_REACHED (default). The mapper must reflect both on the wire.
+        AbstractLoadedStage stage = buildStage("stage-1", change1, change2);
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stage));
+
+        // Mark stage-1 completed with change1 = APPLIED. markStageCompleted merges by
+        // change ID — change1 gets upgraded, change2 stays at the constructor default NOT_REACHED.
+        ChangeResult change1Applied = ChangeResult.builder()
+                .changeId(change1.getId())
+                .status(ChangeStatus.APPLIED)
+                .build();
+        pipelineRun.markStageCompleted(
+                "stage-1",
+                StageResult.builder()
+                        .stageId("stage-1")
+                        .stageName("stage-1")
+                        .state(StageState.COMPLETED)
+                        .changes(Arrays.asList(change1Applied))
+                        .build());
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                pipelineRun, 60000L, Collections.emptyMap());
+
+        // currentStatus is omitted on the wire (null) for NOT_REACHED — Collectors.toMap rejects
+        // null values, so use a plain loop.
+        Map<String, CloudChangeStatus> currentById = new HashMap<>();
+        request.getClientSubmission().getBlocks().get(0).getStages().get(0).getChanges()
+                .forEach(c -> currentById.put(c.getId(), c.getCurrentStatus()));
+
+        assertEquals(CloudChangeStatus.APPLIED, currentById.get(change1.getId()),
+                "Operation-applied change must surface as APPLIED in the request");
+        assertNull(currentById.get(change2.getId()),
+                "Untouched change (NOT_REACHED) must be absent on the wire (null)");
     }
 
     @Test

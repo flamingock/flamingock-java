@@ -27,9 +27,14 @@ import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.response.LockInfoResponse;
+import io.flamingock.cloud.api.response.PipelineResultResponse;
 import io.flamingock.cloud.api.response.StageResponse;
+import io.flamingock.cloud.api.response.StageResultResponse;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.vo.CloudExecutionAction;
+import io.flamingock.cloud.api.vo.CloudPlannerVerdict;
+
+import java.util.Collections;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 
 import java.util.List;
@@ -87,7 +92,14 @@ public class MockExecutionPlanBuilder {
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
-            return new ExecutionPlanResponse(CloudExecutionAction.EXECUTE, executionId, lock, stages);
+            ExecutionPlanResponse executePlanResponse = new ExecutionPlanResponse(
+                    CloudExecutionAction.EXECUTE, executionId, lock, stages);
+            // pipelineResult required by ExecutionPlanResponse.validate() on EXECUTE. Minimal
+            // shape: one NEEDS_WORK entry per stage with no per-change records — tests using
+            // this builder don't assert on verdict/records; richer mocks should be built when
+            // behaviour assertions need them.
+            executePlanResponse.setPipelineResult(pipelineResultFromStages(stages));
+            return executePlanResponse;
 
         } else if (mockRequestResponse instanceof ExecutionAwaitRequestResponseMock) {
             LockInfoResponse lock = new LockInfoResponse();
@@ -100,9 +112,26 @@ public class MockExecutionPlanBuilder {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
             executionPlanResponse.setAction(CloudExecutionAction.CONTINUE);
+            // pipelineResult required by validate() on CONTINUE — empty stages list is fine
+            // for this builder; tests don't assert on verdict/records.
+            executionPlanResponse.setPipelineResult(new PipelineResultResponse(Collections.emptyList()));
             return executionPlanResponse;
         }
 
+    }
+
+    /**
+     * Minimal pipelineResult mirroring the EXECUTE stages: one {@link StageResultResponse}
+     * per stage, NEEDS_WORK verdict, no per-change records. Satisfies
+     * {@link ExecutionPlanResponse#validate()} without forcing every test to think about the
+     * result side.
+     */
+    private static PipelineResultResponse pipelineResultFromStages(List<StageResponse> stages) {
+        List<StageResultResponse> stageResults = stages.stream()
+                .map(s -> new StageResultResponse(s.getName(), CloudPlannerVerdict.NEEDS_WORK,
+                        Collections.emptyList()))
+                .collect(Collectors.toList());
+        return new PipelineResultResponse(stageResults);
     }
 
     private List<ChangeRequest> transformChangeRequests(List<PrototypeChange> prototypeChanges,

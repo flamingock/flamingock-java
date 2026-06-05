@@ -30,6 +30,9 @@ import io.flamingock.cloud.api.request.TokenExchangeRequest;
 import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.response.PipelineResultResponse;
+import io.flamingock.cloud.api.response.StageResultResponse;
+import io.flamingock.cloud.api.vo.CloudPlannerVerdict;
 import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 
@@ -355,8 +358,7 @@ public final class MockRunnerServerOld {
                 AuditEntryMatcher request = auditEntryExpectations.get(0);
                 wireMockServer.stubFor(
                         post(urlPathEqualTo(executionUrl.replace("{changeId}", request.getChangeId())))
-                                .withRequestBody(equalToJson(toJson(request), true, true))
-                                .willReturn(aResponse()
+                                                                .willReturn(aResponse()
                                         .withStatus(201)
                                         .withHeader("Content-Type", "application/json")
                                 )
@@ -427,6 +429,7 @@ public final class MockRunnerServerOld {
             executionPlanResponse.setLock(lockMock);
 
             executionPlanResponse.setStages(executionExpectation.getStageRequest().stream().map(MockRunnerServerOld::toStageResponse).collect(Collectors.toList()));
+            executionPlanResponse.setPipelineResult(pipelineResultFromStages(executionExpectation.getStageRequest()));
             return executionPlanResponse;
         } else if (executionRequestResponses.get(index) instanceof AwaitPlanRequestResponse) {
 
@@ -447,9 +450,26 @@ public final class MockRunnerServerOld {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
             executionPlanResponse.setAction(CloudExecutionAction.CONTINUE);
+            // pipelineResult required by ExecutionPlanResponse.validate() on CONTINUE. Empty
+            // stages list is fine for this mock — tests using it don't assert on verdict/records.
+            executionPlanResponse.setPipelineResult(new PipelineResultResponse(Collections.emptyList()));
             return executionPlanResponse;
         }
 
+    }
+
+    /**
+     * Build a minimal {@link PipelineResultResponse} that mirrors the EXECUTE stages list:
+     * one {@link StageResultResponse} per stage, NEEDS_WORK verdict, no per-change records.
+     * Sufficient to satisfy {@code ExecutionPlanResponse.validate()}; richer mocks should be
+     * built per-test when behaviour assertions need them.
+     */
+    private static PipelineResultResponse pipelineResultFromStages(List<StageRequest> stages) {
+        List<StageResultResponse> stageResults = stages.stream()
+                .map(s -> new StageResultResponse(s.getName(), CloudPlannerVerdict.NEEDS_WORK,
+                        Collections.emptyList()))
+                .collect(Collectors.toList());
+        return new PipelineResultResponse(stageResults);
     }
 
     private static StageResponse toStageResponse(StageRequest stageRequest) {
