@@ -169,9 +169,11 @@ public final class ExecutionReportFormatter {
         String label = stageLabel(stage);
         String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
 
-        // [UP TO DATE] rows render without a duration (the executor never ran). Community has
-        // per-change ALREADY_APPLIED records (planner-populated from audit); cloud doesn't —
-        // we emit either a per-change line or a count-only line depending on what's available.
+        // [UP TO DATE] rows render without a duration (the executor never ran). Both community
+        // and cloud feed per-change ALREADY_APPLIED records into PipelineRun via the planner-side
+        // writer (community from the local audit snapshot; cloud from the server's pipelineResult
+        // payload). When records are present we emit a per-change line; if they're empty we
+        // fall back to a count-only line.
         boolean isUpToDateOnly = stage.getState().isNotStarted()
                 && stage.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE;
 

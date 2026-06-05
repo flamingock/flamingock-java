@@ -19,11 +19,18 @@ import io.flamingock.api.StageType;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.ChangeResponse;
+import io.flamingock.cloud.api.response.ChangeResultResponse;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.response.PipelineResultResponse;
 import io.flamingock.cloud.api.response.StageResponse;
+import io.flamingock.cloud.api.response.StageResultResponse;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
+import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudExecutionAction;
+import io.flamingock.cloud.api.vo.CloudPlannerVerdict;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
@@ -103,6 +110,8 @@ class CloudExecutionPlannerTest {
         // Stub the server to return CONTINUE so the planner doesn't loop or try to acquire a lock.
         ExecutionPlanResponse continueResponse = new ExecutionPlanResponse();
         continueResponse.setAction(CloudExecutionAction.CONTINUE);
+        continueResponse.setPipelineResult(pipelineResultUpToDate(
+                "system-stage", "legacy-stage", "user-a", "user-b"));
         when(client.createExecution(any(), any(), anyLong())).thenReturn(continueResponse);
 
         // Build a PipelineRun with three blocks: SYSTEM (1 stage), LEGACY (1 stage), DEFAULT (2 stages).
@@ -204,6 +213,7 @@ class CloudExecutionPlannerTest {
                         new ChangeResponse(change1.getId(), CloudChangeAction.SKIP),
                         new ChangeResponse(change2.getId(), CloudChangeAction.APPLY))))
         );
+        response.setPipelineResult(pipelineResultUpToDate("stage-1"));
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
@@ -232,6 +242,7 @@ class CloudExecutionPlannerTest {
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(new ChangeResponse(change1.getId(), CloudChangeAction.SKIP))))
         );
+        response.setPipelineResult(pipelineResultUpToDate("stage-1"));
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
@@ -347,7 +358,143 @@ class CloudExecutionPlannerTest {
                                 new ChangeResponse(change1.getId(), CloudChangeAction.SKIP),
                                 new ChangeResponse(change2.getId(), CloudChangeAction.SKIP))))
         );
+        // pipelineResult is required by validate() on CONTINUE/EXECUTE. ABORT/AWAIT
+        // ignore it but accept it being present — convenient for one shared helper.
+        response.setPipelineResult(pipelineResultUpToDate("stage-1"));
         response.setSynchronizedMarks(synchronizedMarks);
         return response;
+    }
+
+    /**
+     * Trivial pipelineResult helper: marks every named stage as UP_TO_DATE with no
+     * per-change ALREADY_APPLIED records. Used by tests that don't care about the result
+     * side specifically; the new tests further below build richer pipelineResults to
+     * exercise the actual writer behaviour.
+     */
+    private PipelineResultResponse pipelineResultUpToDate(String... stageNames) {
+        List<StageResultResponse> stages = Arrays.stream(stageNames)
+                .map(name -> new StageResultResponse(name, CloudPlannerVerdict.UP_TO_DATE,
+                        Collections.emptyList()))
+                .collect(Collectors.toList());
+        return new PipelineResultResponse(stages);
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Tests for the new pipelineResult application path (server-as-planner)
+    // -----------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("CONTINUE with pipelineResult writes per-stage verdict into PipelineRun")
+    void continueWithPipelineResultWritesVerdict() {
+        CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
+
+        // Server says UP_TO_DATE for stage-a, NEEDS_WORK for stage-b. Client must honour both.
+        PipelineResultResponse pipelineResult = new PipelineResultResponse(Arrays.asList(
+                new StageResultResponse("stage-a", CloudPlannerVerdict.UP_TO_DATE,
+                        Collections.emptyList()),
+                new StageResultResponse("stage-b", CloudPlannerVerdict.NEEDS_WORK,
+                        Collections.emptyList())
+        ));
+        ExecutionPlanResponse response = new ExecutionPlanResponse(
+                CloudExecutionAction.CONTINUE, "exec-1", null, Collections.emptyList(),
+                pipelineResult, false);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Arrays.asList(
+                new DefaultLoadedStage("stage-a", StageType.DEFAULT,
+                        Collections.singletonList(change1)),
+                new DefaultLoadedStage("stage-b", StageType.DEFAULT,
+                        Collections.singletonList(change2)));
+        PipelineRun run = PipelineRun.of(stages);
+
+        planner.getNextExecution(run);
+
+        // Verdicts land on the PipelineRun's per-stage StageResult.plannerVerdict via the
+        // existing community-side writer (monotone-forward enforced there).
+        assertEquals(PlannerVerdict.UP_TO_DATE,
+                run.getStageRuns().get(0).getResult().getPlannerVerdict());
+        assertEquals(PlannerVerdict.NEEDS_WORK,
+                run.getStageRuns().get(1).getResult().getPlannerVerdict());
+    }
+
+    @Test
+    @DisplayName("EXECUTE with pipelineResult upgrades NOT_REACHED records to ALREADY_APPLIED")
+    void executeWithPipelineResultUpgradesAlreadyAppliedRecords() {
+        CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
+
+        // Server tells the client: change1 is ALREADY_APPLIED, change2 is NOT_REACHED.
+        // Per the response, only change2 needs to be executed (stages[] reflects the work).
+        PipelineResultResponse pipelineResult = new PipelineResultResponse(
+                Collections.singletonList(new StageResultResponse("stage-1",
+                        CloudPlannerVerdict.NEEDS_WORK,
+                        Arrays.asList(
+                                new ChangeResultResponse(change1.getId(),
+                                        CloudChangeStatus.ALREADY_APPLIED),
+                                new ChangeResultResponse(change2.getId(),
+                                        CloudChangeStatus.NOT_REACHED))))
+        );
+        io.flamingock.cloud.api.response.LockInfoResponse lockInfo =
+                new io.flamingock.cloud.api.response.LockInfoResponse();
+        lockInfo.setKey("test-key");
+        lockInfo.setOwner("test-runner");
+        lockInfo.setAcquisitionId("acq-1");
+        lockInfo.setAcquiredForMillis(60000L);
+        ExecutionPlanResponse response = new ExecutionPlanResponse(
+                CloudExecutionAction.EXECUTE, "exec-1", lockInfo,
+                Collections.singletonList(new StageResponse("stage-1", 0,
+                        Collections.singletonList(
+                                new ChangeResponse(change2.getId(), CloudChangeAction.APPLY)))),
+                pipelineResult, false);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT,
+                        Arrays.asList(change1, change2)));
+        PipelineRun run = PipelineRun.of(stages);
+
+        planner.getNextExecution(run);
+
+        // change1 upgraded NOT_REACHED → ALREADY_APPLIED via the planner-side writer.
+        // change2 stays NOT_REACHED (defensive merge — server reported NOT_REACHED, so the
+        // writer skips it).
+        Map<String, ChangeStatus> statusById = run.getStageRuns().get(0).getResult()
+                .getChanges().stream()
+                .collect(Collectors.toMap(
+                        io.flamingock.internal.common.core.response.data.ChangeResult::getChangeId,
+                        io.flamingock.internal.common.core.response.data.ChangeResult::getStatus));
+        assertEquals(ChangeStatus.ALREADY_APPLIED, statusById.get(change1.getId()));
+        assertEquals(ChangeStatus.NOT_REACHED, statusById.get(change2.getId()));
+        // Verdict also lands.
+        assertEquals(PlannerVerdict.NEEDS_WORK,
+                run.getStageRuns().get(0).getResult().getPlannerVerdict());
+    }
+
+    @Test
+    @DisplayName("ABORT does not touch PipelineRun verdict/records (no pipelineResult on the wire)")
+    void abortLeavesPipelineRunUntouched() {
+        CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
+
+        // ABORT carries no pipelineResult — validate() doesn't require it, and the planner
+        // must not attempt to apply one (NPE-guard).
+        ExecutionPlanResponse response = new ExecutionPlanResponse(
+                CloudExecutionAction.ABORT, "exec-1", null,
+                Collections.singletonList(new StageResponse("stage-1", 0,
+                        Collections.singletonList(
+                                new ChangeResponse(change1.getId(), CloudChangeAction.APPLY))))
+        );
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT,
+                        Collections.singletonList(change1)));
+        PipelineRun run = PipelineRun.of(stages);
+
+        ExecutionPlan plan = planner.getNextExecution(run);
+
+        assertTrue(plan.isAborted());
+        // Default verdict stays NOT_EVALUATED — planner-side writes are gated to
+        // CONTINUE/EXECUTE branches only.
+        assertEquals(PlannerVerdict.NOT_EVALUATED,
+                run.getStageRuns().get(0).getResult().getPlannerVerdict());
     }
 }

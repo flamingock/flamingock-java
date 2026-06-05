@@ -16,12 +16,16 @@
 package io.flamingock.cloud;
 
 import io.flamingock.cloud.api.vo.CloudAuditStatus;
+import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudChangeType;
+import io.flamingock.cloud.api.vo.CloudPlannerVerdict;
 import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.api.vo.CloudTxStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 
@@ -63,6 +67,41 @@ public final class CloudApiMapper {
         if (state.isCompleted()) return CloudStageStatus.COMPLETED;
         if (state.isStarted()) return CloudStageStatus.STARTED;
         throw new IllegalStateException("Unknown StageState: " + state);
+    }
+
+    /**
+     * Maps the internal {@link ChangeStatus} to the wire enum {@link CloudChangeStatus}. Used
+     * when populating {@code ChangeRequest.currentStatus} so the server sees the operation's
+     * recorded per-change status as informational input.
+     *
+     * <p>Returns {@code null} for {@code NOT_REACHED} (or a null status) — the canonical wire
+     * shape for "operation has nothing to report yet" is field-absence (see
+     * {@code ChangeRequest.currentStatus}'s {@code @JsonInclude(NON_NULL)}). The server
+     * treats absent / null as {@code NOT_REACHED}.
+     */
+    public static CloudChangeStatus toCloud(ChangeStatus status) {
+        if (status == null || status == ChangeStatus.NOT_REACHED) return null;
+        return CloudChangeStatus.valueOf(status.name());
+    }
+
+    /**
+     * Maps the wire enum {@link CloudChangeStatus} back to the internal {@link ChangeStatus}.
+     * Used when reading {@code ChangeResultResponse.status} into the client-side
+     * {@code PipelineRun}.
+     */
+    public static ChangeStatus toDomain(CloudChangeStatus status) {
+        if (status == null) return ChangeStatus.NOT_REACHED;
+        return ChangeStatus.valueOf(status.name());
+    }
+
+    /**
+     * Maps the wire enum {@link CloudPlannerVerdict} to the internal {@link PlannerVerdict}.
+     * Used when reading {@code StageResultResponse.verdict} into the client-side
+     * {@code PipelineRun} via {@code markStageVerdict}.
+     */
+    public static PlannerVerdict toDomain(CloudPlannerVerdict verdict) {
+        if (verdict == null) return PlannerVerdict.NOT_EVALUATED;
+        return PlannerVerdict.valueOf(verdict.name());
     }
 
 }
