@@ -36,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import java.io.File;
@@ -118,7 +117,6 @@ import java.util.regex.Pattern;
  * @version 2.0
  * @since Flamingock v1.x
  */
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private static final String RESOURCES_PATH_ARG = "flamingock.resources";
@@ -165,6 +163,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 Change.class.getName(),
                 FlamingockCliBuilder.class.getName()
         ));
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
     }
 
     @Override
