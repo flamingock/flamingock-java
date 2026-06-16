@@ -21,6 +21,8 @@ import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -28,9 +30,12 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterMongoDB implements AuditHistoryReader {
+
+    private static final Logger logger = LoggerFactory.getLogger("MongockImporter");
 
     private final MongoCollection<Document> sourceCollection;
 
@@ -44,6 +49,7 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 .into(new ArrayList<>())
                 .stream()
                 .map(MongockImporterMongoDB::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -55,6 +61,8 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 .toLocalDateTime();
 
         if (changeEntry.shouldBeIgnored()) {
+            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (Mongock never executed this change; nothing to import).",
+                    changeEntry.getChangeId());
             return null;
         }
         return new AuditEntry(

@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
@@ -61,7 +63,10 @@ public class MongockImportChange {
         logger.info("Starting audit log migration from Mongock to Flamingock community audit store");
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
-        List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
+        List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory()
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntriesPropertyValue);
         validate(legacyHistory, targetSystemId, emptyOriginAllowedPropertyValue);
         legacyHistory.forEach(auditEntryFromOrigin -> {
