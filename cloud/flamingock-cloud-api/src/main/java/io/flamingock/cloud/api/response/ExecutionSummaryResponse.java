@@ -19,7 +19,7 @@ import java.time.Instant;
 
 public class ExecutionSummaryResponse {
 
-    private String executionId;
+    private Long executionId;
     private long environmentId;
     private long serviceId;
     private String runnerId;
@@ -28,7 +28,7 @@ public class ExecutionSummaryResponse {
     public ExecutionSummaryResponse() {
     }
 
-    public ExecutionSummaryResponse(String executionId, long environmentId, long serviceId, String runnerId, Instant startedAt) {
+    public ExecutionSummaryResponse(Long executionId, long environmentId, long serviceId, String runnerId, Instant startedAt) {
         this.executionId = executionId;
         this.environmentId = environmentId;
         this.serviceId = serviceId;
@@ -36,8 +36,8 @@ public class ExecutionSummaryResponse {
         this.startedAt = startedAt;
     }
 
-    public String getExecutionId() { return executionId; }
-    public void setExecutionId(String executionId) { this.executionId = executionId; }
+    public Long getExecutionId() { return executionId; }
+    public void setExecutionId(Long executionId) { this.executionId = executionId; }
 
     public long getEnvironmentId() { return environmentId; }
     public void setEnvironmentId(long environmentId) { this.environmentId = environmentId; }

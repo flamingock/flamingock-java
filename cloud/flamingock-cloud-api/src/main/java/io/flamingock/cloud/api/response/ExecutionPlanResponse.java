@@ -22,7 +22,7 @@ import java.util.List;
 
 public class ExecutionPlanResponse {
 
-    private String executionId;
+    private Long executionId;
 
     private CloudExecutionAction action;
 
@@ -50,20 +50,20 @@ public class ExecutionPlanResponse {
     }
 
     public ExecutionPlanResponse(CloudExecutionAction action,
-                                 String executionId,
+                                 Long executionId,
                                  LockInfoResponse lock) {
         this(action, executionId, lock, Collections.emptyList());
     }
 
     public ExecutionPlanResponse(CloudExecutionAction action,
-                                 String executionId,
+                                 Long executionId,
                                  LockInfoResponse lock,
                                  List<StageResponse> stages) {
         this(action, executionId, lock, stages, false);
     }
 
     public ExecutionPlanResponse(CloudExecutionAction action,
-                                 String executionId,
+                                 Long executionId,
                                  LockInfoResponse lock,
                                  List<StageResponse> stages,
                                  boolean synchronizedMarks) {
@@ -71,7 +71,7 @@ public class ExecutionPlanResponse {
     }
 
     public ExecutionPlanResponse(CloudExecutionAction action,
-                                 String executionId,
+                                 Long executionId,
                                  LockInfoResponse lock,
                                  List<StageResponse> stages,
                                  PipelineResultResponse pipelineResult,
@@ -88,11 +88,11 @@ public class ExecutionPlanResponse {
         this.action = action;
     }
 
-    public String getExecutionId() {
+    public Long getExecutionId() {
         return executionId;
     }
 
-    public void setExecutionId(String executionId) {
+    public void setExecutionId(Long executionId) {
         this.executionId = executionId;
     }
 

@@ -185,7 +185,7 @@ class CloudExecutionPlanMapperTest {
     void shouldBuildAbortPlanFromAbortResponse() {
         List<AbstractLoadedStage> loadedStages = Arrays.asList(buildStage("stage-1", change1, change2));
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.ABORT, "exec-1", null,
+                CloudExecutionAction.ABORT, 1L, null,
                 Arrays.asList(buildStageResponse("stage-1", 0,
                         changeResponse(change1.getId(), CloudChangeAction.MANUAL_INTERVENTION),
                         changeResponse(change2.getId(), CloudChangeAction.APPLY)))
@@ -372,7 +372,7 @@ class CloudExecutionPlanMapperTest {
     }
 
     private static ExecutionPlanResponse buildResponse(StageResponse... stages) {
-        return new ExecutionPlanResponse(CloudExecutionAction.EXECUTE, "exec-1", null, Arrays.asList(stages));
+        return new ExecutionPlanResponse(CloudExecutionAction.EXECUTE, 1L, null, Arrays.asList(stages));
     }
 
     private static StageResponse buildStageResponse(String name, int order, ChangeResponse... changes) {

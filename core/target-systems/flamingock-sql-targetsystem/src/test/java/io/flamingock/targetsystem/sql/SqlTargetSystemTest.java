@@ -128,7 +128,7 @@ public class SqlTargetSystemTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
@@ -175,7 +175,7 @@ public class SqlTargetSystemTest {
     @Test
     @DisplayName("Should keep the ongoing change when change fails")
     void failedChanges() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
@@ -224,7 +224,7 @@ public class SqlTargetSystemTest {
     @Disabled("adapt when adding cloud support")
     @DisplayName("Should send ongoing change in execution when is present in local database")
     void shouldSendOngoingChangeInExecutionPlan() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(

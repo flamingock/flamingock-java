@@ -77,7 +77,7 @@ public class MockExecutionPlanBuilder {
     }
 
     public ExecutionPlanResponse getResponse(ExecutionBaseRequestResponseMock mockRequestResponse) {
-        String executionId = mockRequestResponse.getExecutionId();
+        Long executionId = mockRequestResponse.getExecutionId();
         if (mockRequestResponse instanceof ExecutionPlanRequestResponseMock) {
             List<StageResponse> stages = clientSubmission
                     .getStages()

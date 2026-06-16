@@ -24,12 +24,12 @@ import java.util.Optional;
 public class ExecutionBaseRequestResponseMock {
 
 
-    private final String executionId;
+    private final Long executionId;
     private final long acquiredForMillis;
     private final String acquisitionId;
     private final List<MockRequestResponseChange> changes;
 
-    public ExecutionBaseRequestResponseMock(String executionId,
+    public ExecutionBaseRequestResponseMock(Long executionId,
                                             long acquiredForMillis,
                                             String acquisitionId,
                                             MockRequestResponseChange...changes) {
@@ -39,7 +39,7 @@ public class ExecutionBaseRequestResponseMock {
         this.changes = Arrays.asList(changes);
     }
 
-    public String getExecutionId() {
+    public Long getExecutionId() {
         return executionId;
     }
 

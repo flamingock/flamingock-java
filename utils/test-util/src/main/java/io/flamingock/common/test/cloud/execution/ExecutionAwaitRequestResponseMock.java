@@ -21,11 +21,11 @@ import io.flamingock.common.test.cloud.MockRunnerServer;
 
 public class ExecutionAwaitRequestResponseMock extends ExecutionBaseRequestResponseMock {
 
-    public ExecutionAwaitRequestResponseMock(String executionId, MockRequestResponseChange... stages) {
+    public ExecutionAwaitRequestResponseMock(Long executionId, MockRequestResponseChange... stages) {
         this(executionId, MockRunnerServer.DEFAULT_ACQUIRED_FOR_MILLIS, MockRunnerServer.DEFAULT_LOCK_ACQUISITION_ID, stages);
     }
 
-    public ExecutionAwaitRequestResponseMock(String executionId, long acquiredForMillis, String acquisitionId, MockRequestResponseChange... stages) {
+    public ExecutionAwaitRequestResponseMock(Long executionId, long acquiredForMillis, String acquisitionId, MockRequestResponseChange... stages) {
         super(executionId, acquiredForMillis, acquisitionId, stages);
     }
 }
