@@ -155,7 +155,7 @@ class CloudExecutionPlannerTest {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
 
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.ABORT, "exec-1", null,
+                CloudExecutionAction.ABORT, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(new ChangeResponse(change1.getId(), CloudChangeAction.MANUAL_INTERVENTION))))
         );
@@ -178,7 +178,7 @@ class CloudExecutionPlannerTest {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
 
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.ABORT, "exec-1", null,
+                CloudExecutionAction.ABORT, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(new ChangeResponse(change1.getId(), CloudChangeAction.APPLY))))
         );
@@ -208,7 +208,7 @@ class CloudExecutionPlannerTest {
         CloudExecutionPlanner planner = buildPlanner(Arrays.asList(marker1, marker2));
 
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.CONTINUE, "exec-1", null,
+                CloudExecutionAction.CONTINUE, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0, Arrays.asList(
                         new ChangeResponse(change1.getId(), CloudChangeAction.SKIP),
                         new ChangeResponse(change2.getId(), CloudChangeAction.APPLY))))
@@ -238,7 +238,7 @@ class CloudExecutionPlannerTest {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
 
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.CONTINUE, "exec-1", null,
+                CloudExecutionAction.CONTINUE, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(new ChangeResponse(change1.getId(), CloudChangeAction.SKIP))))
         );
@@ -352,7 +352,7 @@ class CloudExecutionPlannerTest {
 
     private ExecutionPlanResponse buildSyncResponse(CloudExecutionAction action, boolean synchronizedMarks) {
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                action, "exec-1", null,
+                action, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Arrays.asList(
                                 new ChangeResponse(change1.getId(), CloudChangeAction.SKIP),
@@ -396,7 +396,7 @@ class CloudExecutionPlannerTest {
                         Collections.emptyList())
         ));
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.CONTINUE, "exec-1", null, Collections.emptyList(),
+                CloudExecutionAction.CONTINUE, 1L, null, Collections.emptyList(),
                 pipelineResult, false);
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
@@ -440,7 +440,7 @@ class CloudExecutionPlannerTest {
         lockInfo.setAcquisitionId("acq-1");
         lockInfo.setAcquiredForMillis(60000L);
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.EXECUTE, "exec-1", lockInfo,
+                CloudExecutionAction.EXECUTE, 1L, lockInfo,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(
                                 new ChangeResponse(change2.getId(), CloudChangeAction.APPLY)))),
@@ -477,7 +477,7 @@ class CloudExecutionPlannerTest {
         // ABORT carries no pipelineResult — validate() doesn't require it, and the planner
         // must not attempt to apply one (NPE-guard).
         ExecutionPlanResponse response = new ExecutionPlanResponse(
-                CloudExecutionAction.ABORT, "exec-1", null,
+                CloudExecutionAction.ABORT, 1L, null,
                 Collections.singletonList(new StageResponse("stage-1", 0,
                         Collections.singletonList(
                                 new ChangeResponse(change1.getId(), CloudChangeAction.APPLY))))

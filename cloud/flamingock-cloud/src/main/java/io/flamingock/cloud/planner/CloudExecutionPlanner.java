@@ -203,7 +203,9 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                                                  ExecutionPlanResponse response,
                                                  Lock lock) {
         return ExecutionPlan.newExecution(
-                response.getExecutionId(),
+                // The server identity is a Long (the executions PK). The shared core ExecutionPlan/AuditEntry keep a
+                // String executionId (used by Community local audit stores too), so convert at the cloud boundary.
+                String.valueOf(response.getExecutionId()),
                 lock,
                 CloudExecutionPlanMapper.getExecutableStages(response, loadedStages)
         );
