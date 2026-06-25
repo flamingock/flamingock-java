@@ -103,6 +103,31 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return changes;
     }
 
+    /**
+     * Returns a new instance of the same concrete stage type carrying the provided changes
+     * instead of this stage's current changes. Name, type, and the per-subclass validation
+     * context are preserved.
+     *
+     * <p>Used at runtime construction time to materialize a stage with a filtered subset
+     * of changes without mutating the original {@code AbstractLoadedStage} (whose
+     * {@code changes} collection is final and immutable post-construction). The copy is
+     * produced by reflecting on the concrete subclass to find its public
+     * {@code (String, StageType, Collection)} constructor — every concrete subclass
+     * ({@link DefaultLoadedStage}, {@link LegacyLoadedStage}, {@link SystemLoadedStage})
+     * exposes one.
+     */
+    public AbstractLoadedStage withChanges(Collection<AbstractLoadedChange> newChanges) {
+        try {
+            return getClass()
+                    .getConstructor(String.class, StageType.class, Collection.class)
+                    .newInstance(getName(), getType(), newChanges);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(
+                    "Cannot copy stage [" + getName() + "] of type " + getClass().getName()
+                            + " with filtered changes", e);
+        }
+    }
+
 
 
     /**

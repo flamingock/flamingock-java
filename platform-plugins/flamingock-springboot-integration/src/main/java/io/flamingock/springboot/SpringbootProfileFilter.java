@@ -22,6 +22,7 @@ import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
 import org.springframework.context.annotation.Profile;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -70,8 +71,12 @@ public class SpringbootProfileFilter implements ChangeFilter {
     }
 
 
-    private boolean filterCodeChange(CodeLoadedChange reflectionDescriptor) {
-        Class<?> sourceClass = reflectionDescriptor.getImplementationClass();
+    private boolean filterCodeChange(CodeLoadedChange change) {
+        Method applyMethod = change.getApplyMethod();
+        if (applyMethod != null && applyMethod.isAnnotationPresent(Profile.class)) {
+            return filterProfiles(Arrays.asList(applyMethod.getAnnotation(Profile.class).value()));
+        }
+        Class<?> sourceClass = change.getImplementationClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }

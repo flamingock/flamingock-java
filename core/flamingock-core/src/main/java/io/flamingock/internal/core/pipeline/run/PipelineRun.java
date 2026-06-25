@@ -25,6 +25,8 @@ import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
@@ -33,6 +35,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -52,12 +55,68 @@ public class PipelineRun {
     public static PipelineRun of(LoadedPipeline pipeline) {
         // Static-structure validation runs as part of construction. Builder-time validation in
         // AbstractChangeRunnerBuilder still fails fast on malformed pipelines; this call covers
-        // the runtime entry point so callers don't have to validate separately.
+        // the runtime entry point so callers don't have to validate separately. Validation
+        // operates on the unfiltered pipeline so structural checks (duplicate IDs, empty
+        // stages, etc.) catch issues regardless of which changes any plugin would exclude.
         pipeline.validate();
+        Collection<ChangeFilter> filters = pipeline.getChangeFilters();
         List<AbstractLoadedStage> stages = new ArrayList<>();
-        pipeline.getSystemStage().ifPresent(stages::add);
-        stages.addAll(pipeline.getStages());
+        // Apply the same drop-empty rule to the system stage as to user stages. A stage is
+        // dropped only when filtering actually removed every change from a stage that had
+        // some to begin with. A stage that was already empty before filtering is preserved
+        // unchanged; this matches the pre-existing "empty stages survive" contract used by
+        // builder-mocked tests and by incremental compile-time flows where a stage may be
+        // temporarily empty before any @Change has been added to its package.
+        pipeline.getSystemStage()
+                .map(stage -> applyFilters(stage, filters))
+                .filter(result -> !result.filteredToEmpty)
+                .map(result -> result.stage)
+                .ifPresent(stages::add);
+        for (AbstractLoadedStage stage : pipeline.getStages()) {
+            FilterResult result = applyFilters(stage, filters);
+            if (!result.filteredToEmpty) {
+                stages.add(result.stage);
+            }
+        }
         return of(stages);
+    }
+
+    /**
+     * Result of running change filters against a single stage. {@code stage} is either the
+     * original stage (no filter removed any change, OR the original was empty, OR no filters
+     * were provided) or a new instance with the surviving changes. {@code filteredToEmpty}
+     * is {@code true} only when the filter actually removed every change from a non-empty
+     * stage — that's the signal the caller uses to drop the stage from the runtime list.
+     */
+    private static final class FilterResult {
+        final AbstractLoadedStage stage;
+        final boolean filteredToEmpty;
+
+        FilterResult(AbstractLoadedStage stage, boolean filteredToEmpty) {
+            this.stage = stage;
+            this.filteredToEmpty = filteredToEmpty;
+        }
+    }
+
+    /**
+     * Applies the given change filters to a stage's changes, returning a {@link FilterResult}
+     * that preserves the original stage reference when no filter removed any change. Filters
+     * are AND-composed: a change is kept only if every filter returns {@code true} for it.
+     */
+    private static FilterResult applyFilters(AbstractLoadedStage stage, Collection<ChangeFilter> filters) {
+        Collection<AbstractLoadedChange> originalChanges = stage.getChanges();
+        if (filters == null || filters.isEmpty() || originalChanges == null || originalChanges.isEmpty()) {
+            // No filtering meaningfully applied. Preserve the original stage unchanged — this
+            // includes the case of a pre-existing empty stage (filteredToEmpty=false).
+            return new FilterResult(stage, false);
+        }
+        Collection<AbstractLoadedChange> surviving = originalChanges.stream()
+                .filter(change -> filters.stream().allMatch(f -> f.filter(change)))
+                .collect(Collectors.toList());
+        if (surviving.size() == originalChanges.size()) {
+            return new FilterResult(stage, false);
+        }
+        return new FilterResult(stage.withChanges(surviving), surviving.isEmpty());
     }
 
     public static PipelineRun of(List<AbstractLoadedStage> stages) {
