@@ -22,7 +22,6 @@ import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
 import org.springframework.context.annotation.Profile;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -72,10 +71,11 @@ public class SpringbootProfileFilter implements ChangeFilter {
 
 
     private boolean filterCodeChange(CodeLoadedChange change) {
-        Method applyMethod = change.getApplyMethod();
-        if (applyMethod != null && applyMethod.isAnnotationPresent(Profile.class)) {
-            return filterProfiles(Arrays.asList(applyMethod.getAnnotation(Profile.class).value()));
-        }
+        // Profiles are declared at change (class) level only. The change is the atomic unit, so
+        // its profile gate lives on the @Change-annotated class. Method-level @Profile (on @Apply
+        // or @Rollback) is intentionally NOT honored: a per-method gate is incoherent for a
+        // change-level inclusion decision and would risk applying a change while silently skipping
+        // its rollback under a different active profile, breaking recovery semantics.
         Class<?> sourceClass = change.getImplementationClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches

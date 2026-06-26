@@ -88,36 +88,6 @@ class SpringProfileFilterCodeChangeTest {
         assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(_002__NotP1.class)));
     }
 
-    @Test
-    @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and method has @Profile(P1)")
-    void trueIfMethodProfileMatchesActiveProfile() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_004__MethodP1.class)));
-    }
-
-    @Test
-    @DisplayName("SHOULD return false WHEN activeProfiles=[P2] and method has @Profile(P1)")
-    void falseIfMethodProfileDoesNotMatchActiveProfile() {
-        assertFalse(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(_004__MethodP1.class)));
-    }
-
-    @Test
-    @DisplayName("SHOULD return false WHEN class @Profile(P1) and method @Profile(P2) with active=[P1]")
-    void falseIfMethodProfileOverridesClassProfile() {
-        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_005__ClassP1MethodP2.class)));
-    }
-
-    @Test
-    @DisplayName("SHOULD return false WHEN activeProfiles=[P1] and method has @Profile(!P1)")
-    void falseIfMethodNegativeProfileExcludesActiveProfile() {
-        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_006__MethodNotP1.class)));
-    }
-
-    @Test
-    @DisplayName("SHOULD return true WHEN activeProfiles=[P2] and method has @Profile(!P1)")
-    void trueIfMethodNegativeProfileDoesNotExcludeActiveProfile() {
-        assertTrue(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(_006__MethodNotP1.class)));
-    }
-
     private CodeLoadedChange getCodeLoadedChange(Class<?> sourceClass) {
         return LoadedChangeBuilder.getCodeBuilderInstance(sourceClass).build();
     }
@@ -152,34 +122,6 @@ class SpringProfileFilterCodeChangeTest {
     @Change(id="annotated-p1-p2", author = "aperezdieppa")
     public static class _003__P1AndP2 {
         @Apply
-        public void apply() {
-            // testing purpose
-        }
-    }
-
-    @Change(id = "method-p1", author = "aperezdieppa")
-    public static class _004__MethodP1 {
-        @Apply
-        @Profile("P1")
-        public void apply() {
-            // testing purpose
-        }
-    }
-
-    @Profile("P1")
-    @Change(id = "class-p1-method-p2", author = "aperezdieppa")
-    public static class _005__ClassP1MethodP2 {
-        @Apply
-        @Profile("P2")
-        public void apply() {
-            // testing purpose
-        }
-    }
-
-    @Change(id = "method-not-p1", author = "aperezdieppa")
-    public static class _006__MethodNotP1 {
-        @Apply
-        @Profile("!P1")
         public void apply() {
             // testing purpose
         }
