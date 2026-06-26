@@ -90,6 +90,9 @@ public class RegistrationFeature implements Feature {
         //Loaded
         registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.LoadedPipeline");
         registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage");
+        registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.stage.DefaultLoadedStage");
+        registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage");
+        registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage");
         registerClassForReflection("io.flamingock.internal.core.change.loaded.AbstractLoadedChange");
         registerClassForReflection("io.flamingock.internal.core.change.loaded.AbstractReflectionLoadedChange");
         registerClassForReflection("io.flamingock.internal.core.change.loaded.CodeLoadedChange");
