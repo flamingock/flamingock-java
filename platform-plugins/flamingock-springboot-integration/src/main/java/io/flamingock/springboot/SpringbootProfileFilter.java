@@ -22,6 +22,7 @@ import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
 import org.springframework.context.annotation.Profile;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -71,17 +72,48 @@ public class SpringbootProfileFilter implements ChangeFilter {
 
 
     private boolean filterCodeChange(CodeLoadedChange change) {
-        // Profiles are declared at change (class) level only. The change is the atomic unit, so
-        // its profile gate lives on the @Change-annotated class. Method-level @Profile (on @Apply
-        // or @Rollback) is intentionally NOT honored: a per-method gate is incoherent for a
-        // change-level inclusion decision and would risk applying a change while silently skipping
-        // its rollback under a different active profile, breaking recovery semantics.
+        // Legacy Mongock @ChangeSet changes: each @ChangeSet method is its own atomic change,
+        // so method-level @Profile is the natural gate. We detect the annotation by FQCN.
+        //
+        // This is intentionally narrow: only methods annotated with the legacy Mongock
+        // @ChangeSet annotation (com.github.cloudyrock.mongock.ChangeSet) qualify.
+        // Mongock @ChangeUnit / @Execution / @BeforeExecution flows are excluded.
+        // Native Flamingock @Apply method-level @Profile is also excluded.
+        if (hasChangeSetAnnotation(change.getApplyMethod())) {
+            Method applyMethod = change.getApplyMethod();
+            if (applyMethod != null && applyMethod.isAnnotationPresent(Profile.class)) {
+                return filterProfiles(Arrays.asList(applyMethod.getAnnotation(Profile.class).value()));
+            }
+        }
+
+        // Native Flamingock changes (and legacy fallback): profiles are declared at the change
+        // (class) level only. The change is the atomic unit, so its profile gate lives on the
+        // @Change-annotated class. Method-level @Profile (on @Apply or @Rollback) is
+        // intentionally NOT honored: a per-method gate is incoherent for a change-level inclusion
+        // decision and would risk applying a change while silently skipping its rollback under a
+        // different active profile, breaking recovery semantics.
         Class<?> sourceClass = change.getImplementationClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }
         List<String> changeProfile = Arrays.asList(sourceClass.getAnnotation(Profile.class).value());
         return filterProfiles(changeProfile);
+    }
+
+    /**
+     * Checks whether the given method carries the legacy Mongock {@code @ChangeSet} annotation,
+     * using its fully qualified name to avoid a compile-time dependency on the legacy module.
+     */
+    private static boolean hasChangeSetAnnotation(Method method) {
+        if (method == null) {
+            return false;
+        }
+        for (java.lang.annotation.Annotation ann : method.getDeclaredAnnotations()) {
+            if ("com.github.cloudyrock.mongock.ChangeSet".equals(ann.annotationType().getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean filterProfiles(List<String> changeProfile) {
