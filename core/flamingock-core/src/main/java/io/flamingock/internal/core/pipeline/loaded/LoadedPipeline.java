@@ -108,6 +108,16 @@ public class LoadedPipeline implements PipelineDescriptor {
         return loadedStages;
     }
 
+    /**
+     * Returns the change filters contributed by plugins and applied at runtime construction
+     * time. A change is included in the runtime pipeline only if every filter returns
+     * {@code true} for it; any filter returning {@code false} excludes the change. May be
+     * empty when no plugin contributed a filter.
+     */
+    public Collection<ChangeFilter> getChangeFilters() {
+        return changeFilters == null ? Collections.emptyList() : changeFilters;
+    }
+
     @Override
     public Optional<AbstractLoadedChange> getLoadedChange(String changeId) {
         return loadedStages.stream()
