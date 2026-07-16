@@ -25,7 +25,7 @@ import com.mongodb.client.model.Filters;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -133,9 +133,9 @@ public class MongoDBSyncAuditMarker implements TargetSystemAuditMarker {
 //                    .withWriteConcern(writeConcern)
                     ;
 
-            CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+            CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                     new MongoDBSyncCollectionHelper(collection),
-                    () -> new MongoDBSyncDocumentHelper(new Document()),
+                    () -> new MongoDBDocumentHelper(new Document()),
                     new String[]{CHANGE_ID}
             );
             if (autoCreate) {

@@ -27,7 +27,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
@@ -50,7 +50,7 @@ import static io.flamingock.internal.core.external.store.lock.community.Communit
 
 public class MongoDBSyncLockService implements CommunityLockService {
 
-    private final MongoDBLockMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
+    private final MongoDBLockMapper<MongoDBDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
 
     private final MongoCollection<Document> collection;
@@ -82,9 +82,9 @@ public class MongoDBSyncLockService implements CommunityLockService {
     }
 
     public void initialize(boolean autoCreate) {
-        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+        CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(collection),
-                () -> new MongoDBSyncDocumentHelper(new Document()),
+                () -> new MongoDBDocumentHelper(new Document()),
                 new String[]{KEY_FIELD}
         );
         if (autoCreate) {
@@ -113,7 +113,7 @@ public class MongoDBSyncLockService implements CommunityLockService {
     public LockAcquisition getLockInfo(LockKey lockKey) {
         Document result = collection.find(new Document().append(KEY_FIELD, lockKey.toString())).first();
         if (result != null) {
-            return mapper.fromDocument(new MongoDBSyncDocumentHelper(result));
+            return mapper.fromDocument(new MongoDBDocumentHelper(result));
         }
         return null;
     }
