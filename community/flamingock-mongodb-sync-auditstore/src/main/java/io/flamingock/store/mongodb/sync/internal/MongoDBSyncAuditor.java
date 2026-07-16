@@ -28,7 +28,7 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -49,7 +49,7 @@ public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncAuditor");
 
     private final MongoCollection<Document> collection;
-    private final MongoDBAuditMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
+    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
     MongoDBSyncAuditor(MongoDatabase database,
                      String collectionName,
@@ -63,9 +63,9 @@ public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
     }
 
     protected void initialize(boolean autoCreate) {
-        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+        CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(collection),
-                () -> new MongoDBSyncDocumentHelper(new Document()),
+                () -> new MongoDBDocumentHelper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
         if (autoCreate) {
@@ -99,7 +99,7 @@ public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
         return collection.find()
                 .into(new LinkedList<>())
                 .stream()
-                .map(MongoDBSyncDocumentHelper::new)
+                .map(MongoDBDocumentHelper::new)
                 .map(mapper::fromDocument)
                 .collect(Collectors.toList());
     }

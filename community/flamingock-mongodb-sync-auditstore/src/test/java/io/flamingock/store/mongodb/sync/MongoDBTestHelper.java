@@ -17,7 +17,7 @@ package io.flamingock.store.mongodb.sync;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;
@@ -33,7 +33,7 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;
-    private final MongoDBAuditMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
+    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
@@ -57,7 +57,7 @@ public class MongoDBTestHelper {
         return mongoDatabase.getCollection(auditLogCollection).find()
                 .into(new LinkedList<>())
                 .stream()
-                .map(MongoDBSyncDocumentHelper::new)
+                .map(MongoDBDocumentHelper::new)
                 .map(mapper::fromDocument)
                 .sorted()
                 .collect(Collectors.toList());

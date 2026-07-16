@@ -1,0 +1,295 @@
+/*
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.targetsystem.mongodb.reactive;
+
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoDatabase;
+import io.flamingock.api.external.TargetSystem;
+import io.flamingock.targetsystem.mongodb.reactive.changes.happypath._001__HappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.reactive.changes.happypath._002__HappyInsertClientsChange;
+import io.flamingock.targetsystem.mongodb.reactive.changes.unhappypath._001__UnhappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.reactive.changes.unhappypath._002__UnhappyInsertClientsChange;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
+import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
+import io.flamingock.internal.util.Trio;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
+import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.builder.runner.Runner;
+import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+
+import java.util.Collections;
+
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.APPLIED;
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.FAILED;
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.ROLLED_BACK;
+
+@Testcontainers
+public class MongoDBReactiveTargetSystemE2ETest {
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoDBReactiveTargetSystemE2ETest.class);
+
+    private static final String DB_NAME = "test";
+    private static final String CLIENTS_COLLECTION = "clientCollection";
+
+    private static MongoClient mongoClient;
+    private static MongoDatabase testDatabase;
+    private static MongoDBTestHelper mongoDBTestHelper;
+
+    private final String apiToken = "FAKE_API_TOKEN";
+    private final long organisationId = 1L;
+    private final String organisationName = "MyOrganisation";
+    private final long projectId = 2L;
+    private final String projectName = "MyOrganisation";
+    private final String serviceName = "clients-service";
+    private final String environmentName = "development";
+    private final long serviceId = 3L;
+    private final long environmentId = 4L;
+    private final long credentialId = 5L;
+    private final int runnerServerPort = 8888;
+    private final String jwt = "fake_jwt";
+
+    private MockRunnerServer mockRunnerServer;
+    private CloudChangeRunnerBuilder flamingockBuilder;
+
+    @Container
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
+
+    @BeforeAll
+    static void beforeAll() {
+        mongoClient = MongoClients.create(MongoClientSettings
+                .builder()
+                .applyConnectionString(new ConnectionString(mongoDBContainer.getConnectionString()))
+                .build());
+        testDatabase = mongoClient.getDatabase(DB_NAME);
+        mongoDBTestHelper = new MongoDBTestHelper(testDatabase);
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        mockRunnerServer = new MockRunnerServer()
+                .setServerPort(runnerServerPort)
+                .setOrganisationId(organisationId)
+                .setOrganisationName(organisationName)
+                .setProjectId(projectId)
+                .setProjectName(projectName)
+                .setServiceId(serviceId)
+                .setServiceName(serviceName)
+                .setEnvironmentId(environmentId)
+                .setEnvironmentName(environmentName)
+                .setCredentialId(credentialId)
+                .setApiToken(apiToken)
+                .setJwt(jwt);
+
+        flamingockBuilder = FlamingockFactory.getCloudBuilder()
+                .setApiToken(apiToken)
+                .setHost("http://localhost:" + runnerServerPort)
+                .setService(serviceName)
+                .setEnvironment(environmentName);
+    }
+
+    @AfterEach
+    void afterEach() throws Exception {
+        //tear down
+        mockRunnerServer.stop();
+
+        ReactiveMongoTestHelper.complete(testDatabase.getCollection(CLIENTS_COLLECTION).drop());
+        ReactiveMongoTestHelper.complete(testDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME).drop());
+    }
+
+    @Test
+    @DisplayName("Should follow the targetSystem lifecycle")
+    void happyPath() {
+        long executionId = 1L;
+        String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addChange("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+        );
+
+        //GIVEN
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mockRunnerServer
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
+                    ).start();
+
+
+            //WHEN
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+            ));
+
+
+            TargetSystem mongoDBTargetSystem = new MongoDBReactiveTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
+            flamingockBuilder
+                    .addTargetSystem(mongoDBTargetSystem)
+                    .build()
+                    .execute();
+
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
+            // check clients changes
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 1);
+            // check ongoing status
+            mongoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
+        }
+    }
+
+    @Test
+    @DisplayName("Should rollback the ongoing deletion when a change fails")
+    void failedChanges() {
+        long executionId = 1L;
+        String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addChange("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "apply", true)
+        );
+
+        //GIVEN
+        try (
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
+        ) {
+            MongoDBReactiveTargetSystem mongoTargetSystem = new MongoDBReactiveTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
+            mockRunnerServer
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", FAILED),
+                            new AuditRequestExpectation(executionId, "insert-clients", ROLLED_BACK)
+                    ).start();
+
+            MongoDBReactiveTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
+
+            //WHEN
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+            ));
+
+            TargetSystem mongoDBTargetSystem = new MongoDBReactiveTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
+            Runner runner = flamingockBuilder
+                    .addTargetSystem(mongoDBTargetSystem)
+                    .build();
+
+            //THEN
+            OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
+
+            mockRunnerServer.verifyAllCalls();
+
+            // check clients changes
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 0);
+
+            // check ongoing status
+            mongoDBTestHelper.checkEmptyTargetSystemAudiMarker();
+        }
+    }
+
+
+    //TODO verify the server is called with the right parameters. among other, it sends the ongoing status
+    @Test
+    @Disabled("adapt when adding cloud support")
+    @DisplayName("Should send ongoing change in execution when is present in local database")
+    void shouldSendOngoingChangeInExecutionPlan() {
+        long executionId = 1L;
+        String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addChange("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+        );
+
+        //GIVEN
+        try (
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
+
+        ) {
+            MongoDBReactiveTargetSystem mongoTargetSystem = new MongoDBReactiveTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
+            mongoDBTestHelper.insertOngoingExecution("insert-clients");
+            mockRunnerServer
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseChange("insert-clients", TargetSystemAuditMarkType.APPLIED)),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
+                    ).start();
+
+
+            //WHEN
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+            ));
+            TargetSystem mongoDBTargetSystem = new MongoDBReactiveTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
+            flamingockBuilder
+                    .addTargetSystem(mongoDBTargetSystem)
+                    .build()
+                    .execute();
+
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
+            // check clients changes
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 1);
+            // check ongoing status
+            mongoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
+        }
+    }
+}

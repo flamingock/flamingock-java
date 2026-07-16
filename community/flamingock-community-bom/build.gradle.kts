@@ -9,6 +9,7 @@ dependencies {
     constraints {
         // Add constraints for BOM managed modules
         api("io.flamingock:flamingock-community:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-sync-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-springdata-auditstore:${version}")
         api("io.flamingock:flamingock-couchbase-auditstore:$version")
@@ -35,6 +36,9 @@ dependencies {
         //mongodb
         api("io.flamingock:flamingock-mongodb-sync-template:${mongodbTemplateVersion}")
         api("io.flamingock:flamingock-mongodb-externalsystem-api:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-externalsystem-api:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-targetsystem:${version}")
+        api("io.flamingock:flamingock-mongodb-springdata-reactive-targetsystem:${version}")
         api("io.flamingock:flamingock-mongodb-sync-targetsystem:${version}")
         api("io.flamingock:flamingock-mongodb-springdata-targetsystem:${version}")
 
