@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.mongodb.client.model.IndexOptions;
 import org.bson.Document;
 
 
-public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBSyncDocumentHelper> {
+public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBDocumentHelper> {
 
     private final MongoCollection<Document> collection;
 
@@ -36,11 +36,11 @@ public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBSync
 
     @Override
     public Iterable<DocumentHelper> listIndexes() {
-        return collection.listIndexes().map(MongoDBSyncDocumentHelper::new);
+        return collection.listIndexes().map(MongoDBDocumentHelper::new);
     }
 
     @Override
-    public String createUniqueIndex(MongoDBSyncDocumentHelper uniqueIndexDocument) {
+    public String createUniqueIndex(MongoDBDocumentHelper uniqueIndexDocument) {
         return collection.createIndex(uniqueIndexDocument.getDocument(), new IndexOptions().unique(true));
     }
 
@@ -50,7 +50,7 @@ public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBSync
     }
 
     @Override
-    public void deleteMany(MongoDBSyncDocumentHelper documentWrapper) {
+    public void deleteMany(MongoDBDocumentHelper documentWrapper) {
         collection.deleteMany(documentWrapper.getDocument());
     }
 

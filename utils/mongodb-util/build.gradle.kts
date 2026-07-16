@@ -1,7 +1,7 @@
 dependencies {
     implementation(project(":core:flamingock-core"))
 
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnly("org.mongodb:bson:4.0.0")
 
     testImplementation(project(":utils:test-util"))
 }

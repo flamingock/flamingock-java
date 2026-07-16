@@ -22,9 +22,9 @@ import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.targetsystem.mongodb.springdata.util.MongoDBSyncCollectionHelper;
-import io.flamingock.targetsystem.mongodb.springdata.util.MongoDBSyncDocumentHelper;
 import org.bson.Document;
 
 import java.util.HashSet;
@@ -37,7 +37,7 @@ public class MongoDBTestHelper {
 
     public final MongoDatabase mongoDatabase;
 
-    private final MongoDBAuditMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
+    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
@@ -47,9 +47,9 @@ public class MongoDBTestHelper {
 
         MongoCollection<Document> onGoingChangesCollection = mongoDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
 
-        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+        CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(onGoingChangesCollection),
-                () -> new MongoDBSyncDocumentHelper(new Document()),
+                () -> new MongoDBDocumentHelper(new Document()),
                 new String[]{"changeId"}
         );
         initializer.initialize();

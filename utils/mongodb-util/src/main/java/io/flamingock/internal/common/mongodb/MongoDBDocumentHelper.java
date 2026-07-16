@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mongodb.springdata.util;
+package io.flamingock.internal.common.mongodb;
 
-import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
-public class MongoDBSyncDocumentHelper implements DocumentHelper {
+public class MongoDBDocumentHelper implements DocumentHelper {
 
     private final Document document;
 
-    public MongoDBSyncDocumentHelper(Document document) {
+    public MongoDBDocumentHelper(Document document) {
         this.document = document;
     }
 
@@ -67,6 +66,6 @@ public class MongoDBSyncDocumentHelper implements DocumentHelper {
 
     @Override
     public DocumentHelper getWithWrapper(String key) {
-        return new MongoDBSyncDocumentHelper((Document) get(key));
+        return new MongoDBDocumentHelper((Document) get(key));
     }
 }

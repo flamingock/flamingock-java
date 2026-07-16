@@ -23,6 +23,7 @@ dependencies {
 
         // Flamingock Community
         api("io.flamingock:flamingock-community:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-sync-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-springdata-auditstore:${version}")
         api("io.flamingock:flamingock-couchbase-auditstore:$version")
@@ -46,6 +47,9 @@ dependencies {
 
         // Mongodb
         api("io.flamingock:flamingock-mongodb-externalsystem-api:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-externalsystem-api:${version}")
+        api("io.flamingock:flamingock-mongodb-reactive-targetsystem:${version}")
+        api("io.flamingock:flamingock-mongodb-springdata-reactive-targetsystem:${version}")
         api("io.flamingock:flamingock-mongodb-sync-targetsystem:${version}")
         api("io.flamingock:flamingock-mongodb-springdata-targetsystem:${version}")
         api("io.flamingock:flamingock-mongodb-sync-template:${mongodbTemplateVersion}")
