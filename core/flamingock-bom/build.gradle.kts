@@ -12,6 +12,7 @@ dependencies {
     constraints {
         // Flamingock Core
         api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
+        api("io.flamingock:flamingock-reactive-util:${version}")
         api("io.flamingock:flamingock-core-api:${coreApiVersion}")
         api("io.flamingock:flamingock-template-api:${templateApiVersion}")
         api("io.flamingock:flamingock-test-support:${version}")

@@ -31,6 +31,7 @@ import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
 
 import java.util.HashSet;

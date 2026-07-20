@@ -22,6 +22,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.transaction.TransactionManager;
+import io.flamingock.reactive.util.PublisherSync;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

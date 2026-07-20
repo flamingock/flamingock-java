@@ -22,6 +22,7 @@ import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
 
 import java.util.Date;
