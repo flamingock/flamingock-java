@@ -37,6 +37,7 @@ import io.flamingock.internal.core.external.store.lock.community.CommunityLockEn
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 

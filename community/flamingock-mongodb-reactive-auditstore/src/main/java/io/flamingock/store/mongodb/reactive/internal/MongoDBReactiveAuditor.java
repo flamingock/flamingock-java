@@ -32,6 +32,7 @@ import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;

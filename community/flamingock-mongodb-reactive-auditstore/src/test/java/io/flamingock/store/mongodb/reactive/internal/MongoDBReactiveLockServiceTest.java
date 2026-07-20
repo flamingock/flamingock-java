@@ -26,6 +26,7 @@ import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.external.store.lock.LockServiceException;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.reactive.util.PublisherSync;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -24,6 +24,7 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import io.flamingock.reactive.util.PublisherSync;
 import org.slf4j.Logger;
 
 import java.time.Duration;

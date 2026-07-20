@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mongodb.reactive;
+package io.flamingock.reactive.util;
 
-import io.flamingock.internal.common.core.error.FlamingockException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -25,18 +24,28 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-final class PublisherSync {
+public final class PublisherSync {
 
     private PublisherSync() {
     }
 
-    static <T> T first(Publisher<T> publisher) {
+    public static <T> T first(Publisher<T> publisher) {
         List<T> values = collect(publisher);
         return values.isEmpty() ? null : values.get(0);
     }
 
-    static <T> List<T> collect(Publisher<T> publisher) {
+    public static <T> List<T> collect(Publisher<T> publisher) {
         List<T> values = new ArrayList<>();
+        await(publisher, values::add);
+        return values;
+    }
+
+    public static void complete(Publisher<?> publisher) {
+        await(publisher, value -> {
+        });
+    }
+
+    private static <T> void await(Publisher<T> publisher, ItemConsumer<T> consumer) {
         AtomicReference<Throwable> error = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
         publisher.subscribe(new Subscriber<T>() {
@@ -47,7 +56,7 @@ final class PublisherSync {
 
             @Override
             public void onNext(T value) {
-                values.add(value);
+                consumer.accept(value);
             }
 
             @Override
@@ -67,13 +76,8 @@ final class PublisherSync {
             throw (RuntimeException) throwable;
         }
         if (throwable != null) {
-            throw new FlamingockException(throwable);
+            throw new PublisherSyncException(throwable);
         }
-        return values;
-    }
-
-    static void complete(Publisher<?> publisher) {
-        collect(publisher);
     }
 
     private static void await(CountDownLatch latch) {
@@ -81,7 +85,11 @@ final class PublisherSync {
             latch.await();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new FlamingockException(e);
+            throw new PublisherSyncException(e);
         }
+    }
+
+    private interface ItemConsumer<T> {
+        void accept(T value);
     }
 }

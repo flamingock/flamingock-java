@@ -1,6 +1,7 @@
 dependencies {
     implementation(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
+    implementation(project(":utils:flamingock-reactive-util"))
     implementation(project(":utils:test-util"))
 
     compileOnly("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
