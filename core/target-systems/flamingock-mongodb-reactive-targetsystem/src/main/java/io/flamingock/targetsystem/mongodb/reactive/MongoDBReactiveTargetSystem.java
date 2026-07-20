@@ -31,6 +31,7 @@ import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.reactive.util.PublisherSync;
 
 import java.util.Optional;
 

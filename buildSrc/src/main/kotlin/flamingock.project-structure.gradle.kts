@@ -61,6 +61,7 @@ val utilProjects = setOf(
     "mongodb-util",
     "mongodb-sync-util",
     "mongodb-reactive-util",
+    "flamingock-reactive-util",
     "dynamodb-util",
     "couchbase-util"
 )

@@ -141,6 +141,9 @@ include("utils:mongodb-reactive-util")
 project(":utils:mongodb-reactive-util").name = "mongodb-reactive-util"
 project(":utils:mongodb-reactive-util").projectDir = file("utils/mongodb-reactive-util")
 
+include("utils:flamingock-reactive-util")
+project(":utils:flamingock-reactive-util").projectDir = file("utils/reactive-util")
+
 include("utils:mongodb-test-kit")
 project(":utils:mongodb-test-kit").name = "mongodb-test-kit"
 project(":utils:mongodb-test-kit").projectDir = file("utils/mongodb-test-kit")

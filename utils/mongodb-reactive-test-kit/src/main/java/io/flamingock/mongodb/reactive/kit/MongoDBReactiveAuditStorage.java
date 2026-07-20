@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
 
 import java.util.List;

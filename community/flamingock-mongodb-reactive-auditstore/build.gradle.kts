@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.utils.extendsFrom
 dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":utils:mongodb-reactive-util"))
+    implementation(project(":utils:flamingock-reactive-util"))
     implementation(project(":core:flamingock-core"))
     
     api(project(":core:target-systems:flamingock-mongodb-reactive-externalsystem-api"))

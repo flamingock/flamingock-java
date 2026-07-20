@@ -8,6 +8,7 @@ plugins {
 dependencies {
     constraints {
         // Add constraints for BOM managed modules
+        api("io.flamingock:flamingock-reactive-util:${version}")
         api("io.flamingock:flamingock-community:${version}")
         api("io.flamingock:flamingock-mongodb-reactive-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-sync-auditstore:$version")
