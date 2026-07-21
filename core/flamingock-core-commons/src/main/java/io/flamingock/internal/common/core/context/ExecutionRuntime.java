@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.change.executable;
+package io.flamingock.internal.common.core.context;
 
-import io.flamingock.internal.common.core.context.ExecutionContext;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
-public interface Rollback {
+public interface ExecutionRuntime extends ExecutionContext {
 
-    ExecutableChange getChange();
+    Object getInstance(Constructor<?> constructor);
 
-    void rollback(ExecutionContext runtimeHelper);
+    Object executeMethodWithInjectedDependencies(Object instance, Method method);
 
-    String getRollbackMethodName();
+    Object executeMethodWithParameters(Object instance, Method method, Object... parameters);
 }

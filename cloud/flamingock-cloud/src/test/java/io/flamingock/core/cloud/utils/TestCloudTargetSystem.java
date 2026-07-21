@@ -16,11 +16,11 @@
 package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
@@ -61,9 +61,11 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
 
 
     public static class TestCloudTxWrapper implements TransactionWrapper {
+
         @Override
-        public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> changeApplier) {
-            return changeApplier.apply(executionRuntime);
+        public <CONTEXT extends ExecutionContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+            return operation.apply(executionContext);
+
         }
     }
 

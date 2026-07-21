@@ -15,10 +15,11 @@
  */
 package io.flamingock.internal.core.change.navigation.step.afteraudit;
 
+import io.flamingock.internal.common.core.context.ExecutionContext;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.change.navigation.step.AbstractChangeStep;
 import io.flamingock.internal.core.change.navigation.step.rolledback.ManualRolledBackStep;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.StopWatch;
 
 public final class RollableStep extends AbstractChangeStep {

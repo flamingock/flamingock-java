@@ -19,6 +19,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.context.ExecutionContext;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
@@ -447,9 +449,9 @@ class CommunityExecutionPlannerTest {
         @Override public boolean isTransactional() { return false; }
         @Override public io.flamingock.internal.common.core.change.ChangeDescriptor getLoadedChange() { return null; }
         @Override public String getStageName() { return "test"; }
-        @Override public void apply(io.flamingock.internal.core.runtime.ExecutionRuntime rt) {}
+        @Override public void apply(ExecutionRuntime rt) {}
         @Override public String getApplyMethodName() { return "apply"; }
-        @Override public void rollback(io.flamingock.internal.core.runtime.ExecutionRuntime rt) {}
+        @Override public void rollback(ExecutionRuntime rt) {}
         @Override public String getRollbackMethodName() { return null; }
         @Override public boolean hasRollback() { return false; }
         @Override public java.util.Optional<String> getOrder() { return java.util.Optional.of("001"); }
