@@ -19,10 +19,13 @@ package io.flamingock.internal.common.mongodb;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
@@ -32,18 +35,30 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
 
     private final static int INDEX_ENSURE_MAX_TRIES = 3;
 
-    private final String[] uniqueFields;
+    private final List<IndexDefinition> indexDefinitions;
     private final Supplier<DOCUMENT_WRAPPER> documentWrapperSupplier;
     private boolean ensuredCollectionIndex = false;
 
     private final CollectionHelper<DOCUMENT_WRAPPER> collectionWrapper;
 
+    /**
+     * Backward-compatible constructor: a single ascending unique index on {@code uniqueFields}.
+     * Retained so existing callers (audit, lock, target-system markers) keep behaving identically.
+     */
     public CollectionInitializator(CollectionHelper<DOCUMENT_WRAPPER> collectionWrapper,
                                    Supplier<DOCUMENT_WRAPPER> documentWrapperSupplier,
                                    String[] uniqueFields) {
+        this(collectionWrapper,
+                documentWrapperSupplier,
+                Collections.singletonList(IndexDefinition.uniqueOn(uniqueFields)));
+    }
+
+    public CollectionInitializator(CollectionHelper<DOCUMENT_WRAPPER> collectionWrapper,
+                                   Supplier<DOCUMENT_WRAPPER> documentWrapperSupplier,
+                                   List<IndexDefinition> indexDefinitions) {
         this.collectionWrapper = collectionWrapper;
         this.documentWrapperSupplier = documentWrapperSupplier;
-        this.uniqueFields = uniqueFields;
+        this.indexDefinitions = new ArrayList<>(indexDefinitions);
     }
 
 
@@ -65,22 +80,20 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
             throw new RuntimeException("Max tries " + INDEX_ENSURE_MAX_TRIES + " index  creation");
         }
         if (isIndexWrong()) {
-            cleanResidualUniqueKeys();
-            if (indexCreatedNotRequired()) {
-                createRequiredUniqueIndex();
-            }
+            cleanResidualKeys();
+            createMissingIndexes();
             ensureIndex(tryCounter - 1);
         }
     }
 
     protected boolean isIndexWrong() {
-        return !getResidualKeys().isEmpty() || indexCreatedNotRequired();
+        return !getResidualKeys().isEmpty() || !getMissingSpecs().isEmpty();
     }
 
-    protected void cleanResidualUniqueKeys() {
-        logger.debug("Removing residual uniqueKeys for collection [{}]", getCollectionName());
+    protected void cleanResidualKeys() {
+        logger.debug("Removing residual indexes for collection [{}]", getCollectionName());
         getResidualKeys().stream()
-                .peek(index -> logger.debug("Removed residual uniqueKey [{}] for collection [{}]", index.toString(), getCollectionName()))
+                .peek(index -> logger.debug("Removed residual index [{}] for collection [{}]", index.toString(), getCollectionName()))
                 .forEach(this::dropIndex);
     }
 
@@ -95,30 +108,83 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
     }
 
     protected boolean doesNeedToBeRemoved(DocumentHelper index) {
-        return !isIdIndex(index) && isUniqueIndex(index) && !isRightIndex(index);
+        if (isIdIndex(index)) {
+            return false;
+        }
+        boolean matchesAnySpec = indexDefinitions.stream().anyMatch(spec -> matchesSpec(index, spec));
+        // Rule (a) — legacy behavior, unchanged for the single-unique callers: a unique, non-_id index
+        // that matches none of the desired specs is residual and must be dropped/recreated.
+        if (isUniqueIndex(index) && !matchesAnySpec) {
+            return true;
+        }
+        // Rule (b) — only fires for specs carrying an explicit name (i.e. never for the audit/lock specs,
+        // whose name is null): an existing index reusing a requested name but not matching that spec is a
+        // stale/mis-defined index that must be dropped so the correct one can be recreated.
+        String indexName = index.get("name") != null ? index.get("name").toString() : null;
+        if (indexName != null) {
+            for (IndexDefinition spec : indexDefinitions) {
+                if (spec.getName() != null && spec.getName().equals(indexName) && !matchesSpec(index, spec)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected boolean isIdIndex(DocumentHelper index) {
         return index.getWithWrapper("key").get("_id") != null;
     }
 
-    protected boolean indexCreatedNotRequired() {
-        return StreamSupport.stream(
-                        collectionWrapper.listIndexes().spliterator(),
-                        false)
-                .noneMatch(this::isRightIndex);
+    protected List<IndexDefinition> getMissingSpecs() {
+        List<DocumentHelper> existing = StreamSupport.stream(listIndexes().spliterator(), false)
+                .collect(Collectors.toList());
+        return indexDefinitions.stream()
+                .filter(spec -> existing.stream().noneMatch(index -> matchesSpec(index, spec)))
+                .collect(Collectors.toList());
     }
 
-    protected void createRequiredUniqueIndex() {
-        collectionWrapper.createUniqueIndex(getIndexDocument(uniqueFields));
-        logger.debug("Index in collection [{}] was recreated", getCollectionName());
+    protected void createMissingIndexes() {
+        for (IndexDefinition spec : getMissingSpecs()) {
+            collectionWrapper.createIndex(
+                    buildKeyDocument(spec),
+                    spec.getName(),
+                    spec.isUnique(),
+                    buildPartialFilterDocument(spec));
+            logger.debug("Index {} in collection [{}] was created", spec.getName(), getCollectionName());
+        }
     }
 
-    protected boolean isRightIndex(DocumentHelper index) {
+    protected boolean matchesSpec(DocumentHelper index, IndexDefinition spec) {
         final DocumentHelper key = index.getWithWrapper("key");
-        boolean keyContainsAllFields = Stream.of(uniqueFields).allMatch(uniqueField -> key.get(uniqueField) != null);
-        boolean onlyTheseFields = key.size() == uniqueFields.length;
-        return keyContainsAllFields && onlyTheseFields && isUniqueIndex(index);
+        boolean keyContainsAllFields = spec.getKeys().keySet().stream().allMatch(field -> key.get(field) != null);
+        boolean onlyTheseFields = key.size() == spec.getKeys().size();
+        if (!keyContainsAllFields || !onlyTheseFields) {
+            return false;
+        }
+        if (isUniqueIndex(index) != spec.isUnique()) {
+            return false;
+        }
+        return partialFilterMatches(index, spec);
+    }
+
+    private boolean partialFilterMatches(DocumentHelper index, IndexDefinition spec) {
+        boolean indexHasPartial = index.containsKey("partialFilterExpression");
+        if (indexHasPartial != spec.hasPartialFilter()) {
+            return false;
+        }
+        if (!spec.hasPartialFilter()) {
+            return true;
+        }
+        DocumentHelper stored = index.getWithWrapper("partialFilterExpression");
+        if (stored.size() != spec.getPartialFilterExpression().size()) {
+            return false;
+        }
+        for (Map.Entry<String, Object> entry : spec.getPartialFilterExpression().entrySet()) {
+            if (!Objects.equals(stored.get(entry.getKey()), entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected boolean isUniqueIndex(DocumentHelper index) {
@@ -129,10 +195,19 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
         return collectionWrapper.getCollectionName();
     }
 
-    protected DOCUMENT_WRAPPER getIndexDocument(String[] uniqueFields) {
-        final DOCUMENT_WRAPPER indexDocument = documentWrapperSupplier.get();
-        Stream.of(uniqueFields).forEach(field -> indexDocument.append(field, 1));
-        return indexDocument;
+    protected DOCUMENT_WRAPPER buildKeyDocument(IndexDefinition spec) {
+        final DOCUMENT_WRAPPER keyDocument = documentWrapperSupplier.get();
+        spec.getKeys().forEach(keyDocument::append);
+        return keyDocument;
+    }
+
+    protected DOCUMENT_WRAPPER buildPartialFilterDocument(IndexDefinition spec) {
+        if (!spec.hasPartialFilter()) {
+            return null;
+        }
+        final DOCUMENT_WRAPPER partialDocument = documentWrapperSupplier.get();
+        spec.getPartialFilterExpression().forEach(partialDocument::append);
+        return partialDocument;
     }
 
     protected void dropIndex(DocumentHelper index) {

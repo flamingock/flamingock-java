@@ -41,6 +41,7 @@ import java.util.function.Function;
  *
  * @param <HOLDER> the concrete target system type for fluent API support
  */
+//TODO rename to AbstractTransactionalTargetSystem
 public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTargetSystem<HOLDER>>
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {

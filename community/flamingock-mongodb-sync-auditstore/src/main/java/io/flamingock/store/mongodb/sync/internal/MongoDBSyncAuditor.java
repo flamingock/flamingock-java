@@ -27,8 +27,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
 import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -40,9 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.*;
 
 public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
 

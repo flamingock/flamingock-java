@@ -16,8 +16,18 @@
 package io.flamingock.internal.core.external.store.audit.community;
 
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.event.EventStore;
 
 public interface CommunityAuditPersistence extends AuditPersistence, CommunityAuditReader {
 
 //    LocalLockService getLockService();
+
+    /**
+     * Returns the local event buffer for this store. Stores that do not yet support the event buffer
+     * inherit this throwing default, so they need no changes. Implementations that support it override
+     * this to return their {@link EventStore}.
+     */
+    default EventStore getEventStore() {
+        throw new UnsupportedOperationException("Event buffer not supported by this audit store");
+    }
 }

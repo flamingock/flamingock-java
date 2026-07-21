@@ -1,0 +1,116 @@
+> I have added the file docs/ADR-0001-separate-local-operational-state-from-centralized-audit.md. That explains the context and where are we moving to. I have also created the enum FlamingockEventType  and the class FlamingockEvent.
+
+
+
+
+
+
+
+As you can see in the ADR, this requries implement in all the audit stores, but we will start doing a POC only in MongoDB sync. We will build a POC that works end to end for a audit store, as said MongoDB sync.  The first phase of this conssits in:
+
+
+
+
+
+
+
+- Creating the collection flamingockEvents(following the pattern and practices we have followed for the other collections for the audit store), with the right indexes
+
+
+
+
+
+
+
+- craete a method in the audit store to retrieve the last event for a streamId.
+
+
+
+- create a method in the audit store to retrieve all the non-acknowledged events(with a limit passed as parameter)
+
+
+
+- create a method in the audit store to acknowledge all the events, which id´s are pased as parameter.
+
+
+
+I imagine adding this methods implies to add it in upstream interfaces. You can create them with empty implementation, throwing a NotImplemented exception and only implemented for MongoDB sync. Does it makes sense
+
+
+
+
+
+
+
+That´s it. It´s not functional, but it´s additive and shoudn´t break anything, but we build the first blocks for the wall.
+
+
+
+
+
+
+
+Notes:
+
+
+
+
+
+
+
+I believe the indexes shouuld be :
+
+
+
+// Secuencia única dentro de cada key.
+// También resuelve "último sequence de este key".
+db.collection.createIndex(
+  { streamId: 1, streamSequence: 1 },
+  {
+    unique: true,
+    name: "unique_key_sequence"
+  }
+)
+
+// Cola o conjunto de elementos pendientes,
+// ya ordenado por key y sequence.
+db.collection.createIndex(
+  { streamId: 1, streamSequence: 1 },
+  {
+    partialFilterExpression: {
+      acknowledged: false
+    },
+    name: "unacknowledged_by_key_sequence"
+  }
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Because the accesss pattern I see these two:
+
+
+
+
+
+
+
+- retrieving the last event for the a giving streamId
+
+
+
+
+
+
+
+- retrieve the non-acknowledges, ideally sorted by streamSequence

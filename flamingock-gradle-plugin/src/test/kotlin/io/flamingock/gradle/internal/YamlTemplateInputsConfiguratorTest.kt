@@ -15,10 +15,13 @@
  */
 package io.flamingock.gradle.internal
 
+import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.io.TempDir
@@ -36,9 +39,45 @@ class YamlTemplateInputsConfiguratorTest {
     @TempDir
     lateinit var projectDir: Path
 
+    companion object {
+        /**
+         * Shared Gradle user home for the ProjectBuilder fixtures, located under the module's
+         * build directory (supplied via a system property from build.gradle.kts) rather than
+         * inside each test's [TempDir]. Gradle's native services memory-map files (e.g.
+         * {@code .tmp/gradle*.bin}) under this home for the life of the test JVM; on Windows
+         * those mapped files stay locked and would break JUnit's recursive [TempDir] deletion
+         * if they lived inside it. Keeping the home outside the [TempDir] lets cleanup succeed
+         * on every platform.
+         */
+        private lateinit var gradleUserHome: File
+
+        @JvmStatic
+        @BeforeAll
+        fun setUpSharedGradleHome() {
+            val configured = System.getProperty("flamingock.test.gradleUserHome")
+                ?: File(System.getProperty("java.io.tmpdir"), "flamingock-test-gradle-home").absolutePath
+            gradleUserHome = File(configured).apply { mkdirs() }
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun tearDownSharedGradleHome() {
+            // Best-effort: on POSIX the mapped files unlink immediately; on Windows they stay
+            // locked until the JVM exits, so deletion may fail — that's fine, `clean` removes it.
+            runCatching { gradleUserHome.deleteRecursively() }
+        }
+    }
+
+    /** Builds a ProjectBuilder project whose Gradle user home lives outside the [TempDir]. */
+    private fun newProject(): Project =
+        ProjectBuilder.builder()
+            .withProjectDir(projectDir.toFile())
+            .withGradleUserHomeDir(gradleUserHome)
+            .build()
+
     @Test
     fun `attaches YAML inputs to compileJava when java plugin is applied`() {
-        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val project = newProject()
         project.plugins.apply("java")
 
         // Fixture: one YAML under src/main/java, one under src/main/resources.
@@ -57,7 +96,7 @@ class YamlTemplateInputsConfiguratorTest {
 
     @Test
     fun `attaches YAML inputs to compileTestJava for test source set`() {
-        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val project = newProject()
         project.plugins.apply("java")
 
         writeYamlFixture("src/test/java/com/example/changes/_0001__test.yaml")
@@ -75,7 +114,7 @@ class YamlTemplateInputsConfiguratorTest {
 
     @Test
     fun `compileJava and compileTestJava only track their own source set's YAML files`() {
-        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val project = newProject()
         project.plugins.apply("java")
 
         writeYamlFixture("src/main/resources/_main_only.yaml")
@@ -98,7 +137,7 @@ class YamlTemplateInputsConfiguratorTest {
 
     @Test
     fun `is a no-op when java plugin is not applied`() {
-        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val project = newProject()
         // No java plugin applied.
 
         assertDoesNotThrow {
@@ -108,7 +147,7 @@ class YamlTemplateInputsConfiguratorTest {
 
     @Test
     fun `is a no-op when there are no YAML fixtures`() {
-        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val project = newProject()
         project.plugins.apply("java")
 
         assertDoesNotThrow {
