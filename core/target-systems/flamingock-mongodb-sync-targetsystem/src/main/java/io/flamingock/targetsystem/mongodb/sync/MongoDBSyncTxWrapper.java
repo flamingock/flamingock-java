@@ -18,10 +18,10 @@ package io.flamingock.targetsystem.mongodb.sync;
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -43,69 +43,7 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
         return sessionManager;
     }
 
-    @Override
-    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
-        LocalDateTime transactionStart = LocalDateTime.now();
-        String sessionId = executionRuntime.getSessionId();
-        Dependency clienteSessionDependency;
 
-        try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
-            clienteSessionDependency = new Dependency(ClientSession.class, clientSession, false);
-            String connectionInfo = getConnectionInfo(clientSession);
-
-            logger.debug("Starting MongoDB transaction [connection={}]", connectionInfo);
-            clientSession.startTransaction(TransactionOptions.builder().build());
-            executionRuntime.addDependency(clienteSessionDependency);
-
-            try {
-                T result = operation.apply(executionRuntime);
-                Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
-
-                if (result instanceof FailedStep) {
-                    logger.info("Rolling back MongoDB transaction due to failed step [duration={}]", formatDuration(transactionDuration));
-                    clientSession.abortTransaction();
-                    logger.debug("MongoDB transaction rollback completed successfully [duration={}]", formatDuration(transactionDuration));
-                } else {
-                    logger.debug("Committing successful MongoDB transaction [duration={}]", formatDuration(transactionDuration));
-                    clientSession.commitTransaction();
-                    logger.debug("MongoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
-                }
-                return result;
-
-            } catch (Exception e) {
-                Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                logger.debug("MongoDB transaction failed, attempting rollback [duration={} error={}]",
-                           formatDuration(failureDuration), e.getMessage());
-
-                DatabaseTransactionException.RollbackStatus rollbackStatus;
-                try {
-                    clientSession.abortTransaction();
-                    rollbackStatus = DatabaseTransactionException.RollbackStatus.SUCCESS;
-                    logger.info("MongoDB transaction rollback completed successfully after failure [duration={}]",
-                              formatDuration(failureDuration));
-                } catch (Exception rollbackEx) {
-                    rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
-                    logger.debug("Transaction rollback failed [duration={} rollback_error={}]",
-                               formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
-                }
-
-                throw new DatabaseTransactionException(
-                    "MongoDB transaction failed during operation execution",
-                    DatabaseTransactionException.TransactionState.FAILED,
-                    null, // isolation level not applicable to MongoDB
-                    null, // timeout not available
-                    failureDuration,
-                    rollbackStatus,
-                    null, // specific operation not available at this level
-                    connectionInfo,
-                    e
-                );
-            }
-
-        } finally {
-            sessionManager.closeSession(sessionId);
-        }
-    }
 
     private String getConnectionInfo(ClientSession session) {
         try {
@@ -126,4 +64,67 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
         }
     }
 
+    @Override
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+        LocalDateTime transactionStart = LocalDateTime.now();
+        String sessionId = executionContext.getSessionId();
+        Dependency clienteSessionDependency;
+
+        try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
+            clienteSessionDependency = new Dependency(ClientSession.class, clientSession, false);
+            String connectionInfo = getConnectionInfo(clientSession);
+
+            logger.debug("Starting MongoDB transaction [connection={}]", connectionInfo);
+            clientSession.startTransaction(TransactionOptions.builder().build());
+            executionContext.addDependency(clienteSessionDependency);
+
+            try {
+                RESULT result = operation.apply(executionContext);
+                Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
+
+                if (result instanceof FailedStep) {
+                    logger.info("Rolling back MongoDB transaction due to failed step [duration={}]", formatDuration(transactionDuration));
+                    clientSession.abortTransaction();
+                    logger.debug("MongoDB transaction rollback completed successfully [duration={}]", formatDuration(transactionDuration));
+                } else {
+                    logger.debug("Committing successful MongoDB transaction [duration={}]", formatDuration(transactionDuration));
+                    clientSession.commitTransaction();
+                    logger.debug("MongoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
+                }
+                return result;
+
+            } catch (Exception e) {
+                Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
+                logger.debug("MongoDB transaction failed, attempting rollback [duration={} error={}]",
+                        formatDuration(failureDuration), e.getMessage());
+
+                DatabaseTransactionException.RollbackStatus rollbackStatus;
+                try {
+                    clientSession.abortTransaction();
+                    rollbackStatus = DatabaseTransactionException.RollbackStatus.SUCCESS;
+                    logger.info("MongoDB transaction rollback completed successfully after failure [duration={}]",
+                            formatDuration(failureDuration));
+                } catch (Exception rollbackEx) {
+                    rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
+                    logger.debug("Transaction rollback failed [duration={} rollback_error={}]",
+                            formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
+                }
+
+                throw new DatabaseTransactionException(
+                        "MongoDB transaction failed during operation execution",
+                        DatabaseTransactionException.TransactionState.FAILED,
+                        null, // isolation level not applicable to MongoDB
+                        null, // timeout not available
+                        failureDuration,
+                        rollbackStatus,
+                        null, // specific operation not available at this level
+                        connectionInfo,
+                        e
+                );
+            }
+
+        } finally {
+            sessionManager.closeSession(sessionId);
+        }
+    }
 }

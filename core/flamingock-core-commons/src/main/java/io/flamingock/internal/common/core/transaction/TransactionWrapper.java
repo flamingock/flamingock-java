@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.transaction;
+package io.flamingock.internal.common.core.transaction;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.RuntimeContext;
 
 import java.util.function.Function;
 
@@ -49,12 +49,12 @@ public interface TransactionWrapper {
      *   <li>Clean up resources</li>
      * </ol>
      *
-     * @param <T>                        the return type of the operation
+     * @param <RESULT>                        the return type of the operation
      * @param injectableContextProvider  the execution runtime for dependency injection
      * @param operation                  the function to execute within the transaction
      * @return the result of the operation
      * @throws RuntimeException if the transaction fails
      */
-    <T> T wrapInTransaction(ExecutionRuntime injectableContextProvider, Function<ExecutionRuntime, T> operation);
+    <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT injectableContextProvider, Function<CONTEXT, RESULT> operation);
 
 }

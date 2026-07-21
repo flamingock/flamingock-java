@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runtime;
+package io.flamingock.internal.common.core.context;
 
-import io.flamingock.internal.common.core.context.RuntimeContext;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+public interface RuntimeContext extends ContextProvider, DependencyInjectable, LayeredDependencyContext {
 
-public interface ExecutionRuntime extends RuntimeContext {
+    String getSessionId();
 
-    Object getInstance(Constructor<?> constructor);
-
-    Object executeMethodWithInjectedDependencies(Object instance, Method method);
-
-    Object executeMethodWithParameters(Object instance, Method method, Object... parameters);
 }

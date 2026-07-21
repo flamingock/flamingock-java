@@ -17,9 +17,10 @@ package io.flamingock.core.runtime;
 
 
 import io.flamingock.api.annotations.Nullable;
-import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.runtime.MissingInjectedParameterException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.runtime.DefaultExecutionRuntime;
+import io.flamingock.internal.core.runtime.MissingInjectedParameterException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ public class ExecutionRuntimeTest {
     @DisplayName("should throw exception when executing method if no dependency and not annotated with @Nullable")
     void shouldThrowExceptionIfNoNullableAnnotation() throws NoSuchMethodException {
 
-        ExecutionRuntime executionRuntime = ExecutionRuntime.builder()
+        ExecutionRuntime executionRuntime = DefaultExecutionRuntime.builder()
                 .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();
@@ -48,7 +49,7 @@ public class ExecutionRuntimeTest {
     @DisplayName("should not throw exception when executing method if no dependency and parameter is annotated with @Nullable")
     void shouldNotThrowExceptionIfNullableAnnotation() throws NoSuchMethodException {
 
-        ExecutionRuntime executionRuntime = ExecutionRuntime.builder()
+        ExecutionRuntime executionRuntime = DefaultExecutionRuntime.builder()
                 .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();

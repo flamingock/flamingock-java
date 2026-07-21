@@ -15,8 +15,8 @@
  */
 package io.flamingock.core.utils;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import java.util.function.Function;
 
@@ -24,15 +24,15 @@ public class EmptyTransactionWrapper implements TransactionWrapper {
 
     private boolean called = false;
 
-    @Override
-    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
-        called = true;
-        return operation.apply(executionRuntime);
-    }
 
     public boolean isCalled() {
         return called;
     }
 
 
+    @Override
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+        called = true;
+        return operation.apply(executionContext);
+    }
 }

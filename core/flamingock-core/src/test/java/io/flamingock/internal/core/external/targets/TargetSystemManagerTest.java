@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.external.targets;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -70,14 +70,14 @@ class TargetSystemManagerTest {
     private static class StubNonTransactionalTargetSystem extends AbstractTargetSystem<StubNonTransactionalTargetSystem> {
         StubNonTransactionalTargetSystem(String id) { super(id); }
         @Override protected StubNonTransactionalTargetSystem getSelf() { return this; }
-        @Override protected void enhanceExecutionRuntime(ExecutionRuntime rt, boolean tx) {}
+        @Override protected void enhanceExecutionRuntime(RuntimeContext rt, boolean tx) {}
     }
 
     private static class StubTransactionalTargetSystem extends TransactionalTargetSystem<StubTransactionalTargetSystem> {
         StubTransactionalTargetSystem(String id) { super(id); }
         @Override protected StubTransactionalTargetSystem getSelf() { return this; }
         @Override public TransactionWrapper getTxWrapper() { return null; }
-        @Override protected void enhanceExecutionRuntime(ExecutionRuntime rt, boolean tx) {}
+        @Override protected void enhanceExecutionRuntime(RuntimeContext rt, boolean tx) {}
         @Override public void initialize(io.flamingock.internal.common.core.context.ContextResolver ctx) {}
     }
 }

@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.core.change.navigation.step;
 
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.change.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.change.navigation.step.execution.FailedExecutionStep;
 import io.flamingock.internal.core.change.navigation.step.execution.SuccessApplyStep;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.StopWatch;
 
 public class ExecutableStep extends AbstractChangeStep {

@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.change.executable;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.change.ChangeDescriptor;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 
 public interface ExecutableChange extends ChangeDescriptor {
