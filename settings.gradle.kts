@@ -184,6 +184,10 @@ include("legacy:mongock-importer-mongodb")
 project(":legacy:mongock-importer-mongodb").name = "mongock-importer-mongodb"
 project(":legacy:mongock-importer-mongodb").projectDir = file("legacy/mongock-importer-mongodb")
 
+include("legacy:mongock-importer-mongodb-reactive")
+project(":legacy:mongock-importer-mongodb-reactive").name = "mongock-importer-mongodb-reactive"
+project(":legacy:mongock-importer-mongodb-reactive").projectDir = file("legacy/mongock-importer-mongodb-reactive")
+
 include("legacy:mongock-importer-dynamodb")
 project(":legacy:mongock-importer-dynamodb").name = "mongock-importer-dynamodb"
 project(":legacy:mongock-importer-dynamodb").projectDir = file("legacy/mongock-importer-dynamodb")
