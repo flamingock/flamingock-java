@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import org.mockito.Mockito;
 
 import java.util.Arrays;

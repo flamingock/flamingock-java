@@ -29,7 +29,7 @@ import io.flamingock.internal.core.change.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategyFactory;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 

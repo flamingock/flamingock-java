@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.transaction;
+package io.flamingock.internal.common.core.transaction;
 
 import io.flamingock.internal.common.core.context.ExecutionContext;
 

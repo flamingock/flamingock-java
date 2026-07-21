@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;

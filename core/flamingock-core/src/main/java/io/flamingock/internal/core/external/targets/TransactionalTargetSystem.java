@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import java.util.Optional;
 import java.util.function.Function;

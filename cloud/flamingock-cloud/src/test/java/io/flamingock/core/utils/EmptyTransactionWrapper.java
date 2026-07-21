@@ -16,7 +16,7 @@
 package io.flamingock.core.utils;
 
 import io.flamingock.internal.common.core.context.ExecutionContext;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import java.util.function.Function;
 
