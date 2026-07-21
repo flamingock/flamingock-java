@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.change.navigation.step;
 
-import io.flamingock.internal.common.core.context.ExecutionRuntime;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.change.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.change.navigation.step.execution.FailedExecutionStep;
 import io.flamingock.internal.core.change.navigation.step.execution.SuccessApplyStep;
