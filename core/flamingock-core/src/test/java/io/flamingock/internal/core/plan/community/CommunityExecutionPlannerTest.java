@@ -19,6 +19,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;

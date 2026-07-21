@@ -17,7 +17,7 @@ package io.flamingock.targetsystem.sql;
 
 import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
@@ -80,7 +80,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
+    protected void enhanceExecutionRuntime(ExecutionContext executionRuntime, boolean isTransactional) {
         //if transactional, the connection is injected in the wrapInTransaction
         if (!isTransactional) {
             try {

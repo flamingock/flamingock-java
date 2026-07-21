@@ -16,7 +16,7 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
@@ -50,74 +50,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
     }
 
 
-    @Override
-    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
-        LocalDateTime transactionStart = LocalDateTime.now();
-        String sessionId = executionRuntime.getSessionId();
-        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = txManager.startSession(sessionId);
-        Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
-        
-        try {
-            String connectionInfo = getConnectionInfo();
-            logger.debug("Starting DynamoDB transaction [connection={}]", connectionInfo);
-            
-            executionRuntime.addDependency(writeRequestBuilderDependency);
-            
-            T result = operation.apply(executionRuntime);
-            Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
-            
-            if (result instanceof FailedStep) {
-                logger.info("Skipping DynamoDB transaction commit due to failed step [duration={}]", formatDuration(transactionDuration));
-            } else {
-                try {
-                    logger.debug("Committing DynamoDB transaction [duration={}]", formatDuration(transactionDuration));
-                    TransactWriteItemsEnhancedRequest request = writeRequestBuilder.build();
-                    if(request.transactWriteItems() != null && !request.transactWriteItems().isEmpty()) {
-                        dynamoDBUtil.getEnhancedClient().transactWriteItems(request);
-                    }
-                    logger.debug("DynamoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
-                } catch (TransactionCanceledException ex) {
-                    String cancellationReasons = ex.cancellationReasons().stream()
-                        .map(reason -> String.format("%s: %s", reason.code(), reason.message()))
-                        .collect(Collectors.joining(", "));
-                    
-                    logger.debug("DynamoDB transaction cancelled [duration={} reasons={}]",
-                               formatDuration(transactionDuration), cancellationReasons);
-                    
-                    throw new DatabaseTransactionException(
-                        "DynamoDB transaction was cancelled during commit",
-                        DatabaseTransactionException.TransactionState.FAILED,
-                        null, // isolation level not applicable to DynamoDB
-                        null, // timeout not available
-                        transactionDuration,
-                        DatabaseTransactionException.RollbackStatus.NOT_SUPPORTED, // DynamoDB handles atomicity
-                        "TransactWriteItems",
-                        connectionInfo,
-                        ex
-                    );
-                } catch (Exception ex) {
-                    logger.debug("DynamoDB transaction failed during commit [duration={} error={}]",
-                               formatDuration(transactionDuration), ex.getMessage());
-                    
-                    throw new DatabaseTransactionException(
-                        ex.getMessage(),
-                        DatabaseTransactionException.TransactionState.FAILED,
-                        null,
-                        null,
-                        transactionDuration,
-                        DatabaseTransactionException.RollbackStatus.NOT_SUPPORTED, // DynamoDB handles atomicity
-                        "TransactWriteItems",
-                        connectionInfo,
-                        ex
-                    );
-                }
-            }
 
-            return result;
-        } finally {
-            txManager.closeSession(sessionId);
-        }
-    }
 
     private String getConnectionInfo() {
         try {
@@ -138,4 +71,72 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
         }
     }
 
+    @Override
+    public <CONTEXT extends ExecutionContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+        LocalDateTime transactionStart = LocalDateTime.now();
+        String sessionId = executionContext.getSessionId();
+        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = txManager.startSession(sessionId);
+        Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
+
+        try {
+            String connectionInfo = getConnectionInfo();
+            logger.debug("Starting DynamoDB transaction [connection={}]", connectionInfo);
+
+            executionContext.addDependency(writeRequestBuilderDependency);
+
+            RESULT result = operation.apply(executionContext);
+            Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
+
+            if (result instanceof FailedStep) {
+                logger.info("Skipping DynamoDB transaction commit due to failed step [duration={}]", formatDuration(transactionDuration));
+            } else {
+                try {
+                    logger.debug("Committing DynamoDB transaction [duration={}]", formatDuration(transactionDuration));
+                    TransactWriteItemsEnhancedRequest request = writeRequestBuilder.build();
+                    if(request.transactWriteItems() != null && !request.transactWriteItems().isEmpty()) {
+                        dynamoDBUtil.getEnhancedClient().transactWriteItems(request);
+                    }
+                    logger.debug("DynamoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
+                } catch (TransactionCanceledException ex) {
+                    String cancellationReasons = ex.cancellationReasons().stream()
+                            .map(reason -> String.format("%s: %s", reason.code(), reason.message()))
+                            .collect(Collectors.joining(", "));
+
+                    logger.debug("DynamoDB transaction cancelled [duration={} reasons={}]",
+                            formatDuration(transactionDuration), cancellationReasons);
+
+                    throw new DatabaseTransactionException(
+                            "DynamoDB transaction was cancelled during commit",
+                            DatabaseTransactionException.TransactionState.FAILED,
+                            null, // isolation level not applicable to DynamoDB
+                            null, // timeout not available
+                            transactionDuration,
+                            DatabaseTransactionException.RollbackStatus.NOT_SUPPORTED, // DynamoDB handles atomicity
+                            "TransactWriteItems",
+                            connectionInfo,
+                            ex
+                    );
+                } catch (Exception ex) {
+                    logger.debug("DynamoDB transaction failed during commit [duration={} error={}]",
+                            formatDuration(transactionDuration), ex.getMessage());
+
+                    throw new DatabaseTransactionException(
+                            ex.getMessage(),
+                            DatabaseTransactionException.TransactionState.FAILED,
+                            null,
+                            null,
+                            transactionDuration,
+                            DatabaseTransactionException.RollbackStatus.NOT_SUPPORTED, // DynamoDB handles atomicity
+                            "TransactWriteItems",
+                            connectionInfo,
+                            ex
+                    );
+                }
+            }
+
+            return result;
+        } finally {
+            txManager.closeSession(sessionId);
+        }
+    }
 }

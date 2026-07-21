@@ -19,7 +19,7 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import com.couchbase.client.java.transactions.error.TransactionFailedException;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -32,6 +32,8 @@ public class CouchbaseTxWrapper implements TransactionWrapper {
     private final Cluster cluster;
     private final TransactionManager<TransactionAttemptContext> txManager;
 
+
+
     static class IntentionalRollback extends RuntimeException {}
 
     public CouchbaseTxWrapper(Cluster cluster, TransactionManager<TransactionAttemptContext> txManager) {
@@ -39,22 +41,18 @@ public class CouchbaseTxWrapper implements TransactionWrapper {
         this.txManager = txManager;
     }
 
-    TransactionManager<TransactionAttemptContext> getTxManager() {
-        return txManager;
-    }
-
     @Override
-    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
-        String sessionId = executionRuntime.getSessionId();
+    public <CONTEXT extends ExecutionContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+        String sessionId = executionContext.getSessionId();
 
-        AtomicReference<T> resultRef = new AtomicReference<>();
+        AtomicReference<RESULT> resultRef = new AtomicReference<>();
 
         try {
             cluster.transactions().run(ctx -> {
                 txManager.startSession(sessionId, ctx);
                 Dependency clienteSessionDependency = new Dependency(ctx);
-                executionRuntime.addDependency(clienteSessionDependency);
-                T result = operation.apply(executionRuntime);
+                executionContext.addDependency(clienteSessionDependency);
+                RESULT result = operation.apply(executionContext);
                 resultRef.set(result);
                 if (result instanceof FailedStep) {
                     throw new IntentionalRollback();
@@ -72,4 +70,10 @@ public class CouchbaseTxWrapper implements TransactionWrapper {
             txManager.closeSession(sessionId);
         }
     }
+
+    TransactionManager<TransactionAttemptContext> getTxManager() {
+        return txManager;
+    }
+
+
 }

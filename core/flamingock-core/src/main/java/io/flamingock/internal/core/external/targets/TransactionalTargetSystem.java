@@ -18,6 +18,7 @@ package io.flamingock.internal.core.external.targets;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextInitializable;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
@@ -61,7 +62,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      * <p>
      * This method orchestrates transactional change execution by:
      * <ol>
-     *   <li>Calling {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} with
+     *   <li>Calling {@link #enhanceExecutionRuntime(ExecutionContext, boolean)} with
      *       {@code isTransactional=true} for session-scoped dependency injection</li>
      *   <li>Delegating to the {@link TransactionWrapper} for transaction management
      *       and potential injection of transaction-scoped dependencies</li>

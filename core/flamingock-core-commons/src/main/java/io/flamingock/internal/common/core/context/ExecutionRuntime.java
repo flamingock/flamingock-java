@@ -3,9 +3,7 @@ package io.flamingock.internal.common.core.context;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-public interface ExecutionRuntime extends ContextProvider, DependencyInjectable, LayeredDependencyContext {
-
-    String getSessionId();
+public interface ExecutionRuntime extends ExecutionContext {
 
     Object getInstance(Constructor<?> constructor);
 

@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.change.navigation.step.afteraudit;
 
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.change.navigation.step.AbstractChangeStep;

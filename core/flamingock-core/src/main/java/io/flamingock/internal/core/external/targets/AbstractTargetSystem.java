@@ -50,7 +50,7 @@ import java.util.function.Function;
  * including dependencies and properties that will be available to changes
  * during execution.
  * <p>
- * Subclasses should override {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)}
+ * Subclasses should override {@link #enhanceExecutionRuntime(ExecutionContext, boolean)}
  * to inject session-scoped dependencies (e.g., database connections, client sessions)
  * that are obtained fresh for each change execution.
  *
@@ -82,7 +82,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * Applies a change operation with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional change execution.
-     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * It calls {@link #enhanceExecutionRuntime(ExecutionContext, boolean)} to allow
      * subclasses to inject session-scoped dependencies before executing the change.
      *
      * @param <T>             the return type of the change operation
@@ -99,7 +99,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * Rolls back (reverts) a previously applied change with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional rollback execution.
-     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * It calls {@link #enhanceExecutionRuntime(ExecutionContext, boolean)} to allow
      * subclasses to inject session-scoped dependencies before executing the rollback.
      *
      * @param <T>               the return type of the rollback operation
@@ -131,7 +131,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * @param executionRuntime the runtime to enhance with dependencies
      * @param isTransactional  true if the change will run in a transaction, false otherwise
      */
-    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
+    protected void enhanceExecutionRuntime(ExecutionContext executionRuntime, boolean isTransactional) {
     }
 
     @Override

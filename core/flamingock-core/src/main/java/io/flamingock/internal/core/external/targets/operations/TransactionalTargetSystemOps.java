@@ -17,6 +17,7 @@ package io.flamingock.internal.core.external.targets.operations;
 
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
+import io.flamingock.internal.common.core.context.ExecutionContext;
 import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
