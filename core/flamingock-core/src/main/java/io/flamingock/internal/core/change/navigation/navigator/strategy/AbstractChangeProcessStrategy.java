@@ -22,7 +22,8 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.runtime.DefaultExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
@@ -188,7 +189,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      */
     protected ExecutionRuntime buildExecutionRuntime() {
         Context changeSessionContext = new PriorityContext(new SimpleContext(), baseContext);
-        return ExecutionRuntime.builder()
+        return DefaultExecutionRuntime.builder()
                 .setSessionId(change.getId())
                 .setDependencyContext(changeSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)

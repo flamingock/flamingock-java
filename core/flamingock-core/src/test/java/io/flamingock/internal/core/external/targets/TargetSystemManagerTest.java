@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.external.targets;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -16,7 +16,7 @@
 package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;

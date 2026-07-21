@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.change.executable;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 
 public interface Rollback {
 

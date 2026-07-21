@@ -16,9 +16,9 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;

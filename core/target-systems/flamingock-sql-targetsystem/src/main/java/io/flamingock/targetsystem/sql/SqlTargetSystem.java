@@ -17,11 +17,11 @@ package io.flamingock.targetsystem.sql;
 
 import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 

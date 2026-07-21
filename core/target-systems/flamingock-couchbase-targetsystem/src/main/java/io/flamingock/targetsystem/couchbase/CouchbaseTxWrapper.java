@@ -19,8 +19,8 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import com.couchbase.client.java.transactions.error.TransactionFailedException;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 

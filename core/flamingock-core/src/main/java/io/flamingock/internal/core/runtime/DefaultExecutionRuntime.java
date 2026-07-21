@@ -17,12 +17,7 @@ package io.flamingock.internal.core.runtime;
 
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.Nullable;
-import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.common.core.context.ContextProvider;
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.LayeredDependencyContext;
+import io.flamingock.internal.common.core.context.*;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
@@ -36,20 +31,13 @@ import org.slf4j.Logger;
 import javax.inject.Named;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class ExecutionRuntime implements ContextProvider, DependencyInjectable, LayeredDependencyContext {
+public final class DefaultExecutionRuntime implements ExecutionRuntime {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Runtime");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
@@ -62,10 +50,10 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
     private String sessionId;
     private Context dependencyContext;
 
-    private ExecutionRuntime(String sessionId,
-                             LockGuardProxyFactory proxyFactory,
-                             Context baseContext,
-                             boolean isNativeImage) {
+    private DefaultExecutionRuntime(String sessionId,
+                                    LockGuardProxyFactory proxyFactory,
+                                    Context baseContext,
+                                    boolean isNativeImage) {
         this.sessionId = sessionId;
         this.dependencyContext = new PriorityContext(new SimpleContext(), baseContext);
         this.proxyFactory = proxyFactory;
@@ -76,6 +64,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         return new Builder();
     }
 
+    @Override
     public String getSessionId() {
         return sessionId;
     }
@@ -101,6 +90,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         dependencyContext.addDependency(dependency);
     }
 
+    @Override
     public Object getInstance(Constructor<?> constructor) {
         List<Object> signatureParameters = getSignatureParameters(constructor);
         logMethodWithArguments(constructor.getName(), signatureParameters);
@@ -111,10 +101,12 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         }
     }
 
+    @Override
     public Object executeMethodWithInjectedDependencies(Object instance, Method method) {
         return executeMethodWithParameters(instance, method, getSignatureParameters(method).toArray());
     }
 
+    @Override
     public Object executeMethodWithParameters(Object instance, Method method, Object... parameters) {
         try {
             return method.invoke(instance, parameters);
@@ -169,7 +161,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
 
     private static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
         String arguments = changelogInvocationParameters.stream()
-                .map(ExecutionRuntime::getParameterType)
+                .map(DefaultExecutionRuntime::getParameterType)
                 .collect(Collectors.joining(", "));
         logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
 
@@ -223,7 +215,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         }
 
 
-        public ExecutionRuntime build() {
+        public DefaultExecutionRuntime build() {
             LockGuardProxyFactory proxyFactory = this.lockProxyFactory != null
                     ? this.lockProxyFactory
                     : LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
@@ -235,7 +227,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
             }
             sessionId = sessionId != null ? sessionId : UUID.randomUUID().toString();
             logger.debug("Running on native image: {}", isNativeImage);
-            return new ExecutionRuntime(sessionId, proxyFactory, dependencyContext, isNativeImage);
+            return new DefaultExecutionRuntime(sessionId, proxyFactory, dependencyContext, isNativeImage);
         }
 
         private static boolean isRunningInNativeImage() {
