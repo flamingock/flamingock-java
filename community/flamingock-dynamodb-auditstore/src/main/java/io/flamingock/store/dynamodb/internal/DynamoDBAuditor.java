@@ -15,7 +15,7 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements LifecycleAuditWriter, CommunityAuditReader {
+public class DynamoDBAuditor implements AuditWriter, CommunityAuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
 

@@ -15,6 +15,7 @@
  */
 package io.flamingock.cloud;
 
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.util.id.RunnerId;
@@ -35,7 +36,6 @@ import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
@@ -107,7 +107,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
         EnvironmentId environmentId = EnvironmentId.fromLong(authResponse.getEnvironmentId());
         ServiceId serviceId = ServiceId.fromLong(authResponse.getServiceId());
 
-        LifecycleAuditWriter auditWriter = new HtttpAuditWriter(
+        AuditWriter auditWriter = new HtttpAuditWriter(
                 cloudConfiguration.getHost(),
                 environmentId,
                 serviceId,

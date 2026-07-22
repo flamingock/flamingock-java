@@ -16,9 +16,9 @@
 package io.flamingock.internal.core.change.navigation.navigator;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
@@ -60,7 +60,7 @@ public class ChangeProcessStrategyFactory {
 
     protected ExecutableChange change;
 
-    protected LifecycleAuditWriter auditWriter;
+    protected AuditWriter auditWriter;
 
     protected Lock lock;
 
@@ -79,7 +79,7 @@ public class ChangeProcessStrategyFactory {
         return this;
     }
 
-    public ChangeProcessStrategyFactory setAuditWriter(LifecycleAuditWriter auditWriter) {
+    public ChangeProcessStrategyFactory setAuditWriter(AuditWriter auditWriter) {
         this.auditWriter = auditWriter;
         return this;
     }

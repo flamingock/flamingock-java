@@ -16,11 +16,12 @@
 package io.flamingock.internal.core.external.store.audit;
 
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 
 import java.util.Collections;
 import java.util.Set;
 
-public interface AuditPersistence extends LifecycleAuditWriter, AuditReader {
+public interface AuditPersistence extends AuditWriter, AuditReader {
 
     default Runnable getCloser() {
         return () -> {

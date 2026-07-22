@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.external.TargetSystem;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.common.core.context.Dependency;
@@ -24,7 +25,6 @@ import io.flamingock.internal.core.configuration.core.CoreConfigurator;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
@@ -89,7 +89,7 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
 
     protected AuditPersistence getAuditPersistence(PriorityContext hierarchicalContext) {
         AuditPersistence persistence = auditStore.getPersistence();
-        hierarchicalContext.addDependency(new Dependency(LifecycleAuditWriter.class, persistence));
+        hierarchicalContext.addDependency(new Dependency(AuditWriter.class, persistence));
         return persistence;
     }
 
