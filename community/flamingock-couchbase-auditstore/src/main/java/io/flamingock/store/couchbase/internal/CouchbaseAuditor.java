@@ -25,10 +25,10 @@ import com.couchbase.client.java.kv.ReplicateTo;
 import com.couchbase.client.java.kv.UpsertOptions;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
+public class CouchbaseAuditor implements AuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseAuditor");
 

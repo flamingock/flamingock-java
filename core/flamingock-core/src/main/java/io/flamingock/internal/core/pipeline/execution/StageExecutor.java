@@ -15,12 +15,12 @@
  */
 package io.flamingock.internal.core.pipeline.execution;
 
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.context.PriorityContext;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.result.StageResultBuilder;
@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 public class StageExecutor {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("StageExecutor");
 
-    protected final LifecycleAuditWriter auditWriter;
+    protected final AuditWriter auditWriter;
 
     private final ContextResolver baseDependencyContext;
     private final Set<Class<?>> nonGuardedTypes;
@@ -53,7 +53,7 @@ public class StageExecutor {
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
-                         LifecycleAuditWriter auditWriter,
+                         AuditWriter auditWriter,
                          TargetSystemManager targetSystemManager,
                          TransactionWrapper auditStoreTxWrapper) {
         this.baseDependencyContext = dependencyContext;
