@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.mongodb.event;
+package io.flamingock.internal.common.mongodb.journal;
 
 /**
  * Default persistence name for the local event buffer, mirroring the (external, un-extendable)
  * {@code CommunityPersistenceConstants} defaults used for the audit and lock collections.
  */
-public final class EventPersistenceConstants {
+public final class JournalEventPersistenceConstants {
 
-    public static final String DEFAULT_EVENTS_STORE_NAME = "flamingockEvents";
+    public static final String DEFAULT_JOURNAL_STORE_NAME = "flamingockJournalEvents";
 
-    private EventPersistenceConstants() {
+    private JournalEventPersistenceConstants() {
     }
 }

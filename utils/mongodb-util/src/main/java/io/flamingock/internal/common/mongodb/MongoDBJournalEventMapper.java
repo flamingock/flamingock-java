@@ -23,14 +23,14 @@ import org.bson.Document;
 import java.time.Instant;
 import java.util.Date;
 
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_ACKNOWLEDGED;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_DATA;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_EVENT_ID;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_EVENT_TYPE;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_EVENT_VERSION;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_OCCURRED_AT;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_STREAM_ID;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_STREAM_SEQUENCE;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_ACKNOWLEDGED;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_DATA;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_ID;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_TYPE;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_VERSION;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_OCCURRED_AT;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_STREAM_ID;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_STREAM_SEQUENCE;
 
 /**
  * Maps a {@link JournalEvent} carrying an {@link AuditEntry} payload to/from a MongoDB {@link Document}.
@@ -43,7 +43,7 @@ import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KE
  * event types (e.g. {@link JournalEventType#EXECUTION_STATE}) carry different payloads and are not yet
  * implemented, so this mapper rejects them rather than silently mis-mapping their data as an audit entry.
  */
-public class MongoDBEventMapper {
+public class MongoDBJournalEventMapper {
 
     /** The only event type whose {@code data} is an {@link AuditEntry} and is supported for now. */
     private static final JournalEventType SUPPORTED_EVENT_TYPE = JournalEventType.CHANGE_STATE;
@@ -84,7 +84,7 @@ public class MongoDBEventMapper {
     private static void requireSupportedType(JournalEventType eventType) {
         if (eventType != SUPPORTED_EVENT_TYPE) {
             throw new UnsupportedOperationException(
-                    "MongoDBEventMapper only supports " + SUPPORTED_EVENT_TYPE + " events (AuditEntry payload); "
+                    "MongoDBJournalEventMapper only supports " + SUPPORTED_EVENT_TYPE + " events (AuditEntry payload); "
                             + "event type " + eventType + " is not yet implemented");
         }
     }

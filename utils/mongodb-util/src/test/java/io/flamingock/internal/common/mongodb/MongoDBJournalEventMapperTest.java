@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MongoDBEventMapperTest {
+class MongoDBJournalEventMapperTest {
 
-    private final MongoDBEventMapper mapper = new MongoDBEventMapper();
+    private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
 
     @Test
     void roundTripsChangeStateEventWithAuditEntryPayload() {

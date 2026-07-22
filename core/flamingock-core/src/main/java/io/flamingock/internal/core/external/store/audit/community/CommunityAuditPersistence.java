@@ -16,7 +16,6 @@
 package io.flamingock.internal.core.external.store.audit.community;
 
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
-import io.flamingock.internal.core.external.store.event.EventStore;
 
 public interface CommunityAuditPersistence extends AuditPersistence, CommunityAuditReader {
 }
