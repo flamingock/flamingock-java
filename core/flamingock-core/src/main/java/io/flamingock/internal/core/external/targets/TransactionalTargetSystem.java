@@ -19,6 +19,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
@@ -43,7 +44,7 @@ import java.util.function.Function;
  */
 public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTargetSystem<HOLDER>>
         extends AbstractTargetSystem<HOLDER>
-        implements ContextInitializable {
+        implements TransactionalExternalSystem, ContextInitializable {
 
     protected boolean autoCreate = true;
     protected TargetSystemAuditMarker auditMarker;
@@ -90,15 +91,6 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         return auditMarker;
     }
 
-    /**
-     * Returns the transaction wrapper for this target system.
-     * <p>
-     * The wrapper is responsible for starting, committing, and rolling back transactions,
-     * as well as injecting transaction-scoped dependencies into the execution runtime.
-     *
-     * @return the transaction wrapper instance
-     */
-    abstract public TransactionWrapper getTxWrapper();
 
     /**
      * Returns an audit history reader for importing audit entries from external migration sources.
