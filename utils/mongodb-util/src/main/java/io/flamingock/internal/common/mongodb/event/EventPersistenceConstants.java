@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.audit.community;
+package io.flamingock.internal.common.mongodb.event;
 
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
-import io.flamingock.internal.core.external.store.event.EventStore;
+/**
+ * Default persistence name for the local event buffer, mirroring the (external, un-extendable)
+ * {@code CommunityPersistenceConstants} defaults used for the audit and lock collections.
+ */
+public final class EventPersistenceConstants {
 
-public interface CommunityAuditPersistence extends AuditPersistence, CommunityAuditReader {
+    public static final String DEFAULT_EVENTS_STORE_NAME = "flamingockEvents";
+
+    private EventPersistenceConstants() {
+    }
 }

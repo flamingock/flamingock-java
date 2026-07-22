@@ -23,6 +23,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.event.EventStore;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
@@ -34,8 +35,10 @@ import java.util.Set;
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private MongoDBSyncAuditor auditor;
+    private MongoDBSyncEventStore eventStore;
     private final MongoDatabase database;
     private final String auditCollectionName;
+    private final String eventsCollectionName;
     private final ReadConcern readConcern;
     private final ReadPreference readPreference;
     private final WriteConcern writeConcern;
@@ -45,6 +48,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
                                      MongoDatabase database,
                                      String auditCollectionName,
+                                     String eventsCollectionName,
                                      ReadConcern readConcern,
                                      ReadPreference readPreference,
                                      WriteConcern writeConcern,
@@ -52,6 +56,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         super(localConfiguration);
         this.database = database;
         this.auditCollectionName = auditCollectionName;
+        this.eventsCollectionName = eventsCollectionName;
         this.readConcern = readConcern;
         this.readPreference = readPreference;
         this.writeConcern = writeConcern;
@@ -63,6 +68,9 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         //Auditor
         auditor = new MongoDBSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
         auditor.initialize(autoCreate);
+        //Event buffer
+        eventStore = new MongoDBSyncEventStore(database, eventsCollectionName, readConcern, readPreference, writeConcern);
+        eventStore.initialize(autoCreate);
     }
 
     @Deprecated
