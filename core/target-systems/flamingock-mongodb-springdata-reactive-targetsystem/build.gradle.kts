@@ -9,6 +9,7 @@ dependencies {
     api(project(":core:flamingock-core"))
     api(project(":utils:flamingock-reactive-util"))
     api(project(":core:target-systems:flamingock-mongodb-reactive-externalsystem-api"))
+    implementation(project(":legacy:mongock-importer-mongodb-reactive"))
 
     compileOnly("org.mongodb:mongodb-driver-reactivestreams:${versions["mongodb"]}")
     compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
