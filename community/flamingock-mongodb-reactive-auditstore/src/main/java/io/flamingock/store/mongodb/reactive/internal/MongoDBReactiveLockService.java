@@ -137,6 +137,13 @@ public class MongoDBReactiveLockService implements CommunityLockService {
                     acquireLockQuery,
                     newLockDocumentSet,
                     new UpdateOptions().upsert(!onlyIfSameOwner)));
+            if (result == null) {
+                throw new LockServiceException(
+                        acquireLockQuery.toString(),
+                        newLockDocumentSet.toString(),
+                        "MongoDB updateMany operation completed without returning an UpdateResult"
+                );
+            }
             lockHeld = result.getModifiedCount() <= 0 && result.getUpsertedId() == null;
 
         } catch (MongoWriteException ex) {
