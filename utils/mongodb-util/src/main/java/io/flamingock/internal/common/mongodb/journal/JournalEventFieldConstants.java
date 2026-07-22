@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.mongodb.event;
+package io.flamingock.internal.common.mongodb.journal;
 
 /**
- * BSON field names for the local event-buffer collection ({@code flamingockEvents}).
+ * BSON field names for the local journal collection ({@code flamingockJournalEvents}).
  * <p>
  * Declared locally because the shared {@code AuditEntryFieldConstants}/{@code CommunityPersistenceConstants}
  * live in the external {@code flamingock-general-util} artifact and cannot be extended from this repository.
  */
-public final class EventFieldConstants {
+public final class JournalEventFieldConstants {
 
     public static final String KEY_EVENT_ID = "eventId";
     public static final String KEY_EVENT_TYPE = "eventType";
@@ -32,6 +32,6 @@ public final class EventFieldConstants {
     public static final String KEY_DATA = "data";
     public static final String KEY_ACKNOWLEDGED = "acknowledged";
 
-    private EventFieldConstants() {
+    private JournalEventFieldConstants() {
     }
 }

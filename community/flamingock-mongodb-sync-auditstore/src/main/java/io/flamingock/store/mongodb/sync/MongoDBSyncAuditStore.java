@@ -32,7 +32,7 @@ import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
-import static io.flamingock.internal.common.mongodb.event.EventPersistenceConstants.DEFAULT_EVENTS_STORE_NAME;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
@@ -47,7 +47,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
-    private String eventsRepositoryName = DEFAULT_EVENTS_STORE_NAME;
+    private String journalRepositoryName = DEFAULT_JOURNAL_STORE_NAME;
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
@@ -87,8 +87,8 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         return this;
     }
 
-    public MongoDBSyncAuditStore withEventsRepositoryName(String eventsRepositoryName) {
-        this.eventsRepositoryName = eventsRepositoryName;
+    public MongoDBSyncAuditStore withJournalRepositoryName(String journalRepositoryName) {
+        this.journalRepositoryName = journalRepositoryName;
         return this;
     }
 
@@ -127,7 +127,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
                     communityConfiguration,
                     database,
                     auditRepositoryName,
-                    eventsRepositoryName,
+                    journalRepositoryName,
                     readConcern,
                     readPreference,
                     writeConcern,
@@ -169,20 +169,20 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
-        if (eventsRepositoryName == null || eventsRepositoryName.trim().isEmpty()) {
-            throw new FlamingockException("The 'eventsRepositoryName' property is required.");
+        if (journalRepositoryName == null || journalRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'journalRepositoryName' property is required.");
         }
 
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
 
-        if (eventsRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
-            throw new FlamingockException("The 'eventsRepositoryName' and 'auditRepositoryName' properties must not be the same.");
+        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
         }
 
-        if (eventsRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
-            throw new FlamingockException("The 'eventsRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
 
         if (readConcern == null) {

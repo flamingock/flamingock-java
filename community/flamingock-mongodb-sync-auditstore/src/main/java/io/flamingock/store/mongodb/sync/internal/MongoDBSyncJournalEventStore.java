@@ -28,9 +28,9 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.IndexDefinition;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
-import io.flamingock.internal.common.mongodb.MongoDBEventMapper;
+import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.core.external.store.event.EventStore;
+import io.flamingock.internal.core.external.store.journal.JournalEventStore;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -41,26 +41,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_ACKNOWLEDGED;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_EVENT_ID;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_STREAM_ID;
-import static io.flamingock.internal.common.mongodb.event.EventFieldConstants.KEY_STREAM_SEQUENCE;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_ACKNOWLEDGED;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_ID;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_STREAM_ID;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_STREAM_SEQUENCE;
 
 /**
- * MongoDB-sync implementation of the local event buffer ({@code flamingockEvents}).
+ * MongoDB-sync implementation of the local journal ({@code flamingockJournalEvents}).
  * <p>
  * Sibling of {@link MongoDBSyncAuditor}/{@link MongoDBSyncLockService}: it owns its own collection and
  * index setup. Phase 1 is read/acknowledge only — event writing (atomic with the state write) is a later phase.
  */
-public class MongoDBSyncEventStore implements EventStore {
+public class MongoDBSyncJournalEventStore implements JournalEventStore {
 
     static final String UNIQUE_INDEX_NAME = "unique_key_sequence";
     static final String UNACKNOWLEDGED_INDEX_NAME = "unacknowledged_by_key_sequence";
 
     private final MongoCollection<Document> collection;
-    private final MongoDBEventMapper mapper = new MongoDBEventMapper();
+    private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
 
-    MongoDBSyncEventStore(MongoDatabase database,
+    MongoDBSyncJournalEventStore(MongoDatabase database,
                           String collectionName,
                           ReadConcern readConcern,
                           ReadPreference readPreference,

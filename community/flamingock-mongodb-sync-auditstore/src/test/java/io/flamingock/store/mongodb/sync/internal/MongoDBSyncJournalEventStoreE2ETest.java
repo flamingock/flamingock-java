@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
-import io.flamingock.internal.common.mongodb.MongoDBEventMapper;
+import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,29 +54,29 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class MongoDBSyncEventStoreE2ETest {
+class MongoDBSyncJournalEventStoreE2ETest {
 
     private static final String DB_NAME = "test";
-    private static final String EVENTS_COLLECTION = "flamingockEvents";
+    private static final String JOURNAL_COLLECTION = "flamingockJournalEvents";
 
     @Container
     public static final MongoDBContainer mongoDBContainer =
             new MongoDBContainer(DockerImageName.parse("mongo:6")).withReuse(true);
 
-    private final MongoDBEventMapper mapper = new MongoDBEventMapper();
+    private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
 
     private MongoClient mongoClient;
     private MongoDatabase database;
-    private MongoDBSyncEventStore eventStore;
+    private MongoDBSyncJournalEventStore journalEventStore;
 
     @BeforeEach
     void setUp() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase(DB_NAME);
-        eventStore = new MongoDBSyncEventStore(
-                database, EVENTS_COLLECTION,
+        journalEventStore = new MongoDBSyncJournalEventStore(
+                database, JOURNAL_COLLECTION,
                 ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
-        eventStore.initialize(true);
+        journalEventStore.initialize(true);
     }
 
     @AfterEach
@@ -90,12 +90,12 @@ class MongoDBSyncEventStoreE2ETest {
     void createsExpectedIndexes() {
         Map<String, Document> byName = listIndexesByName();
 
-        Document unique = byName.get(MongoDBSyncEventStore.UNIQUE_INDEX_NAME);
+        Document unique = byName.get(MongoDBSyncJournalEventStore.UNIQUE_INDEX_NAME);
         assertNotNull(unique, "unique index missing");
         assertTrue(unique.getBoolean("unique", false), "index should be unique");
         assertEquals(new Document("streamId", 1).append("streamSequence", 1), unique.get("key"));
 
-        Document unacked = byName.get(MongoDBSyncEventStore.UNACKNOWLEDGED_INDEX_NAME);
+        Document unacked = byName.get(MongoDBSyncJournalEventStore.UNACKNOWLEDGED_INDEX_NAME);
         assertNotNull(unacked, "unacknowledged partial index missing");
         assertFalse(unacked.getBoolean("unique", false), "partial index should not be unique");
         assertEquals(new Document("acknowledged", 1).append("streamId", 1).append("streamSequence", 1), unacked.get("key"));
@@ -107,9 +107,9 @@ class MongoDBSyncEventStoreE2ETest {
     void initializeIsIdempotent() {
         Map<String, Document> before = listIndexesByName();
 
-        eventStore.initialize(true);
-        MongoDBSyncEventStore secondInstance = new MongoDBSyncEventStore(
-                database, EVENTS_COLLECTION,
+        journalEventStore.initialize(true);
+        MongoDBSyncJournalEventStore secondInstance = new MongoDBSyncJournalEventStore(
+                database, JOURNAL_COLLECTION,
                 ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
         secondInstance.initialize(true);
 
@@ -134,12 +134,12 @@ class MongoDBSyncEventStoreE2ETest {
                 event("evt-A3", "stageA", 3L, false),
                 event("evt-B1", "stageB", 1L, false)));
 
-        Optional<JournalEvent<AuditEntry>> last = eventStore.getLastEventByStream("stageA");
+        Optional<JournalEvent<AuditEntry>> last = journalEventStore.getLastEventByStream("stageA");
         assertTrue(last.isPresent());
         assertEquals("evt-A3", last.get().getEventId());
         assertEquals(3L, last.get().getStreamSequence());
 
-        assertFalse(eventStore.getLastEventByStream("unknown-stream").isPresent());
+        assertFalse(journalEventStore.getLastEventByStream("unknown-stream").isPresent());
     }
 
     @Test
@@ -151,10 +151,10 @@ class MongoDBSyncEventStoreE2ETest {
                 event("evt-A3", "stageA", 3L, false),
                 event("evt-B1", "stageB", 1L, false)));
 
-        List<String> all = ids(eventStore.getUnacknowledgedEvents(10));
+        List<String> all = ids(journalEventStore.getUnacknowledgedEvents(10));
         assertEquals(Arrays.asList("evt-A2", "evt-A3", "evt-B1"), all);
 
-        List<String> firstTwo = ids(eventStore.getUnacknowledgedEvents(2));
+        List<String> firstTwo = ids(journalEventStore.getUnacknowledgedEvents(2));
         assertEquals(Arrays.asList("evt-A2", "evt-A3"), firstTwo);
     }
 
@@ -166,18 +166,18 @@ class MongoDBSyncEventStoreE2ETest {
                 event("evt-A3", "stageA", 3L, false),
                 event("evt-B1", "stageB", 1L, false)));
 
-        long modified = eventStore.acknowledgeEvents(Arrays.asList("evt-A2", "evt-B1"));
+        long modified = journalEventStore.acknowledgeEvents(Arrays.asList("evt-A2", "evt-B1"));
         assertEquals(2L, modified);
 
-        assertEquals(Collections.singletonList("evt-A3"), ids(eventStore.getUnacknowledgedEvents(10)));
+        assertEquals(Collections.singletonList("evt-A3"), ids(journalEventStore.getUnacknowledgedEvents(10)));
 
-        assertEquals(0L, eventStore.acknowledgeEvents(Collections.emptyList()));
+        assertEquals(0L, journalEventStore.acknowledgeEvents(Collections.emptyList()));
     }
 
     // ----------------------------- helpers -----------------------------
 
     private Map<String, Document> listIndexesByName() {
-        return database.getCollection(EVENTS_COLLECTION).listIndexes()
+        return database.getCollection(JOURNAL_COLLECTION).listIndexes()
                 .into(new ArrayList<>())
                 .stream()
                 .filter(index -> index.getString("name") != null)
@@ -185,7 +185,7 @@ class MongoDBSyncEventStoreE2ETest {
     }
 
     private void seed(List<JournalEvent<AuditEntry>> events) {
-        MongoCollection<Document> collection = database.getCollection(EVENTS_COLLECTION);
+        MongoCollection<Document> collection = database.getCollection(JOURNAL_COLLECTION);
         List<Document> documents = events.stream().map(mapper::toDocument).collect(Collectors.toList());
         collection.insertMany(documents);
     }
