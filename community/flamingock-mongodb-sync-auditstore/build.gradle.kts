@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.utils.extendsFrom
 
 dependencies {
     implementation(project(":utils:mongodb-util"))
+    implementation(project(":utils:mongodb-sync-util"))
     implementation(project(":core:flamingock-core"))
 
     api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))

@@ -61,6 +61,11 @@ project(":community:flamingock-mongodb-sync-auditstore").name = "flamingock-mong
 project(":community:flamingock-mongodb-sync-auditstore").projectDir =
     file("community/flamingock-mongodb-sync-auditstore")
 
+include("community:flamingock-mongodb-reactive-auditstore")
+project(":community:flamingock-mongodb-reactive-auditstore").name = "flamingock-mongodb-reactive-auditstore"
+project(":community:flamingock-mongodb-reactive-auditstore").projectDir =
+    file("community/flamingock-mongodb-reactive-auditstore")
+
 include("community:flamingock-couchbase-auditstore")
 project(":community:flamingock-couchbase-auditstore").name = "flamingock-couchbase-auditstore"
 project(":community:flamingock-couchbase-auditstore").projectDir = file("community/flamingock-couchbase-auditstore")
@@ -93,9 +98,15 @@ include("core:target-systems:flamingock-nontransactional-targetsystem")
 
 include("core:target-systems:flamingock-mongodb-externalsystem-api")
 
+include("core:target-systems:flamingock-mongodb-reactive-externalsystem-api")
+
 include("core:target-systems:flamingock-mongodb-sync-targetsystem")
 
+include("core:target-systems:flamingock-mongodb-reactive-targetsystem")
+
 include("core:target-systems:flamingock-mongodb-springdata-targetsystem")
+
+include("core:target-systems:flamingock-mongodb-springdata-reactive-targetsystem")
 
 include("core:target-systems:flamingock-sql-externalsystem-api")
 
@@ -122,9 +133,24 @@ include("utils:mongodb-util")
 project(":utils:mongodb-util").name = "mongodb-util"
 project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
 
+include("utils:mongodb-sync-util")
+project(":utils:mongodb-sync-util").name = "mongodb-sync-util"
+project(":utils:mongodb-sync-util").projectDir = file("utils/mongodb-sync-util")
+
+include("utils:mongodb-reactive-util")
+project(":utils:mongodb-reactive-util").name = "mongodb-reactive-util"
+project(":utils:mongodb-reactive-util").projectDir = file("utils/mongodb-reactive-util")
+
+include("utils:flamingock-reactive-util")
+project(":utils:flamingock-reactive-util").projectDir = file("utils/reactive-util")
+
 include("utils:mongodb-test-kit")
 project(":utils:mongodb-test-kit").name = "mongodb-test-kit"
 project(":utils:mongodb-test-kit").projectDir = file("utils/mongodb-test-kit")
+
+include("utils:mongodb-reactive-test-kit")
+project(":utils:mongodb-reactive-test-kit").name = "mongodb-reactive-test-kit"
+project(":utils:mongodb-reactive-test-kit").projectDir = file("utils/mongodb-reactive-test-kit")
 
 include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"

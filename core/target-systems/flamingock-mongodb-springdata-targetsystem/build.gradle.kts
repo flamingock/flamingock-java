@@ -10,6 +10,7 @@ dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
+    implementation(project(":utils:mongodb-sync-util"))
     implementation(project(":legacy:mongock-importer-mongodb"))
     api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 
