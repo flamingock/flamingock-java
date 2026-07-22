@@ -1,0 +1,115 @@
+me ha surgido un problema. Resulta que en el sistema ya tenemos el concepto de Eventos. Exactamente flamingock provee unos eventos al usuario: cuando empieza el proceso, por cada stage, cuando finaliza o tiene un error y al final del proceso, entre otros. Son eventos de cara al usuario  y ya se estan usando.
+
+Claro introducir esto tambien como evento puede ser confuso, uanque sea un concepto interno, mayormente, pero podemos aprovchar que todavia no se ha hecho release para intentar buscar una forma limpia y profesional de diferenciarlos.
+
+
+Por una parte, el usuario ya puede estar usando los eventos(los del lifceCycle) , lo digo porque idealmente los hubiera llamado LifecycleEvent, pero se llamo Event. Sin embargo, ese Event es una marker interface, realmente los eventos que se usan son clases concretas.
+
+package io.flamingock.internal.core.event.model;
+
+public interface Event {
+
+}
+
+Ejemplo del PipelineCompletedEvent
+public interface IPipelineCompletedEvent extends Event {
+
+    ExecuteResponseData getResult();
+
+}
+
+public class PipelineCompletedEvent implements IPipelineCompletedEvent {
+
+    private final ExecuteResponseData result;
+
+    public PipelineCompletedEvent(ExecuteResponseData result) {
+        this.result = result;
+    }
+
+    @Override
+    public ExecuteResponseData getResult() {
+        return result;
+    }
+}
+
+
+public class SpringPipelineCompletedEvent extends ApplicationEvent implements IPipelineCompletedEvent {
+
+  private final IPipelineCompletedEvent event;
+
+  /**
+   * Create a new {@code ApplicationEvent}.
+   *
+   * @param source the object on which the event initially occurred or with
+   *               which the event is associated (never {@code null})
+   */
+  public SpringPipelineCompletedEvent(Object source, IPipelineCompletedEvent event) {
+    super(source);
+    this.event = event;
+  }
+
+  @Override
+  public ExecuteResponseData getResult() {
+    return event.getResult();
+  }
+
+  @Override
+  public String toString() {
+    return "SpringPipelineCompletedEvent{" +
+            "event=" + event +
+            ", source=" + source +
+            '}';
+  }
+}
+
+
+Realmente lo que hace le usuario es definir los listeners recibiendo esos Objetos. Ejemplo de uno:
+
+package io.flamingock.internal.core.event.listener;
+
+import io.flamingock.internal.common.core.response.data.ExecutionReportFormatter;
+import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
+
+import java.util.function.Consumer;
+
+/**
+ * Writes the canonical execution report at {@code INFO} on the {@code FK-Report} logger when a
+ * pipeline completes successfully. Registered by the builder unless
+ * {@code enableDefaultExecutionReport(false)} is set.
+ *
+ * <p>Defensive: must never throw. A failure inside the formatter is reported as a single
+ * fallback {@code ERROR} line and swallowed so it cannot mask the run outcome.
+ */
+public final class DefaultPipelineCompletedReportListener implements Consumer<IPipelineCompletedEvent> {
+
+    // Bare component name; FlamingockLoggerFactory.getLogger prepends "FK-" → "FK-Report".
+    public static final String LOGGER_NAME = "Report";
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger(LOGGER_NAME);
+
+    @Override
+    public void accept(IPipelineCompletedEvent event) {
+        try {
+            String report = ExecutionReportFormatter.report(event != null ? event.getResult() : null);
+            logger.info("{}{}", System.lineSeparator(), report);
+        } catch (Throwable t) {
+            logger.error("FK-Report rendering failed: {}", t.toString(), t);
+        }
+    }
+}
+
+
+builder.setPipelineCompletedListener(new DefaultPipelineCompletedReportListener ());
+
+
+Aunque como se ve el usuario no usa el Evetn directamente. Supongo que puede ser seguro renombrarlo a algocomo LifecycleEvent.
+Otro enfoque es dejarlo como está y renombrar el event nuevo que hemos creado FlamingockEvent.
+
+Que opinas?
+
+
+Por cierto hablemos en ingles
+
+
