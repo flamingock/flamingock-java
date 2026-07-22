@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
