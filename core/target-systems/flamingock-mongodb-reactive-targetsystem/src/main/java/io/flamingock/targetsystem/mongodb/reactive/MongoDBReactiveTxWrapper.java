@@ -18,11 +18,11 @@ package io.flamingock.targetsystem.mongodb.reactive;
 import com.mongodb.TransactionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.reactive.util.PublisherSync;
 import org.slf4j.Logger;
@@ -45,19 +45,19 @@ public class MongoDBReactiveTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
-        String sessionId = executionRuntime.getSessionId();
+        String sessionId = executionContext.getSessionId();
         ClientSession clientSession = sessionManager.startSession(sessionId);
         String connectionInfo = getConnectionInfo(clientSession);
 
         try {
             logger.debug("Starting MongoDB reactive transaction [connection={}]", connectionInfo);
             clientSession.startTransaction(TransactionOptions.builder().build());
-            executionRuntime.addDependency(new Dependency(ClientSession.class, clientSession, false));
+            executionContext.addDependency(new Dependency(ClientSession.class, clientSession, false));
 
             try {
-                T result = operation.apply(executionRuntime);
+                RESULT result = operation.apply(executionContext);
                 Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
                 if (result instanceof FailedStep) {
                     logger.info("Rolling back MongoDB reactive transaction due to failed step [duration={}]", formatDuration(transactionDuration));
