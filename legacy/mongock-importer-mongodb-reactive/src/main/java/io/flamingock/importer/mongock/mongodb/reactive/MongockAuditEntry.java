@@ -19,11 +19,6 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.Date;
 
-/**
- * Mirrors io.flamingock.importer.mongock.mongodb.MongockAuditEntry (sync importer module).
- * Duplicated rather than shared to avoid a reactive-importer to sync-importer module
- * dependency; this is a plain driver-agnostic POJO with no logic asymmetry risk.
- */
 public class MongockAuditEntry {
 
     protected String executionId;
@@ -76,56 +71,112 @@ public class MongockAuditEntry {
         return executionId;
     }
 
+    public void setExecutionId(String executionId) {
+        this.executionId = executionId;
+    }
+
     public String getChangeId() {
         return changeId;
+    }
+
+    public void setChangeId(String changeId) {
+        this.changeId = changeId;
     }
 
     public String getAuthor() {
         return author;
     }
 
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
     public Date getTimestamp() {
         return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
 
     public AuditEntry.Status getState() {
         return state.toAuditStatus();
     }
 
+    public void setState(String state) {
+        this.state = MongockAuditEntry.MongockChangeState.valueOf(state);
+    }
+
     public AuditEntry.ChangeType getType() {
         return type.toAuditType();
+    }
+
+    public void setType(String type) {
+        this.type = parseType(type);
     }
 
     public String getChangeLogClass() {
         return changeLogClass;
     }
 
+    public void setChangeLogClass(String changeLogClass) {
+        this.changeLogClass = changeLogClass;
+    }
+
     public String getChangeSetMethod() {
         return changeSetMethod;
+    }
+
+    public void setChangeSetMethod(String changeSetMethod) {
+        this.changeSetMethod = changeSetMethod;
     }
 
     public Object getMetadata() {
         return metadata;
     }
 
+    public void setMetadata(Object metadata) {
+        this.metadata = metadata;
+    }
+
     public long getExecutionMillis() {
         return executionMillis;
+    }
+
+    public void setExecutionMillis(long executionMillis) {
+        this.executionMillis = executionMillis;
     }
 
     public String getExecutionHostname() {
         return executionHostname;
     }
 
+    public void setExecutionHostname(String executionHostname) {
+        this.executionHostname = executionHostname;
+    }
+
     public String getErrorTrace() {
         return errorTrace;
+    }
+
+    public void setErrorTrace(String errorTrace) {
+        this.errorTrace = errorTrace;
     }
 
     public Boolean getSystemChange() {
         return systemChange;
     }
 
+    public void setSystemChange(Boolean systemChange) {
+        this.systemChange = normalizeSystemChange(systemChange);
+    }
+
     public Date getOriginalTimestamp() {
         return originalTimestamp;
+    }
+
+    public void setOriginalTimestamp(Date originalTimestamp) {
+        this.originalTimestamp = originalTimestamp;
     }
 
     public boolean shouldBeIgnored() {

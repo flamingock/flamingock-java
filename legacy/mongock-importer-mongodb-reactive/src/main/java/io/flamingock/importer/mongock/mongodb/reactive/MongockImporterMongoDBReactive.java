@@ -22,28 +22,15 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * Mirrors io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB (sync importer),
- * reading against the reactive streams driver. AuditHistoryReader#getAuditHistory() is a
- * synchronous contract (MongockImportChange calls it directly, no reactive path), so the
- * reactive find() is bridged with PublisherSync — same one-shot blocking pattern used
- * throughout this branch (target-system database-name resolution, migration change-unit
- * saves).
- */
 public class MongockImporterMongoDBReactive implements AuditHistoryReader {
-
-    private static final Logger logger = LoggerFactory.getLogger("MongockImporter");
 
     private final MongoCollection<Document> sourceCollection;
 
@@ -56,7 +43,6 @@ public class MongockImporterMongoDBReactive implements AuditHistoryReader {
         return PublisherSync.collect(sourceCollection.find())
                 .stream()
                 .map(MongockImporterMongoDBReactive::toAuditEntry)
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -68,8 +54,6 @@ public class MongockImporterMongoDBReactive implements AuditHistoryReader {
                 .toLocalDateTime();
 
         if (changeEntry.shouldBeIgnored()) {
-            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (Mongock never executed this change; nothing to import).",
-                    changeEntry.getChangeId());
             return null;
         }
         return new AuditEntry(

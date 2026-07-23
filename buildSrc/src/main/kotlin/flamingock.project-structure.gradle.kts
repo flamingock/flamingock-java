@@ -69,6 +69,7 @@ val utilProjects = setOf(
 val legacyProjects = setOf(
     "mongock-support",
     "mongock-importer-mongodb",
+    "mongock-importer-mongodb-reactive",
     "mongock-importer-dynamodb",
     "mongock-importer-couchbase"
 )

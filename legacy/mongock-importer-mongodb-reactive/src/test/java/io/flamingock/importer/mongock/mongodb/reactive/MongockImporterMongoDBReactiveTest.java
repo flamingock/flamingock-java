@@ -38,13 +38,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Mirrors io.flamingock.importer.mongock.mongodb.MongoDBImporterTest's core assertions
- * (mapping correctness + IGNORED-state filtering) for the reactive driver flavor. Full
- * pipeline-level E2E proof (real upgrade via a booted JHipster reactive app with
- * @MongockSupport wired to the reactive target system) lives in the JHipster fork's
- * poc/gradle-sb4-reactive PoC.
- */
 @Testcontainers
 class MongockImporterMongoDBReactiveTest {
 
@@ -99,16 +92,17 @@ class MongockImporterMongoDBReactiveTest {
     }
 
     @Test
-    @DisplayName("Should skip an IGNORED legacy entry without throwing")
-    void shouldSkipIgnoredEntry() {
+    @DisplayName("Should map an IGNORED legacy entry to null")
+    void shouldMapIgnoredEntryToNull() {
         seed(document("users-initialization", "EXECUTED", "EXECUTION", "pretend-mongock-run"));
         seed(document("ghost-extra", "IGNORED", "EXECUTION", null));
 
         MongockImporterMongoDBReactive importer = new MongockImporterMongoDBReactive(database, LEGACY_COLLECTION);
         List<AuditEntry> history = importer.getAuditHistory();
 
-        Assertions.assertEquals(1, history.size(), "IGNORED entry must be filtered out, not throw");
+        Assertions.assertEquals(2, history.size());
         Assertions.assertEquals("users-initialization", history.get(0).getChangeId());
+        Assertions.assertNull(history.get(1));
     }
 
     @Test
