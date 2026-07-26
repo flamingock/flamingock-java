@@ -22,6 +22,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.externalsystem.mongodb.reactive.api.MongoDBReactiveExternalSystem;
+import io.flamingock.importer.mongock.mongodb.reactive.MongockImporterMongoDBReactive;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -33,8 +34,12 @@ import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMa
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.reactive.util.PublisherSync;
 
+import java.util.Objects;
 import java.util.Optional;
 
+import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<MongoDBReactiveTargetSystem>
@@ -47,6 +52,7 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
     private MongoDBReactiveTxWrapper txWrapper;
+    private ContextResolver baseContext;
 
     public MongoDBReactiveTargetSystem(String id, MongoClient mongoClient, String databaseName) {
         super(id);
@@ -103,6 +109,7 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.baseContext = baseContext;
         this.validate();
         targetSystemContext.addDependency(mongoClient);
         database = mongoClient.getDatabase(databaseName)
@@ -150,6 +157,16 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
 
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
-        return Optional.empty();
+        if (Objects.requireNonNull(type) == MONGOCK) {
+            return Optional.of(new MongockImporterMongoDBReactive(database, getMongockOrigin()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private String getMongockOrigin() {
+        return targetSystemContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                .orElse(baseContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                        .orElse(DEFAULT_MONGOCK_ORIGIN));
     }
 }
