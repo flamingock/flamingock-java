@@ -16,50 +16,19 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.external.store.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.util.Result;
 
-class InMemoryAuditWriter implements LifecycleAuditWriter {
+class InMemoryAuditWriter implements AuditWriter {
 
     private final InMemoryAuditStorage auditStorage;
 
     public InMemoryAuditWriter(InMemoryAuditStorage auditStorage) {
         this.auditStorage = auditStorage;
     }
-    
-    @Override
-    public Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle) {
-        try {
-            AuditEntry auditEntry = auditContextBundle.toAuditEntry();
-            return writeEntry(auditEntry);
-        } catch (Exception e) {
-            return new Result.Error(e);
-        }
-    }
-    
-    @Override
-    public Result writeExecution(ExecutionAuditContextBundle auditContextBundle) {
-        try {
-            AuditEntry auditEntry = auditContextBundle.toAuditEntry();
-            return writeEntry(auditEntry);
-        } catch (Exception e) {
-            return new Result.Error(e);
-        }
-    }
-    
-    @Override
-    public Result writeRollback(RollbackAuditContextBundle auditContextBundle) {
-        try {
-            AuditEntry auditEntry = auditContextBundle.toAuditEntry();
-            return writeEntry(auditEntry);
-        } catch (Exception e) {
-            return new Result.Error(e);
-        }
-    }
-    
     /**
      * Write an audit entry to the storage
      */

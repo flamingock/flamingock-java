@@ -15,25 +15,12 @@
  */
 package io.flamingock.cloud.audit;
 
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.store.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.StartExecutionAuditContextBundle;
 
-public interface CloudAuditWriter extends LifecycleAuditWriter {
+public interface CloudAuditWriter extends AuditWriter {
 
-    default Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle) {
-        return Result.OK();//TODO remove this
-//        return writeEntry(AuditEntryMapper.map(auditContextBundle));
-    }
-
-
-    default Result writeExecution(ExecutionAuditContextBundle auditContextBundle) {
-        return writeEntry(auditContextBundle.toAuditEntry());
-    }
-
-    default Result writeRollback(RollbackAuditContextBundle auditContextBundle) {
-        return writeEntry(auditContextBundle.toAuditEntry());
-    }
 }

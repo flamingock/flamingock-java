@@ -43,6 +43,14 @@ java {
 
 tasks.test {
     useJUnitPlatform()
+    // Give ProjectBuilder-based tests a Gradle user home under build/, outside their @TempDir.
+    // This keeps Gradle's memory-mapped native .bin files out of the @TempDir so JUnit can
+    // reliably clean it up on all platforms (on Windows those mapped files stay locked for the
+    // life of the JVM and would otherwise fail @TempDir deletion). Removed by `clean`.
+    systemProperty(
+        "flamingock.test.gradleUserHome",
+        layout.buildDirectory.dir("test-gradle-home").get().asFile.absolutePath
+    )
 }
 
 publishing {

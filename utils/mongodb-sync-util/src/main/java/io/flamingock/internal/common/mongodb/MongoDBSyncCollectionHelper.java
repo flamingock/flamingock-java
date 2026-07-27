@@ -40,8 +40,18 @@ public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBDocu
     }
 
     @Override
-    public String createUniqueIndex(MongoDBDocumentHelper uniqueIndexDocument) {
-        return collection.createIndex(uniqueIndexDocument.getDocument(), new IndexOptions().unique(true));
+    public String createIndex(MongoDBDocumentHelper keyDocument,
+                              String name,
+                              boolean unique,
+                              MongoDBDocumentHelper partialFilterExpression) {
+        IndexOptions options = new IndexOptions().unique(unique);
+        if (name != null) {
+            options.name(name);
+        }
+        if (partialFilterExpression != null) {
+            options.partialFilterExpression(partialFilterExpression.getDocument());
+        }
+        return collection.createIndex(keyDocument.getDocument(), options);
     }
 
     @Override
