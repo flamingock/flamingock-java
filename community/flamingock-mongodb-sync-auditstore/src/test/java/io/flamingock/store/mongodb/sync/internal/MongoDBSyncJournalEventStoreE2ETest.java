@@ -86,7 +86,7 @@ class MongoDBSyncJournalEventStoreE2ETest {
     }
 
     @Test
-    @DisplayName("initialize creates the unique and partial-unacknowledged indexes")
+    @DisplayName("initialize creates the unique, partial-unacknowledged and unique-eventId indexes")
     void createsExpectedIndexes() {
         Map<String, Document> byName = listIndexesByName();
 
@@ -100,6 +100,11 @@ class MongoDBSyncJournalEventStoreE2ETest {
         assertFalse(unacked.getBoolean("unique", false), "partial index should not be unique");
         assertEquals(new Document("acknowledged", 1).append("streamId", 1).append("streamSequence", 1), unacked.get("key"));
         assertEquals(new Document("acknowledged", false), unacked.get("partialFilterExpression"));
+
+        Document eventId = byName.get(MongoDBSyncJournalEventStore.EVENT_ID_INDEX_NAME);
+        assertNotNull(eventId, "unique eventId index missing");
+        assertTrue(eventId.getBoolean("unique", false), "eventId index should be unique");
+        assertEquals(new Document("eventId", 1), eventId.get("key"));
     }
 
     @Test
@@ -123,6 +128,15 @@ class MongoDBSyncJournalEventStoreE2ETest {
 
         assertThrows(RuntimeException.class,
                 () -> seed(Collections.singletonList(event("evt-other", "stageA", 1L, false))));
+    }
+
+    @Test
+    @DisplayName("the unique eventId index rejects a second event reusing an existing eventId")
+    void uniqueIndexEnforcesEventIdentity() {
+        seed(Collections.singletonList(event("evt-A1", "stageA", 1L, false)));
+
+        assertThrows(RuntimeException.class,
+                () -> seed(Collections.singletonList(event("evt-A1", "stageB", 1L, false))));
     }
 
     @Test

@@ -56,6 +56,7 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
 
     static final String UNIQUE_INDEX_NAME = "unique_key_sequence";
     static final String UNACKNOWLEDGED_INDEX_NAME = "unacknowledged_by_key_sequence";
+    static final String EVENT_ID_INDEX_NAME = "unique_event_id";
 
     private final MongoCollection<Document> collection;
     private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
@@ -84,7 +85,7 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
     }
 
     /**
-     * The two indexes for the event buffer:
+     * The three indexes for the event buffer:
      * <ul>
      *   <li>a unique {@code (streamId, streamSequence)} index enforcing the stream-position invariant and
      *       serving "last event per stream" (reverse scan);</li>
@@ -92,13 +93,16 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
      *       serving the ordered unacknowledged batch scan. The leading {@code acknowledged} field gives it a
      *       distinct key pattern from the unique index (avoiding an index-key conflict) while keeping the
      *       index sized to the pending backlog.</li>
+     *   <li>a unique {@code eventId} index enforcing the global event-identity invariant (each fact exists
+     *       exactly once, guarding against duplicate inserts on retried writes) and serving the
+     *       {@link #acknowledgeEvents(Collection)} lookup, which filters by {@code eventId}.</li>
      * </ul>
      */
     private static List<IndexDefinition> indexDefinitions() {
-        LinkedHashMap<String, Integer> uniqueKeys = new LinkedHashMap<>();
-        uniqueKeys.put(KEY_STREAM_ID, 1);
-        uniqueKeys.put(KEY_STREAM_SEQUENCE, 1);
-        IndexDefinition uniqueIndex = new IndexDefinition(uniqueKeys, true, null, UNIQUE_INDEX_NAME);
+        LinkedHashMap<String, Integer> streamUniqueKeys = new LinkedHashMap<>();
+        streamUniqueKeys.put(KEY_STREAM_ID, 1);
+        streamUniqueKeys.put(KEY_STREAM_SEQUENCE, 1);
+        IndexDefinition streamUniqueIndex = new IndexDefinition(streamUniqueKeys, true, null, UNIQUE_INDEX_NAME);
 
         LinkedHashMap<String, Integer> partialKeys = new LinkedHashMap<>();
         partialKeys.put(KEY_ACKNOWLEDGED, 1);
@@ -109,7 +113,11 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
         IndexDefinition unacknowledgedIndex =
                 new IndexDefinition(partialKeys, false, partialFilter, UNACKNOWLEDGED_INDEX_NAME);
 
-        return Arrays.asList(uniqueIndex, unacknowledgedIndex);
+        LinkedHashMap<String, Integer> eventIdKeys = new LinkedHashMap<>();
+        eventIdKeys.put(KEY_EVENT_ID, 1);
+        IndexDefinition eventIdIndex = new IndexDefinition(eventIdKeys, true, null, EVENT_ID_INDEX_NAME);
+
+        return Arrays.asList(streamUniqueIndex, unacknowledgedIndex, eventIdIndex);
     }
 
     @Override
