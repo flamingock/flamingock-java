@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.externalsystem.mongodb.api;
+package io.flamingock.internal.common.core.journal;
 
-import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.external.ExternalSystem;
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
-
-public interface MongoDBExternalSystem extends TransactionalExternalSystem {
-
-    MongoDatabase getMongoDatabase();
+public enum JournalEventType {
+    EXECUTION_STATE,
+    CHANGE_STATE
 }

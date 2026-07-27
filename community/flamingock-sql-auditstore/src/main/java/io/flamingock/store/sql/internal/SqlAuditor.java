@@ -18,9 +18,9 @@ package io.flamingock.store.sql.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.common.sql.dialectHelpers.SqlAuditorDialectHelper;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 
 import javax.sql.DataSource;
@@ -28,7 +28,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
+public class SqlAuditor implements AuditWriter, AuditReader {
 
     private final DataSource dataSource;
     private final String auditTableName;

@@ -21,7 +21,24 @@ public interface CollectionHelper<DOCUMENT extends DocumentHelper> {
 
     Iterable<DocumentHelper> listIndexes();
 
-    String createUniqueIndex(DOCUMENT uniqueIndexDocument);
+    /**
+     * Creates an index on the collection.
+     *
+     * @param keyDocument              the index key specification (field → direction)
+     * @param name                     explicit index name, or {@code null} to let the server auto-generate it
+     * @param unique                   whether the index enforces uniqueness
+     * @param partialFilterExpression  a partial-index filter, or {@code null} for a full index
+     * @return the resulting index name
+     */
+    String createIndex(DOCUMENT keyDocument, String name, boolean unique, DOCUMENT partialFilterExpression);
+
+    /**
+     * Backward-compatible shortcut for a plain unique index. Retained so existing callers keep working;
+     * delegates to {@link #createIndex(DocumentHelper, String, boolean, DocumentHelper)}.
+     */
+    default String createUniqueIndex(DOCUMENT uniqueIndexDocument) {
+        return createIndex(uniqueIndexDocument, null, true, null);
+    }
 
     void dropIndex(String name);
 

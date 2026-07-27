@@ -34,8 +34,10 @@ import java.util.Set;
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private MongoDBSyncAuditor auditor;
+    private MongoDBSyncJournalEventStore journalEventStore;
     private final MongoDatabase database;
     private final String auditCollectionName;
+    private final String journalCollectionName;
     private final ReadConcern readConcern;
     private final ReadPreference readPreference;
     private final WriteConcern writeConcern;
@@ -45,6 +47,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
                                      MongoDatabase database,
                                      String auditCollectionName,
+                                     String journalCollectionName,
                                      ReadConcern readConcern,
                                      ReadPreference readPreference,
                                      WriteConcern writeConcern,
@@ -52,6 +55,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         super(localConfiguration);
         this.database = database;
         this.auditCollectionName = auditCollectionName;
+        this.journalCollectionName = journalCollectionName;
         this.readConcern = readConcern;
         this.readPreference = readPreference;
         this.writeConcern = writeConcern;
@@ -63,6 +67,9 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         //Auditor
         auditor = new MongoDBSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
         auditor.initialize(autoCreate);
+        //Journal
+        journalEventStore = new MongoDBSyncJournalEventStore(database, journalCollectionName, readConcern, readPreference, writeConcern);
+        journalEventStore.initialize(autoCreate);
     }
 
     @Deprecated

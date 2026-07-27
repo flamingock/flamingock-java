@@ -18,6 +18,4 @@ package io.flamingock.internal.core.external.store.audit.community;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 
 public interface CommunityAuditPersistence extends AuditPersistence, CommunityAuditReader {
-
-//    LocalLockService getLockService();
 }
