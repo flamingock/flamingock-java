@@ -2,6 +2,7 @@ dependencies {
     api(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
     implementation(project(":utils:mongodb-reactive-util"))
+    implementation(project(":legacy:mongock-importer-mongodb-reactive"))
     api(project(":utils:flamingock-reactive-util"))
     api(project(":core:target-systems:flamingock-mongodb-reactive-externalsystem-api"))
 
