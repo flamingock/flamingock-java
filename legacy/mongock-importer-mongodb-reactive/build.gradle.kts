@@ -1,7 +1,7 @@
 dependencies {
     implementation(project(":core:flamingock-core-commons"))
     implementation(project(":utils:flamingock-reactive-util"))
-    compileOnly("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testAnnotationProcessor(project(":legacy:mongock-support"))

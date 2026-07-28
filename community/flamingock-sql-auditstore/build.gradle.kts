@@ -3,11 +3,10 @@ import java.time.Duration
 val sqlVersion: String by extra
 
 dependencies {
-    api(project(":core:flamingock-core"))
-
     api(project(":core:target-systems:flamingock-sql-externalsystem-api"))
 
-    api(project(":core:target-systems:flamingock-sql-targetsystem"))
+    api(project(":core:flamingock-core"))
+    implementation(project(":core:target-systems:flamingock-sql-targetsystem"))
     implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
 
     testImplementation(project(":core:target-systems:flamingock-sql-externalsystem-api"))
@@ -65,4 +64,3 @@ tasks.test {
         showStandardStreams = false
     }
 }
-

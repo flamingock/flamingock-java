@@ -1,9 +1,9 @@
 dependencies {
-    implementation(project(":core:flamingock-core-commons"))
+    api(project(":core:flamingock-core-commons"))
     implementation(project(":utils:couchbase-util"))
 
     //General
-    compileOnly("com.couchbase.client:java-client:3.6.0")
+    compileOnlyApi("com.couchbase.client:java-client:3.6.0")
 
 
     testAnnotationProcessor(project(":core:flamingock-processor"))

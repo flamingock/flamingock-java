@@ -1,15 +1,13 @@
-val generalUtilVersion: String by extra
 dependencies {
     implementation(project(":core:flamingock-core"))
     implementation(project(":utils:dynamodb-util"))
-    implementation("io.flamingock:flamingock-general-util:${generalUtilVersion}")
-    implementation(project(":utils:test-util"))
+    api(project(":utils:test-util"))
 
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
+    compileOnlyApi("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
-    compileOnly("software.amazon.awssdk:url-connection-client:2.24.11")
+    implementation("software.amazon.awssdk:url-connection-client:2.24.11")
 
-    compileOnly("org.testcontainers:testcontainers:2.0.2")
+    compileOnlyApi("org.testcontainers:testcontainers:2.0.2")
     compileOnly("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
 }
 

@@ -1,3 +1,6 @@
+import groovy.util.Node
+import org.gradle.api.artifacts.ExternalModuleDependency
+
 plugins {
     `maven-publish`
     id("org.jreleaser")
@@ -11,6 +14,15 @@ fun Project.isLibraryModule(): Boolean = name !in setOf(
 
 val fromComponentPublishing = if (isBomModule()) "javaPlatform" else "java"
 val mavenPublication = if (isBomModule()) "communityBom" else "maven"
+val externalCompileOnlyApiDependencies = provider {
+    configurations.findByName("compileOnlyApi")
+        ?.dependencies
+        ?.filterIsInstance<ExternalModuleDependency>()
+        ?.filter { dependency -> dependency.group != "io.flamingock" }
+        ?.map { dependency -> "${dependency.group}:${dependency.name}" }
+        ?.toSet()
+        ?: emptySet()
+}
 
 publishing {
     publications {
@@ -20,6 +32,31 @@ publishing {
             version = project.version.toString()
             from(components[fromComponentPublishing])
             pom {
+                withXml {
+                    val optionalDependencies = externalCompileOnlyApiDependencies.get()
+                    val dependencies = (asNode().get("dependencies") as List<*>)
+                        .filterIsInstance<Node>()
+                        .flatMap { dependenciesNode ->
+                            (dependenciesNode.get("dependency") as List<*>).filterIsInstance<Node>()
+                        }
+
+                    dependencies
+                        .filter { dependency ->
+                            val groupId = (dependency.get("groupId") as List<*>)
+                                .filterIsInstance<Node>()
+                                .firstOrNull()
+                                ?.text()
+                            val artifactId = (dependency.get("artifactId") as List<*>)
+                                .filterIsInstance<Node>()
+                                .firstOrNull()
+                                ?.text()
+                            "$groupId:$artifactId" in optionalDependencies
+                        }
+                        .filter { dependency ->
+                            (dependency.get("optional") as List<*>).isEmpty()
+                        }
+                        .forEach { dependency -> dependency.appendNode("optional", "true") }
+                }
                 name.set(project.name)
                 description.set("Flamingock is a Java library that brings Change-as-Code to your applications. It enables you to define and apply versioned, auditable changes to databases, event schemas, and external systems, ensuring safety, synchronization, and governance at runtime")
                 url.set("https://www.flamingock.io")
