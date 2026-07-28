@@ -24,7 +24,11 @@ import java.util.Collection;
  * callers depend on this contract rather than a concrete store. The buffer holds immutable facts awaiting
  * synchronization to Flamingock Cloud; it is a separate concern from the operational/audit state.
  * <p>
- * Phase 1 exposes read/acknowledge only. Event <em>writing</em> (atomic with the state write) is a later phase.
+ * This contract covers reads and acknowledgements only. Appending an event is deliberately absent: it has to
+ * join the same transaction as the state write it mirrors, which means accepting a store-specific transaction
+ * handle (a MongoDB {@code ClientSession}, a JDBC {@code Connection}, a DynamoDB write-request builder, …).
+ * Each implementation therefore keeps its append method internal, and only its own audit persistence — the
+ * component that owns the transaction boundary — calls it.
  */
 public interface JournalEventStore extends JournalEventReader {
 

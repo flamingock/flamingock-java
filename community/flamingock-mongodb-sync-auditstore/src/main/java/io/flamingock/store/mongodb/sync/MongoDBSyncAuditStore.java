@@ -18,19 +18,32 @@ package io.flamingock.store.mongodb.sync;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
+import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditRepository;
+import io.flamingock.store.mongodb.sync.internal.MongoDBSyncJournalEventStore;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -52,6 +65,9 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private ReadPreference readPreference = ReadPreference.primary();
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private boolean autoCreate = true;
+    private MongoDBSyncAuditRepository auditRepository;
+    private MongoDBSyncJournalEventStore journalEventStore;
+    private JournalEventSequencerFactory journalEventSequencerFactory;
 
 
     private MongoDBSyncAuditStore(MongoDBExternalSystem mongoDBTargetSystem) {
@@ -117,41 +133,52 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         database = mongoDBTargetSystem.getMongoDatabase();
+        auditRepository = new MongoDBSyncAuditRepository(database, auditRepositoryName, readConcern, readPreference, writeConcern);
+        journalEventStore = new MongoDBSyncJournalEventStore(database, journalRepositoryName, readConcern, readPreference, writeConcern);
+        journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+
+        lockService = new MongoDBSyncLockService(
+                database,
+                lockRepositoryName,
+                readConcern,
+                readPreference,
+                writeConcern,
+                TimeService.getDefault()
+        );
+        lockService.initialize(autoCreate);
         this.validate();
     }
 
     @Override
-    public synchronized CommunityAuditPersistence getPersistence() {
-        if (persistence == null) {
+    public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+        return stageId -> {
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
-                    database,
-                    auditRepositoryName,
-                    journalRepositoryName,
-                    readConcern,
-                    readPreference,
-                    writeConcern,
+                    auditRepository,
+                    journalEventStore,
+                    journalEventSequencer,
+                    mongoDBTargetSystem.getTxWrapper(),
                     autoCreate
             );
             persistence.initialize(runnerId);
-        }
-        return persistence;
+            return persistence;
+        };
+    }
+
+    @Override
+    public AuditReader getAuditReader() {
+        return () -> auditRepository.getAuditHistory();
+    }
+
+
+    @Override
+    public CommunityAuditPersistence getPersistence() {
+        throw new RuntimeException("getPersistence shouldn´t be called at MongodbSync ");
     }
 
     @Override
     public synchronized CommunityLockService getLockService() {
-        if (lockService == null) {
-            lockService = new MongoDBSyncLockService(
-                    database,
-                    lockRepositoryName,
-                    readConcern,
-                    readPreference,
-                    writeConcern,
-                    TimeService.getDefault()
-            );
-            lockService.initialize(autoCreate);
-
-        }
         return lockService;
     }
 
@@ -196,5 +223,10 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         if (writeConcern == null) {
             throw new FlamingockException("The 'writeConcern' property is required.");
         }
+    }
+
+    @Override
+    public Set<Class<?>> getNonGuardedTypes() {
+        return new HashSet<>(Collections.singletonList(ClientSession.class));
     }
 }

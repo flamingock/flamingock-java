@@ -18,6 +18,7 @@ package io.flamingock.springboot;
 import io.flamingock.api.external.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.error.PendingChangesException;
+import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
@@ -107,6 +108,8 @@ class ValidationOnlyIntegrationTest {
      * @param auditHistory the audit history to return from {@code getAuditHistory()}
      */
     private static CommunityAuditStore buildAuditStoreMock(List<AuditEntry> auditHistory) {
+
+        CommunityAuditStore auditStore = mock(CommunityAuditStore.class);
         CommunityAuditPersistence persistence = mock(CommunityAuditPersistence.class);
         CommunityLockService lockService = mock(CommunityLockService.class);
 
@@ -117,7 +120,7 @@ class ValidationOnlyIntegrationTest {
         when(persistence.getAuditSnapshotByChangeId()).thenCallRealMethod();
 
         // Stub closer — called by both the operation and the runner finalizer
-        when(persistence.getCloser()).thenReturn(() -> { });
+        when(auditStore.getCloser()).thenReturn(() -> { });
 
         // Stub lock acquisition — required when there are pending changes
         when(lockService.upsert(any(), any(RunnerId.class), anyLong()))
@@ -133,7 +136,6 @@ class ValidationOnlyIntegrationTest {
                         invocation.getArgument(2)
                 ));
 
-        CommunityAuditStore auditStore = mock(CommunityAuditStore.class);
         when(auditStore.getPersistence()).thenReturn(persistence);
         when(auditStore.getLockService()).thenReturn(lockService);
 

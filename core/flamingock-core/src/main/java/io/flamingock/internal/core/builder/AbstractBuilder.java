@@ -87,12 +87,6 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
         auditStore.initialize(dependencyContext);
     }
 
-    protected AuditPersistence getAuditPersistence(PriorityContext hierarchicalContext) {
-        AuditPersistence persistence = auditStore.getPersistence();
-        hierarchicalContext.addDependency(new Dependency(AuditWriter.class, persistence));
-        return persistence;
-    }
-
     protected RunnerId generateRunnerId() {
         RunnerId runnerId = RunnerId.generate(getServiceIdentifier());
         setProperty(runnerId);

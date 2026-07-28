@@ -22,9 +22,5 @@ import io.flamingock.internal.common.core.audit.AuditSnapshotBuilder;
 import java.util.Map;
 
 public interface CommunityAuditReader extends AuditReader {
-    default Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
-        getAuditHistory().forEach(builder::addEntry);
-        return builder.buildMap();
-    }
+
 }

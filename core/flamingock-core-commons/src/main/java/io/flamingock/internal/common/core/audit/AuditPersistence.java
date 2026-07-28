@@ -15,18 +15,8 @@
  */
 package io.flamingock.internal.common.core.audit;
 
-import java.util.Collections;
-import java.util.Set;
 
 public interface AuditPersistence extends AuditWriter, AuditReader {
 
-    default Runnable getCloser() {
-        return () -> {
-        };
-    }
 
-    //TODO move this to TargetSystem
-    default Set<Class<?>> getNonGuardedTypes() {
-        return Collections.emptySet();
-    }
 }

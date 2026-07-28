@@ -22,6 +22,7 @@ import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.audit.AuditFixArgs;
 import io.flamingock.internal.core.operation.audit.AuditFixOperation;
@@ -58,7 +59,7 @@ public class OperationResolver {
     private final RunnerId runnerId;
     private final FlamingockArguments flamingockArgs;
     private final LoadedPipeline pipeline;
-    private final AuditPersistence persistence;
+    private final AuditStore<?> auditStore;
     private final ExecutionPlanner executionPlanner;
     private final TargetSystemManager targetSystemManager;
     private final CoreConfigurable coreConfiguration;
@@ -71,7 +72,7 @@ public class OperationResolver {
     public OperationResolver(RunnerId runnerId,
                              FlamingockArguments flamingockArgs,
                              LoadedPipeline pipeline,
-                             AuditPersistence persistence,
+                             AuditStore<?> auditStore,
                              ExecutionPlanner executionPlanner,
                              TargetSystemManager targetSystemManager,
                              CoreConfigurable coreConfiguration,
@@ -83,7 +84,7 @@ public class OperationResolver {
         this.runnerId = runnerId;
         this.flamingockArgs = flamingockArgs;
         this.pipeline = pipeline;
-        this.persistence = persistence;
+        this.auditStore = auditStore;
         this.executionPlanner = executionPlanner;
         this.targetSystemManager = targetSystemManager;
         this.coreConfiguration = coreConfiguration;
@@ -120,7 +121,7 @@ public class OperationResolver {
         boolean history = flamingockArgs.getBooleanOr(ARG_HISTORY, false);
         java.time.LocalDateTime since = flamingockArgs.getDateTimeOr(ARG_SINCE, null);
         boolean extended = flamingockArgs.getBooleanOr(ARG_EXTENDED, false);
-        AuditListOperation auditListOperation = new AuditListOperation(persistence);
+        AuditListOperation auditListOperation = new AuditListOperation(auditStore.getAuditReader());
         return new RunnableOperation<>(auditListOperation, new AuditListArgs(history, since, extended));
     }
 
@@ -129,24 +130,24 @@ public class OperationResolver {
                 "Change ID is required for AUDIT_FIX operation");
         Resolution resolution = flamingockArgs.getEnumOrThrow(ARG_RESOLUTION, Resolution.class,
                 "Resolution is required for AUDIT_FIX operation.");
-        AuditFixOperation auditFixOperation = new AuditFixOperation(persistence);
+        AuditFixOperation auditFixOperation = new AuditFixOperation(auditStore.getPersistenceFactory(), auditStore.getAuditReader());
         return new RunnableOperation<>(auditFixOperation, new AuditFixArgs(changeId, resolution));
     }
 
     private RunnableOperation<IssueListArgs, IssueListResult> getIssueListOperation() {
-        IssueListOperation issueListOperation = new IssueListOperation(persistence);
+        IssueListOperation issueListOperation = new IssueListOperation(auditStore.getAuditReader());
         return new RunnableOperation<>(issueListOperation, new IssueListArgs());
     }
 
     private RunnableOperation<IssueGetArgs, IssueGetResult> getIssueGetOperation() {
         String changeId = flamingockArgs.getStringOr(ARG_CHANGE_ID, null);
         boolean guidance = flamingockArgs.getBooleanOr(ARG_GUIDANCE, false);
-        IssueGetOperation issueGetOperation = new IssueGetOperation(persistence);
+        IssueGetOperation issueGetOperation = new IssueGetOperation(auditStore.getAuditReader());
         return new RunnableOperation<>(issueGetOperation, new IssueGetArgs(changeId, guidance));
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteApplyOperation() {
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditStore.getPersistenceFactory(), targetSystemManager, null);
         ExecuteApplyOperation executeApplyOperation = new ExecuteApplyOperation(
             runnerId,
             executionPlanner,
@@ -159,7 +160,7 @@ public class OperationResolver {
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateApplyOperation() {
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditStore.getPersistenceFactory(), targetSystemManager, null);
         ValidateApplyOperation validateApplyOperation = new ValidateApplyOperation(
             runnerId,
             executionPlanner,

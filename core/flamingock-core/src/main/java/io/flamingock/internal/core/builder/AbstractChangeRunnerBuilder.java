@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.external.TargetSystem;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -219,8 +220,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
-        //Configure the persistence from the auditStore
-        AuditPersistence persistence = getAuditPersistence(hierarchicalContext);
+        hierarchicalContext.addDependency(new Dependency(auditStore.getPersistenceFactory()));
 
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
@@ -235,19 +235,19 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 runnerId,
                 flamingockArgs,
                 pipeline,
-                persistence,
+                auditStore,
                 buildExecutionPlanner(runnerId),
                 targetSystemManager,
                 coreConfiguration,
                 buildEventPublisher(),
                 hierarchicalContext,
-                persistence.getNonGuardedTypes(),
+                auditStore.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
-                persistence.getCloser()
+                auditStore.getCloser()
         );
         RunnableOperation<?, ?> operation = operationResolver.getOperation();
 
-        return new RunnerFactory(runnerId, flamingockArgs, operation, persistence.getCloser()).create();
+        return new RunnerFactory(runnerId, flamingockArgs, operation, auditStore.getCloser()).create();
     }
 
 

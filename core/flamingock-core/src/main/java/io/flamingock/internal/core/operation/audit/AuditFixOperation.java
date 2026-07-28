@@ -15,11 +15,10 @@
  */
 package io.flamingock.internal.core.operation.audit;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.*;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.recovery.FixResult;
 import io.flamingock.internal.common.core.recovery.Resolution;
-import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.util.StringUtil;
@@ -29,20 +28,25 @@ import java.util.Optional;
 
 public class AuditFixOperation implements Operation<AuditFixArgs, AuditFixResult> {
 
-    private final AuditPersistence persistence;
+    private final AuditPersistenceFactory<? extends AuditPersistence> persistenceFactory;
+    private final AuditReader auditReader;
 
-    public AuditFixOperation(AuditPersistence persistence) {
-        this.persistence = persistence;
+    public AuditFixOperation(AuditPersistenceFactory<? extends AuditPersistence> persistenceFactory, AuditReader auditReader) {
+        this.persistenceFactory = persistenceFactory;
+        this.auditReader = auditReader;
     }
 
     @Override
     public AuditFixResult execute(AuditFixArgs args) {
-        Optional<AuditEntryIssue> auditIssue = persistence.getAuditIssueByChangeId(args.getChangeId());
+
+        Optional<AuditEntryIssue> auditIssue = auditReader.getAuditIssueByChangeId(args.getChangeId());
         if (!auditIssue.isPresent()) {
             return new AuditFixResult(args.getChangeId(), args.getResolution(), FixResult.NO_ISSUE_FOUND);
         }
 
         AuditEntry currentEntry = auditIssue.get().getAuditEntry();
+
+        AuditWriter auditWriter = persistenceFactory.get(currentEntry.getStageId());
         AuditEntry fixedAuditEntry = new AuditEntry(
                 ExecutionId.getNewExecutionId(),
                 currentEntry.getStageId(),
@@ -65,7 +69,7 @@ public class AuditFixOperation implements Operation<AuditFixArgs, AuditFixResult
                 currentEntry.getRecoveryStrategy(),
                 currentEntry.getTransactionFlag()
         );
-        persistence.writeEntry(fixedAuditEntry);
+        auditWriter.writeEntry(fixedAuditEntry);
         return new AuditFixResult(args.getChangeId(), args.getResolution(), FixResult.APPLIED);
     }
 

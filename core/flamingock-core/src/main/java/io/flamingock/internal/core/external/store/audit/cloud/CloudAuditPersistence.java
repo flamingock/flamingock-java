@@ -25,9 +25,4 @@ public interface CloudAuditPersistence extends AuditPersistence {
     //TODO remove this when cloudBuilder moved to cloud module
     ExecutionPlanner getExecutionPlanner();
 
-    EnvironmentId getEnvironmentId();
-
-    ServiceId getServiceId();
-
-    String getJwt();
 }

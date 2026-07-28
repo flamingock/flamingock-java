@@ -18,14 +18,13 @@ package io.flamingock.store.mongodb.sync.internal;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
@@ -44,18 +43,18 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 
-public class MongoDBSyncAuditor implements AuditWriter, AuditReader {
+public class MongoDBSyncAuditRepository {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncAuditor");
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
-    MongoDBSyncAuditor(MongoDatabase database,
-                     String collectionName,
-                     ReadConcern readConcern,
-                     ReadPreference readPreference,
-                     WriteConcern writeConcern) {
+    public MongoDBSyncAuditRepository(MongoDatabase database,
+                                      String collectionName,
+                                      ReadConcern readConcern,
+                                      ReadPreference readPreference,
+                                      WriteConcern writeConcern) {
         this.collection = database.getCollection(collectionName)
                 .withReadConcern(readConcern)
                 .withReadPreference(readPreference)
@@ -76,8 +75,7 @@ public class MongoDBSyncAuditor implements AuditWriter, AuditReader {
 
     }
 
-    @Override
-    public Result writeEntry(AuditEntry auditEntry) {
+    Result writeEntry(ClientSession clientSession, AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),
@@ -86,15 +84,13 @@ public class MongoDBSyncAuditor implements AuditWriter, AuditReader {
 
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();
 
-        UpdateResult result = collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true));
+        UpdateResult result = collection.replaceOne(clientSession, filter, entryDocument, new ReplaceOptions().upsert(true));
         logger.debug("SaveOrUpdate[{}] with result" +
                 "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]", auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(), result.wasAcknowledged());
 
         return Result.OK();
     }
 
-
-    @Override
     public List<AuditEntry> getAuditHistory() {
         return collection.find()
                 .into(new LinkedList<>())

@@ -15,19 +15,19 @@
  */
 package io.flamingock.internal.core.operation.issue;
 
-import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.operation.Operation;
 
 public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {
 
-    private final AuditPersistence persistence;
+    private final AuditReader auditReader;
 
-    public IssueListOperation(AuditPersistence persistence) {
-        this.persistence = persistence;
+    public IssueListOperation(AuditReader auditReader) {
+        this.auditReader = auditReader;
     }
 
     @Override
     public IssueListResult execute(IssueListArgs args) {
-        return new IssueListResult(persistence.getAuditIssues());
+        return new IssueListResult(auditReader.getAuditIssues());
     }
 }

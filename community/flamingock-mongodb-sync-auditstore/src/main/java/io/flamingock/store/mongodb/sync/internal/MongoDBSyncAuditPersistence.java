@@ -15,14 +15,15 @@
  */
 package io.flamingock.store.mongodb.sync.internal;
 
-import com.mongodb.ReadConcern;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.journal.JournalEvent;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
@@ -33,59 +34,49 @@ import java.util.Set;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private MongoDBSyncAuditor auditor;
-    private MongoDBSyncJournalEventStore journalEventStore;
-    private final MongoDatabase database;
-    private final String auditCollectionName;
-    private final String journalCollectionName;
-    private final ReadConcern readConcern;
-    private final ReadPreference readPreference;
-    private final WriteConcern writeConcern;
+    private final MongoDBSyncAuditRepository auditRepository;
+    private final MongoDBSyncJournalEventStore journalEventStore;
+    private final JournalEventSequencer journalEventSequencer;
+    private final TransactionWrapper txWrapper;
     private final boolean autoCreate;
 
 
     public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
-                                     MongoDatabase database,
-                                     String auditCollectionName,
-                                     String journalCollectionName,
-                                     ReadConcern readConcern,
-                                     ReadPreference readPreference,
-                                     WriteConcern writeConcern,
-                                     boolean autoCreate) {
+                                       MongoDBSyncAuditRepository auditRepository,
+                                       MongoDBSyncJournalEventStore journalEventStore,
+                                       JournalEventSequencer journalEventSequencer,
+                                       TransactionWrapper txWrapper,
+                                       boolean autoCreate) {
         super(localConfiguration);
-        this.database = database;
-        this.auditCollectionName = auditCollectionName;
-        this.journalCollectionName = journalCollectionName;
-        this.readConcern = readConcern;
-        this.readPreference = readPreference;
-        this.writeConcern = writeConcern;
+        this.auditRepository = auditRepository;
+        this.journalEventStore = journalEventStore;
+        this.journalEventSequencer = journalEventSequencer;
+        this.txWrapper = txWrapper;
         this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        //Auditor
-        auditor = new MongoDBSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
-        auditor.initialize(autoCreate);
-        //Journal
-        journalEventStore = new MongoDBSyncJournalEventStore(database, journalCollectionName, readConcern, readPreference, writeConcern);
+        auditRepository.initialize(autoCreate);
         journalEventStore.initialize(autoCreate);
     }
 
-    @Deprecated
-    @Override
-    public Set<Class<?>> getNonGuardedTypes() {
-        return new HashSet<>(Collections.singletonList(ClientSession.class));
-    }
 
     @Override
     public List<AuditEntry> getAuditHistory() {
-        return auditor.getAuditHistory();
+        return auditRepository.getAuditHistory();
     }
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        return auditor.writeEntry(auditEntry);
+        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+        return txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+            ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+            journalEventStore.write(clientSession, journalEvent);
+            return auditRepository.writeEntry(clientSession, auditEntry);
+        });
+
     }
 
 }

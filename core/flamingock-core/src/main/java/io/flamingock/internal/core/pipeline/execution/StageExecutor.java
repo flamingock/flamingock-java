@@ -15,12 +15,15 @@
  */
 package io.flamingock.internal.core.pipeline.execution;
 
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.context.PriorityContext;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.result.StageResultBuilder;
@@ -44,7 +47,7 @@ import java.util.stream.Stream;
 public class StageExecutor {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("StageExecutor");
 
-    protected final AuditWriter auditWriter;
+    protected final AuditPersistenceFactory<? extends AuditPersistence> auditPersistenceFactory;
 
     private final ContextResolver baseDependencyContext;
     private final Set<Class<?>> nonGuardedTypes;
@@ -53,12 +56,12 @@ public class StageExecutor {
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
-                         AuditWriter auditWriter,
+                         AuditPersistenceFactory<? extends AuditPersistence> auditPersistenceFactory,
                          TargetSystemManager targetSystemManager,
                          TransactionWrapper auditStoreTxWrapper) {
         this.baseDependencyContext = dependencyContext;
         this.nonGuardedTypes = nonGuardedTypes;
-        this.auditWriter = auditWriter;
+        this.auditPersistenceFactory = auditPersistenceFactory;
         this.targetSystemManager = targetSystemManager;
         this.auditStoreTxWrapper = auditStoreTxWrapper;
     }
@@ -81,7 +84,8 @@ public class StageExecutor {
 
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
-        ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
+        AuditWriter auditWriter = auditPersistenceFactory.get(stageName);
+        ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, auditWriter, lock, dependencyContext);
 
         try {
             logger.debug("Processing changes [stage={} context={}]", stageName, executionContext.getExecutionId());
@@ -133,7 +137,10 @@ public class StageExecutor {
         }
     }
 
-    private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
+    private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext,
+                                                                 AuditWriter auditWriter,
+                                                                 Lock lock,
+                                                                 ContextResolver contextResolver) {
         return new ChangeProcessStrategyFactory(targetSystemManager)
                 .setExecutionContext(executionContext)
                 .setAuditWriter(auditWriter)

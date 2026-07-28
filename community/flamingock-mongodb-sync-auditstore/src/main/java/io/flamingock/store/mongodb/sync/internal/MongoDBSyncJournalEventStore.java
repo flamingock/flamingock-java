@@ -18,6 +18,7 @@ package io.flamingock.store.mongodb.sync.internal;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -31,7 +32,10 @@ import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
 import io.flamingock.internal.core.journal.JournalEventStore;
+import io.flamingock.internal.util.Result;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.bson.Document;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,10 +53,18 @@ import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldCon
 /**
  * MongoDB-sync implementation of the local journal ({@code flamingockJournalEvents}).
  * <p>
- * Sibling of {@link MongoDBSyncAuditor}/{@link MongoDBSyncLockService}: it owns its own collection and
- * index setup. Phase 1 is read/acknowledge only — event writing (atomic with the state write) is a later phase.
+ * Sibling of {@link MongoDBSyncAuditRepository}/{@link MongoDBSyncLockService}: it owns its own collection and
+ * index setup.
+ * <p>
+ * Reads and acknowledgements are exposed through {@link JournalEventStore}. The append
+ * ({@link #write(ClientSession, JournalEvent)}) deliberately is not: it takes a {@link ClientSession}, so that
+ * the event lands in the same transaction as the audit entry it mirrors, and a driver-specific transaction
+ * handle has no place in a core interface. Only {@link MongoDBSyncAuditPersistence} — which owns that
+ * transaction boundary — calls it.
  */
 public class MongoDBSyncJournalEventStore implements JournalEventStore {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncJournal");
 
     static final String UNIQUE_INDEX_NAME = "unique_key_sequence";
     static final String UNACKNOWLEDGED_INDEX_NAME = "unacknowledged_by_key_sequence";
@@ -61,7 +73,7 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
     private final MongoCollection<Document> collection;
     private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
 
-    MongoDBSyncJournalEventStore(MongoDatabase database,
+    public MongoDBSyncJournalEventStore(MongoDatabase database,
                           String collectionName,
                           ReadConcern readConcern,
                           ReadPreference readPreference,
@@ -118,6 +130,28 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
         IndexDefinition eventIdIndex = new IndexDefinition(eventIdKeys, true, null, EVENT_ID_INDEX_NAME);
 
         return Arrays.asList(streamUniqueIndex, unacknowledgedIndex, eventIdIndex);
+    }
+
+    /**
+     * Appends an event to the journal, within the caller's transaction.
+     * <p>
+     * This is an insert, never an upsert: journal events are immutable facts, so an event that is already
+     * there is a defect rather than something to overwrite. The unique {@code (streamId, streamSequence)} and
+     * {@code eventId} indexes are what make that meaningful — if the single-writer-per-stream assumption is
+     * ever violated, the second writer collides here instead of silently duplicating or clobbering. The
+     * resulting write exception propagates, aborting the caller's transaction and taking the audit entry with
+     * it, which is the point of writing both under one session.
+     *
+     * @param clientSession the session owning the transaction this append must join
+     * @param event         the event to append
+     * @return {@link Result#OK()} — failures surface as exceptions, not as a result
+     */
+    Result write(ClientSession clientSession, JournalEvent<AuditEntry> event) {
+        Document document = mapper.toDocument(event);
+        collection.insertOne(clientSession, document);
+        logger.debug("Journal event appended [eventId={} type={} stream={} sequence={}]",
+                event.getEventId(), event.getEventType(), event.getStreamId(), event.getStreamSequence());
+        return Result.OK();
     }
 
     @Override

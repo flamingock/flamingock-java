@@ -19,6 +19,7 @@ package io.flamingock.internal.core.journal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -32,8 +33,12 @@ public class JournalEventSequencer {
         this.nextSequence = initialSequence;   // seeded from outside
     }
 
-    public <T> JournalEvent<T> newEvent(T payload) {
-        JournalEventType type = getType(payload);
+    public JournalEvent<AuditEntry> newEvent(AuditEntry payload) {
+        return getAuditEntryJournalEvent(payload, JournalEventType.CHANGE_STATE);
+    }
+
+    @NotNull
+    private JournalEvent<AuditEntry> getAuditEntryJournalEvent(AuditEntry payload, JournalEventType type) {
         return new JournalEvent<>(
                 UUID.randomUUID().toString(),   // eventId
                 type,
@@ -43,10 +48,4 @@ public class JournalEventSequencer {
                 payload);
     }
 
-    private JournalEventType getType(Object payload) {
-        if(payload instanceof AuditEntry) {
-            return JournalEventType.CHANGE_STATE;
-        }
-        throw new IllegalArgumentException("Cannot process JournalEvent for type: " + payload.getClass().getName());
-    }
 }
