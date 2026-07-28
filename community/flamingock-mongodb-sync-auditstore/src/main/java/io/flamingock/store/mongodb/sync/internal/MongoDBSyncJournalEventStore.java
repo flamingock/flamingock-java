@@ -30,7 +30,7 @@ import io.flamingock.internal.common.mongodb.IndexDefinition;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.core.external.store.journal.JournalEventStore;
+import io.flamingock.internal.core.journal.JournalEventStore;
 import org.bson.Document;
 
 import java.util.ArrayList;
