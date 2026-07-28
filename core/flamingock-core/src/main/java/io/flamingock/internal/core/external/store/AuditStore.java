@@ -17,7 +17,7 @@ package io.flamingock.internal.core.external.store;
 
 import io.flamingock.api.external.ExternalSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 
 public interface AuditStore<PERSISTENCE extends AuditPersistence> extends ExternalSystem, ContextInitializable {
 

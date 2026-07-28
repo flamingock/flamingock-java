@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.audit;
-
-import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.common.core.audit.AuditWriter;
+package io.flamingock.internal.common.core.audit;
 
 import java.util.Collections;
 import java.util.Set;

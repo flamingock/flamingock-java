@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.operation.issue;
 
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.Operation;
 
 public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {

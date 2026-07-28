@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.recovery.FixResult;
 import io.flamingock.internal.common.core.recovery.Resolution;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.util.StringUtil;

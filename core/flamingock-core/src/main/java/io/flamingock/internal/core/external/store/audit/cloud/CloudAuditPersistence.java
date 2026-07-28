@@ -18,7 +18,7 @@ package io.flamingock.internal.core.external.store.audit.cloud;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 
 public interface CloudAuditPersistence extends AuditPersistence {
 

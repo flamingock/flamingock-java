@@ -30,7 +30,7 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.OperationResolver;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;

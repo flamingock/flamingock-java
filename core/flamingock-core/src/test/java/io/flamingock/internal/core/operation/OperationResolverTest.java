@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;

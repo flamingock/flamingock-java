@@ -17,7 +17,6 @@ package io.flamingock.internal.core.operation.issue;
 
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.Operation;
 
 import java.util.Optional;
