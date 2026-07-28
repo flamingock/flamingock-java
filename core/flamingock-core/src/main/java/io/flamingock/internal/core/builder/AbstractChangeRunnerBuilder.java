@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.external.TargetSystem;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
@@ -220,7 +221,12 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
-        hierarchicalContext.addDependency(new Dependency(auditStore.getPersistenceFactory()));
+        // Registered under the interface, not via new Dependency(instance): the factory is a lambda,
+        // so the single-argument constructor would key it by its synthetic class and rely on the
+        // resolver's assignable-scan fallback — and would raise a bare NullPointerException, instead
+        // of Dependency's "dependency instance cannot be null", when a store supplies no factory.
+        hierarchicalContext.addDependency(
+                new Dependency(AuditPersistenceFactory.class, auditStore.getPersistenceFactory()));
 
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used

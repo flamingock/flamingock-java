@@ -137,6 +137,10 @@ class ValidationOnlyIntegrationTest {
                 ));
 
         when(auditStore.getPersistence()).thenReturn(persistence);
+        // The store's reader and per-stage persistence faces are interface defaults delegating to
+        // getPersistence(); a mock does not run them, so they must be stubbed explicitly.
+        when(auditStore.getAuditReader()).thenReturn(persistence);
+        when(auditStore.getPersistenceFactory()).thenReturn(stageId -> persistence);
         when(auditStore.getLockService()).thenReturn(lockService);
 
         return auditStore;
