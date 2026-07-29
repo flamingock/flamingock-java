@@ -18,19 +18,18 @@ package io.flamingock.store.mongodb.sync.internal;
 import com.mongodb.client.ClientSession;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -58,7 +57,11 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     @Override
     protected void doInitialize(RunnerId runnerId) {
         auditRepository.initialize(autoCreate);
-        journalEventStore.initialize(autoCreate);
+        // Creating the indexes is what brings the journal collection into existence — there is no explicit
+        // createCollection call — so skipping this keeps it from ever appearing. It must stay in step with the
+        // append in writeEntry: skipping setup while still appending would let insertOne create the collection
+        // implicitly and without indexes, voiding the unique (streamId, streamSequence) and eventId guarantees.
+        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate));
     }
 
 
@@ -70,10 +73,16 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+        // The transaction is kept unconditionally, even when the journal is disabled. It exists for the
+        // journal — the audit entry and its event must be atomic — and the audit write on its own is a single
+        // upsert that needs no transaction. Consequence: this store requires a replica set (or mongos) either
+        // way, whereas before the journal an unsessioned replaceOne also worked on a standalone mongod.
         return txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-            journalEventStore.write(clientSession, journalEvent);
+            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> {
+                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+                journalEventStore.write(clientSession, journalEvent);
+            });
             return auditRepository.writeEntry(clientSession, auditEntry);
         });
 
