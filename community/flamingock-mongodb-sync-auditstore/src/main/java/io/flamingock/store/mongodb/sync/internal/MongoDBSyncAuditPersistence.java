@@ -79,11 +79,15 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         // way, whereas before the journal an unsessioned replaceOne also worked on a standalone mongod.
         return txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> {
+            // Read once rather than per branch: the journal append and the audit write shape are two halves of
+            // one model. With events, the audit record is the change's current state and the journal is the
+            // history; without them, the audit record set is itself the history.
+            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
                 JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
                 journalEventStore.write(clientSession, journalEvent);
-            });
-            return auditRepository.writeEntry(clientSession, auditEntry);
+                return auditRepository.save(clientSession, auditEntry);
+            }
+            return auditRepository.saveAsHistory(clientSession, auditEntry);
         });
 
     }

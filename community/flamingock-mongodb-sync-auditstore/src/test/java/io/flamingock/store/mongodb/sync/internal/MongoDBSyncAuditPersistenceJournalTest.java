@@ -140,6 +140,34 @@ class MongoDBSyncAuditPersistenceJournalTest {
     }
 
     @Test
+    @DisplayName("journal enabled: successive states collapse to one audit record, the history staying in the journal")
+    void journalEnabledKeepsOneRecordPerChange() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBSyncAuditPersistence persistence = persistenceFor(auditRepository);
+
+        persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.STARTED));
+        persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.APPLIED));
+
+        List<AuditEntry> auditRecords = auditRepository.getAuditHistory();
+        assertEquals(1, auditRecords.size(), "the audit record is the change's current state, not a ledger");
+        assertEquals(AuditEntry.Status.APPLIED, auditRecords.get(0).getState(), "and it holds the latest state");
+
+        assertEquals(2, storedEvents().size(), "while every transition is kept as an event");
+    }
+
+    @Test
+    @DisplayName("journal disabled: successive states accumulate as separate audit records")
+    void journalDisabledKeepsRecordPerStateTransition() {
+        MongoDBSyncAuditPersistence persistence = persistenceFor(auditRepository);
+
+        persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.STARTED));
+        persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.APPLIED));
+
+        assertEquals(2, auditRepository.getAuditHistory().size(),
+                "without the journal the audit collection is itself the history");
+    }
+
+    @Test
     @DisplayName("journal enabled: a failing journal append rolls the audit entry back with it")
     void journalFailureRollsBackAuditEntry() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
@@ -163,7 +191,7 @@ class MongoDBSyncAuditPersistenceJournalTest {
         // key the way the journal can — the failure has to be injected.
         MongoDBSyncAuditRepository failingRepository = mock(MongoDBSyncAuditRepository.class);
         doThrow(new IllegalStateException("audit write failed"))
-                .when(failingRepository).writeEntry(any(ClientSession.class), any(AuditEntry.class));
+                .when(failingRepository).save(any(ClientSession.class), any(AuditEntry.class));
         MongoDBSyncAuditPersistence persistence = persistenceFor(failingRepository);
 
         assertThrows(DatabaseTransactionException.class, () -> persistence.writeEntry(auditEntry("change-1")));
@@ -213,7 +241,11 @@ class MongoDBSyncAuditPersistenceJournalTest {
     }
 
     private static AuditEntry auditEntry(String changeId) {
+        return auditEntry(changeId, AuditEntry.Status.APPLIED);
+    }
+
+    private static AuditEntry auditEntry(String changeId, AuditEntry.Status status) {
         return AuditEntryTestFactory.createTestAuditEntry(
-                changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, (Class<?>) null);
+                changeId, status, AuditTxType.NON_TX, (Class<?>) null);
     }
 }

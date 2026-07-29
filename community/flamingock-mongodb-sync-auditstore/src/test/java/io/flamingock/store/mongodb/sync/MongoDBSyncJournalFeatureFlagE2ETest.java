@@ -21,6 +21,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.feature.Features;
@@ -96,25 +97,32 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
     }
 
     @Test
-    @DisplayName("journal disabled: a full run writes its audit log and never creates the journal collection")
+    @DisplayName("journal disabled: the audit log is the history, and the journal collection is never created")
     void journalDisabledLeavesNoJournalCollection() {
-        runPipeline();
+        runPipeline(
+                STARTED("create-client-collection"),
+                APPLIED("create-client-collection"),
+                STARTED("insert-federico-document"),
+                APPLIED("insert-federico-document"));
 
         assertFalse(mongoDBTestHelper.collectionExists(JOURNAL_COLLECTION),
                 "the journal collection must not exist when the feature is disabled");
     }
 
     @Test
-    @DisplayName("journal enabled: a full run mirrors every audit entry as an ordered event on the stage stream")
-    void journalEnabledMirrorsEveryAuditEntry() {
+    @DisplayName("journal enabled: the audit log holds current state per change, the journal holds the history")
+    void journalEnabledSplitsCurrentStateFromHistory() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
 
-        runPipeline();
+        // One record per change, in its final state — the STARTED transitions no longer survive here.
+        runPipeline(
+                APPLIED("create-client-collection"),
+                APPLIED("insert-federico-document"));
 
         assertTrue(mongoDBTestHelper.collectionExists(JOURNAL_COLLECTION));
         List<JournalEvent<AuditEntry>> events = storedEvents();
 
-        // Two changes, each audited as STARTED then APPLIED.
+        // ...they survive in the journal instead: two changes, each audited as STARTED then APPLIED.
         assertEquals(4, events.size(), "one event per audit write");
         assertTrue(events.stream().allMatch(event -> DEFAULT_STAGE_NAME.equals(event.getStreamId())),
                 "the stream is the stage");
@@ -125,11 +133,16 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
                         "insert-federico-document", "insert-federico-document"),
                 events.stream().map(event -> event.getData().getChangeId()).sorted().collect(Collectors.toList()),
                 "each event carries the audit entry it mirrors");
+        // sorted() on the enum is ordinal order, and STARTED precedes APPLIED in AuditEntry.Status
+        assertEquals(Arrays.asList(AuditEntry.Status.STARTED, AuditEntry.Status.STARTED,
+                        AuditEntry.Status.APPLIED, AuditEntry.Status.APPLIED),
+                events.stream().map(event -> event.getData().getState()).sorted().collect(Collectors.toList()),
+                "including the STARTED transitions the audit log no longer keeps");
     }
 
     // ----------------------------- helpers -----------------------------
 
-    private void runPipeline() {
+    private void runPipeline(AuditEntryExpectation... expectedAudits) {
         MongoDBSyncTargetSystem targetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -142,11 +155,7 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
                         .addTargetSystem(targetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
-                        APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
-                        APPLIED("insert-federico-document"))
+                .THEN_VerifyAuditSequenceStrict(expectedAudits)
                 .run();
     }
 
