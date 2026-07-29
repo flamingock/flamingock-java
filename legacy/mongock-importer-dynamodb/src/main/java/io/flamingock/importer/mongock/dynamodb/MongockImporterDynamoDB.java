@@ -17,16 +17,21 @@ package io.flamingock.importer.mongock.dynamodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class MongockImporterDynamoDB implements AuditHistoryReader {
+
+    private static final Logger logger = LoggerFactory.getLogger("MongockImporter");
 
     private final DynamoDbTable<MongockAuditEntry> sourceTable;
 
@@ -44,7 +49,17 @@ public class MongockImporterDynamoDB implements AuditHistoryReader {
                 .collect(Collectors.toList());
 
         return entries.stream()
-                .map(MongockAuditEntry::toAuditEntry)
+                .map(MongockImporterDynamoDB::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private static AuditEntry toAuditEntry(MongockAuditEntry entry) {
+        if (entry.shouldBeIgnored()) {
+            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (change was already executed by Mongock; not imported into Flamingock audit history).",
+                    entry.getChangeId());
+            return null;
+        }
+        return entry.toAuditEntry();
     }
 }

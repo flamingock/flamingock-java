@@ -61,7 +61,7 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 .toLocalDateTime();
 
         if (changeEntry.shouldBeIgnored()) {
-            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (Mongock never executed this change; nothing to import).",
+            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (change was already executed by Mongock; not imported into Flamingock audit history).",
                     changeEntry.getChangeId());
             return null;
         }
