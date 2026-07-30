@@ -199,6 +199,27 @@ class MongoDBSyncAuditPersistenceJournalTest {
         assertTrue(storedEvents().isEmpty(), "the journal event must not survive a failed audit write");
     }
 
+    @Test
+    @DisplayName("journal enabled: a failed write leaves no gap — its stream position is handed out again")
+    void failedWriteLeavesNoGapInTheStream() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+
+        MongoDBSyncAuditRepository failingRepository = mock(MongoDBSyncAuditRepository.class);
+        doThrow(new IllegalStateException("audit write failed"))
+                .when(failingRepository).save(any(ClientSession.class), any(AuditEntry.class));
+        MongoDBSyncAuditPersistence failing = persistenceFor(failingRepository, sequencer);
+        assertThrows(DatabaseTransactionException.class, () -> failing.writeEntry(auditEntry("change-1")));
+
+        // Same sequencer: the aborted attempt must not have spent position 1.
+        persistenceFor(auditRepository, sequencer).writeEntry(auditEntry("change-1"));
+
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(1, events.size());
+        assertEquals(1L, events.get(0).getStreamSequence(),
+                "the stream must stay contiguous, so consumers can tell in-flight from lost");
+    }
+
     // ----------------------------- helpers -----------------------------
 
     /**
@@ -209,7 +230,11 @@ class MongoDBSyncAuditPersistenceJournalTest {
      * gated.
      */
     private MongoDBSyncAuditPersistence persistenceFor(MongoDBSyncAuditRepository repository) {
-        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        return persistenceFor(repository, new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
+    }
+
+    private MongoDBSyncAuditPersistence persistenceFor(MongoDBSyncAuditRepository repository,
+                                                       JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
                 new CommunityConfiguration(), repository, journalEventStore, sequencer, txWrapper, true);
         persistence.initialize(RunnerId.generate());
