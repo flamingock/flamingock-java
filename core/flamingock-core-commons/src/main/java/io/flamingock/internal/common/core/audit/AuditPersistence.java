@@ -13,23 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.audit;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.common.core.audit.AuditWriter;
-
-import java.util.Collections;
-import java.util.Set;
 
 public interface AuditPersistence extends AuditWriter, AuditReader {
 
-    default Runnable getCloser() {
-        return () -> {
-        };
-    }
 
-    //TODO move this to TargetSystem
-    default Set<Class<?>> getNonGuardedTypes() {
-        return Collections.emptySet();
-    }
 }

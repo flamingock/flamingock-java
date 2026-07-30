@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.audit.cloud;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.util.id.EnvironmentId;
-import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.common.core.audit.AuditPersistence;
+public interface AuditPersistenceFactory<PERSISTENCE extends AuditPersistence> {
 
-public interface CloudAuditPersistence extends AuditPersistence {
+    PERSISTENCE get(String stageId);
 
-    //TODO remove this when cloudBuilder moved to cloud module
-    ExecutionPlanner getExecutionPlanner();
 
 }

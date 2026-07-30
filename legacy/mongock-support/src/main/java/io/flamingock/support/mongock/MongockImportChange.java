@@ -17,6 +17,7 @@ package io.flamingock.support.mongock;
 
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.Nullable;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
@@ -48,7 +49,7 @@ public class MongockImportChange {
 
     public void importHistory(@Named("change.targetSystem.id") String targetSystemId,
                               @NonLockGuarded TargetSystemManager targetSystemManager,
-                              @NonLockGuarded AuditWriter auditWriter,
+                              @NonLockGuarded AuditPersistenceFactory<?> auditPersistenceFactory,
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
                               @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowedPropertyValue,
                               @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImportPropertyValue,
@@ -64,6 +65,7 @@ public class MongockImportChange {
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
         boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntriesPropertyValue);
         validate(legacyHistory, targetSystemId, emptyOriginAllowedPropertyValue);
+        AuditWriter auditWriter = auditPersistenceFactory.get(PipelineHelper.LEGACY_STAGE_ID);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             Optional<String> stageId = pipelineHelper.findStageId(auditEntryFromOrigin);
             if (!stageId.isPresent()) {
