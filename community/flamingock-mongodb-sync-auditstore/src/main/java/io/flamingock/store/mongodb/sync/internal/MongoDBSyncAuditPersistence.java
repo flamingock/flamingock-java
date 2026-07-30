@@ -73,22 +73,22 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-        // The transaction is kept unconditionally, even when the journal is disabled. It exists for the
-        // journal — the audit entry and its event must be atomic — and the audit write on its own is a single
-        // upsert that needs no transaction. Consequence: this store requires a replica set (or mongos) either
-        // way, whereas before the journal an unsessioned replaceOne also worked on a standalone mongod.
-        return txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
-            ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            // Read once rather than per branch: the journal append and the audit write shape are two halves of
-            // one model. With events, the audit record is the change's current state and the journal is the
-            // history; without them, the audit record set is itself the history.
-            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+            return txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+                ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+                // Read once rather than per branch: the journal append and the audit write shape are two halves of
+                // one model. With events, the audit record is the change's current state and the journal is the
+                // history; without them, the audit record set is itself the history.
                 JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
                 journalEventStore.write(clientSession, journalEvent);
                 return auditRepository.save(clientSession, auditEntry);
-            }
-            return auditRepository.saveAsHistory(clientSession, auditEntry);
-        });
+
+            });
+        } else {
+            return auditRepository.append(auditEntry);
+        }
+
+
 
     }
 

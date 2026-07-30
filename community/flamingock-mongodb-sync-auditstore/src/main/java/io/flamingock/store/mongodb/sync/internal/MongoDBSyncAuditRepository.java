@@ -84,7 +84,7 @@ public class MongoDBSyncAuditRepository {
      * Keyed on {@code changeId} alone, which is safe because {@code LoadedPipeline.validate()} rejects
      * duplicate change ids across all stages. Nothing at the database level enforces one-record-per-change —
      * the existing unique index is on {@code (executionId, changeId, state)}, which is the rule for
-     * {@link #saveAsHistory}, not for this. The single-writer guarantee comes from the stage lock.
+     * {@link #append}, not for this. The single-writer guarantee comes from the stage lock.
      */
     Result save(ClientSession clientSession, AuditEntry auditEntry) {
         Bson filter = Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId());
@@ -106,7 +106,7 @@ public class MongoDBSyncAuditRepository {
      * regardless: a legacy changelog can hold several entries for the same change across executions, and
      * {@link #save} would collapse them onto each other, discarding the very history being imported.
      */
-    Result saveAsHistory(ClientSession clientSession, AuditEntry auditEntry) {
+    Result append(AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),
@@ -115,7 +115,7 @@ public class MongoDBSyncAuditRepository {
 
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();
 
-        UpdateResult result = collection.replaceOne(clientSession, filter, entryDocument, new ReplaceOptions().upsert(true));
+        UpdateResult result = collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true));
         logger.debug("SaveOrUpdate[{}] with result" +
                 "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]", auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(), result.wasAcknowledged());
 
