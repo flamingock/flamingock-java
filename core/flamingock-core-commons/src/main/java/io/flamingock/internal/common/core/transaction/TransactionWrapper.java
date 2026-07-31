@@ -104,7 +104,11 @@ public interface TransactionWrapper {
      *                       transaction-scoped dependencies
      * @param operation      the work to execute within the transaction
      * @return whatever the operation returned — including a failed step, when the operation reported
-     *         its failure that way
+     *         its failure that way. <strong>A normal return does not imply the transaction committed</strong>:
+     *         a failed step is returned after a rollback, without an exception. Callers that must know the
+     *         work is durable — to advance a counter, publish, or acknowledge — cannot infer it from a
+     *         normal return alone; they either check the result themselves, or rely on an operation whose
+     *         return type cannot be a failed step.
      * @throws DatabaseTransactionException if the operation throws, or if the transaction itself cannot
      *                                      be started, committed or rolled back
      */
