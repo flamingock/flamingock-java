@@ -15,50 +15,65 @@
  */
 package io.flamingock.store.dynamodb;
 
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.pipeline.PipelineHelper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
+import io.flamingock.store.dynamodb.internal.DynamoDBJournalEventStore;
 import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
 import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
 
+    private static final String DEFAULT_JOURNAL_REPOSITORY_NAME = "flamingockJournalEvents";
+
     private final DynamoDbClient client;
+    private final DynamoDBExternalSystem targetSystem;
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private DynamoDBAuditPersistence persistence;
+    private DynamoDBAuditPersistence legacyPersistence;
     private DynamoDBLockService lockService;
+    private TransactionWrapper txWrapper;
+    private DynamoDBJournalEventStore journalEventStore;
+    private JournalEventSequencerFactory journalEventSequencerFactory;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+    private String journalRepositoryName = DEFAULT_JOURNAL_REPOSITORY_NAME;
     private long readCapacityUnits = 5L;
     private long writeCapacityUnits = 5L;
     private boolean autoCreate = true;
 
-    private DynamoDBAuditStore(DynamoDbClient client) {
-        this.client = client;
+    private DynamoDBAuditStore(DynamoDBExternalSystem targetSystem) {
+        this.targetSystem = targetSystem;
+        this.client = targetSystem.getClient();
     }
 
     /**
      * Creates a {@link DynamoDBAuditStore} using the same DynamoDB client
      * configured in the given {@link DynamoDBExternalSystem}.
      * <p>
-     * Only the underlying DynamoDB instance (client) is reused.
-     * No additional target-system configuration is carried over.
+     * The DynamoDB client and transaction wrapper are reused from the target system.
      *
      * @param targetSystem the target system from which to derive the client
      * @return a new audit store bound to the same DynamoDB instance as the target system
      */
     public static DynamoDBAuditStore from(DynamoDBExternalSystem targetSystem) {
-        return new DynamoDBAuditStore(targetSystem.getClient());
+        return new DynamoDBAuditStore(targetSystem);
     }
 
     @Override
@@ -73,6 +88,11 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
     public DynamoDBAuditStore withLockRepositoryName(String lockRepositoryName) {
         this.lockRepositoryName = lockRepositoryName;
+        return this;
+    }
+
+    public DynamoDBAuditStore withJournalRepositoryName(String journalRepositoryName) {
+        this.journalRepositoryName = journalRepositoryName;
         return this;
     }
 
@@ -95,22 +115,71 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        txWrapper = targetSystem.getTxWrapper();
+        journalEventStore = new DynamoDBJournalEventStore(
+                client,
+                journalRepositoryName,
+                readCapacityUnits,
+                writeCapacityUnits);
+        journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
         this.validate();
     }
 
     @Override
     public synchronized CommunityAuditPersistence getPersistence() {
-        if (persistence == null) {
-            persistence = new DynamoDBAuditPersistence(
+        if (legacyPersistence == null) {
+            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+                journalEventStore.initialize(autoCreate);
+                JournalEventSequencer journalEventSequencer =
+                        journalEventSequencerFactory.forStream(PipelineHelper.LEGACY_STAGE_ID);
+                legacyPersistence = new DynamoDBAuditPersistence(
+                        client,
+                        txWrapper,
+                        journalEventStore,
+                        journalEventSequencer,
+                        journalEventSequencerFactory,
+                        auditRepositoryName,
+                        readCapacityUnits,
+                        writeCapacityUnits,
+                        autoCreate,
+                        communityConfiguration);
+            } else {
+                legacyPersistence = new DynamoDBAuditPersistence(
+                        client,
+                        auditRepositoryName,
+                        readCapacityUnits,
+                        writeCapacityUnits,
+                        autoCreate,
+                        communityConfiguration);
+            }
+            legacyPersistence.initialize(runnerId);
+        }
+        return legacyPersistence;
+    }
+
+    @Override
+    public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+        return stageId -> {
+            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+                return getPersistence();
+            }
+
+            journalEventStore.initialize(autoCreate);
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
                     client,
+                    txWrapper,
+                    journalEventStore,
+                    journalEventSequencer,
+                    journalEventSequencerFactory,
                     auditRepositoryName,
                     readCapacityUnits,
                     writeCapacityUnits,
                     autoCreate,
                     communityConfiguration);
             persistence.initialize(runnerId);
-        }
-        return persistence;
+            return persistence;
+        };
     }
 
     @Override
@@ -140,8 +209,20 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
+        if (journalRepositoryName == null || journalRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'journalRepositoryName' property is required.");
+        }
+
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
     }
 }

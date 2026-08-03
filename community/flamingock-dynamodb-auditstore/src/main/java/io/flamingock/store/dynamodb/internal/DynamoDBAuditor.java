@@ -28,6 +28,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
@@ -76,6 +77,24 @@ public class DynamoDBAuditor implements AuditWriter, CommunityAuditReader {
             throw ex;
         }
         return Result.OK();
+    }
+
+    /**
+     * Stages a current-state audit write in a caller-owned DynamoDB transaction.
+     *
+     * <p>The change identifier is the partition key in journal mode, so successive state transitions replace
+     * the current audit record while the journal keeps the complete transition history.</p>
+     *
+     * @param builder   the transaction builder that owns the audit write
+     * @param auditEntry the audit entry to stage
+     */
+    void stageWrite(TransactWriteItemsEnhancedRequest.Builder builder, AuditEntry auditEntry) {
+        AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
+        entity.setPartitionKey(auditEntry.getChangeId());
+        builder.addPutItem(table, PutItemEnhancedRequest.builder(AuditEntryEntity.class)
+                .item(entity)
+                .build());
+        logger.debug("Staged current-state audit entry with key {}", entity.getPartitionKey());
     }
 
     @Override

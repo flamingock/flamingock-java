@@ -16,10 +16,19 @@
 package io.flamingock.store.dynamodb.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.JournalEvent;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
@@ -31,10 +40,42 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     private final long readCapacityUnits;
     private final long writeCapacityUnits;
     private final boolean autoCreate;
+    private final TransactionWrapper txWrapper;
+    private final DynamoDBJournalEventStore journalEventStore;
+    private final JournalEventSequencer journalEventSequencer;
+    private final JournalEventSequencerFactory journalEventSequencerFactory;
 
     private DynamoDBAuditor auditor;
 
     public DynamoDBAuditPersistence(DynamoDbClient client,
+                                    String auditTableName,
+                                    long readCapacityUnits,
+                                    long writeCapacityUnits,
+                                    boolean autoCreate,
+                                    CommunityConfigurable localConfiguration) {
+        this(client, null, null, null, null, auditTableName, readCapacityUnits, writeCapacityUnits,
+                autoCreate, localConfiguration);
+    }
+
+    /**
+     * Creates a persistence that can atomically stage an audit record and its journal event.
+     *
+     * @param client               DynamoDB client used by the audit and journal stores
+     * @param txWrapper            transaction wrapper shared with the target system
+     * @param journalEventStore    journal store receiving staged events
+     * @param journalEventSequencer per-stage sequencer for the journal stream
+     * @param journalEventSequencerFactory factory used to route imported events to their destination stage
+     * @param auditTableName       audit table name
+     * @param readCapacityUnits   audit and journal read capacity
+     * @param writeCapacityUnits  audit and journal write capacity
+     * @param autoCreate           whether missing tables may be created
+     * @param localConfiguration   community configuration
+     */
+    public DynamoDBAuditPersistence(DynamoDbClient client,
+                                    TransactionWrapper txWrapper,
+                                    DynamoDBJournalEventStore journalEventStore,
+                                    JournalEventSequencer journalEventSequencer,
+                                    JournalEventSequencerFactory journalEventSequencerFactory,
                                     String auditTableName,
                                     long readCapacityUnits,
                                     long writeCapacityUnits,
@@ -46,6 +87,36 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
         this.readCapacityUnits = readCapacityUnits;
         this.writeCapacityUnits = writeCapacityUnits;
         this.autoCreate = autoCreate;
+        this.txWrapper = txWrapper;
+        this.journalEventStore = journalEventStore;
+        this.journalEventSequencer = journalEventSequencer;
+        this.journalEventSequencerFactory = journalEventSequencerFactory;
+    }
+
+    /**
+     * Creates a persistence with a fixed journal stream sequencer.
+     *
+     * @param client               DynamoDB client used by the audit and journal stores
+     * @param txWrapper            transaction wrapper shared with the target system
+     * @param journalEventStore    journal store receiving staged events
+     * @param journalEventSequencer sequencer for the persistence stream
+     * @param auditTableName       audit table name
+     * @param readCapacityUnits   audit and journal read capacity
+     * @param writeCapacityUnits  audit and journal write capacity
+     * @param autoCreate           whether missing tables may be created
+     * @param localConfiguration   community configuration
+     */
+    public DynamoDBAuditPersistence(DynamoDbClient client,
+                                    TransactionWrapper txWrapper,
+                                    DynamoDBJournalEventStore journalEventStore,
+                                    JournalEventSequencer journalEventSequencer,
+                                    String auditTableName,
+                                    long readCapacityUnits,
+                                    long writeCapacityUnits,
+                                    boolean autoCreate,
+                                    CommunityConfigurable localConfiguration) {
+        this(client, txWrapper, journalEventStore, journalEventSequencer, null, auditTableName,
+                readCapacityUnits, writeCapacityUnits, autoCreate, localConfiguration);
     }
 
     @Override
@@ -56,6 +127,9 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
                 auditTableName,
                 readCapacityUnits,
                 writeCapacityUnits);
+        if (journalEventStore != null) {
+            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate));
+        }
     }
 
     @Override
@@ -65,6 +139,24 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+            if (txWrapper == null || journalEventStore == null || journalEventSequencer == null) {
+                throw new IllegalStateException("Journal-enabled persistence requires transaction and journal wiring");
+            }
+            JournalEventSequencer sequencer = journalEventSequencer;
+            RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+            Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+                TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
+                        .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
+                JournalEvent<AuditEntry> journalEvent = sequencer.newEvent(auditEntry);
+                journalEventStore.write(builder, journalEvent);
+                auditor.stageWrite(builder, auditEntry);
+                return Result.OK();
+            });
+            sequencer.confirm();
+            return result;
+        }
         return auditor.writeEntry(auditEntry);
     }
+
 }
