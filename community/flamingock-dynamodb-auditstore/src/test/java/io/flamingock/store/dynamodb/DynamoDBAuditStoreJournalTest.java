@@ -21,7 +21,6 @@ import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
@@ -35,12 +34,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,48 +111,107 @@ class DynamoDBAuditStoreJournalTest {
     }
 
     @Test
-    @DisplayName("journal-disabled stores keep the legacy factory path and do not create the journal table")
-    void journalDisabledStoreFactoryKeepsLegacyPath() {
-        SimpleContext context = newContext();
-        DynamoDBAuditStore auditStore = initializeStore(context);
-
-        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get(STAGE_ONE);
-        persistence.writeEntry(auditEntry("legacy-change"));
-
-        assertEquals(1, persistence.getAuditHistory().size());
-        assertTrue(client.listTables().tableNames().contains(auditTableName));
-        assertFalse(client.listTables().tableNames().contains(journalTableName),
-                "flag OFF must not initialize the journal table through the persistence factory");
-    }
-
-    @Test
-    @DisplayName("journal-enabled deprecated getPersistence remains writable on the default stream")
-    void journalEnabledDeprecatedPersistenceRemainsWritable() {
+    @DisplayName("journal-enabled store reseeds each requested stage independently")
+    void journalEnabledStoreReseedsEachRequestedStageIndependently() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         SimpleContext context = newContext();
         DynamoDBAuditStore auditStore = initializeStore(context);
 
-        CommunityAuditPersistence persistence = auditStore.getPersistence();
-        persistence.writeEntry(auditEntry("deprecated-direct-write"));
+        auditStore.getPersistenceFactory().get(STAGE_ONE).writeEntry(auditEntry("stage-one-first"));
+        auditStore.getPersistenceFactory().get(STAGE_TWO).writeEntry(auditEntry("stage-two-first"));
+        auditStore.getPersistenceFactory().get(STAGE_ONE).writeEntry(auditEntry("stage-one-second"));
 
-        assertEquals(1, persistence.getAuditHistory().size());
         List<JournalEvent<AuditEntry>> events = storedEvents();
-        assertEquals(1, events.size());
-        assertEquals(PipelineHelper.LEGACY_STAGE_ID, events.get(0).getStreamId());
-        assertEquals(1L, events.get(0).getStreamSequence());
+        assertEquals(3, events.size());
+        assertTrue(events.stream().anyMatch(event -> STAGE_ONE.equals(event.getStreamId())
+                && event.getStreamSequence() == 1L
+                && "stage-one-first".equals(event.getData().getChangeId())));
+        assertTrue(events.stream().anyMatch(event -> STAGE_ONE.equals(event.getStreamId())
+                && event.getStreamSequence() == 2L
+                && "stage-one-second".equals(event.getData().getChangeId())));
+        assertTrue(events.stream().anyMatch(event -> STAGE_TWO.equals(event.getStreamId())
+                && event.getStreamSequence() == 1L
+                && "stage-two-first".equals(event.getData().getChangeId())));
     }
 
     @Test
-    @DisplayName("journal-disabled deprecated getPersistence keeps the append-only path")
-    void journalDisabledDeprecatedPersistenceKeepsAppendPath() {
+    @DisplayName("journal-enabled autoCreate completes an audit-only installation with a journal table")
+    void journalEnabledAutoCreatesJournalForAuditOnlyInstallation() {
+        client = Mockito.spy(client);
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
         SimpleContext context = newContext();
         DynamoDBAuditStore auditStore = initializeStore(context);
 
-        CommunityAuditPersistence persistence = auditStore.getPersistence();
+        assertTrue(auditStore.getAuditReader().getAuditHistory().isEmpty());
+        assertTrue(client.listTables().tableNames().contains(auditTableName));
+
+        auditStore.getPersistenceFactory().get(STAGE_ONE).writeEntry(auditEntry("audit-only-change"));
+        auditStore.getPersistenceFactory().get(STAGE_TWO);
+
+        assertTrue(client.listTables().tableNames().contains(journalTableName));
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(1, events.size());
+        assertEquals("audit-only-change", events.get(0).getData().getChangeId());
+        Mockito.verify(client, Mockito.times(2)).createTable(ArgumentMatchers.any(CreateTableRequest.class));
+    }
+
+    @Test
+    @DisplayName("non-positive capacities fail before DynamoDB setup")
+    void nonPositiveCapacitiesFailBeforeDynamoDbSetup() {
+        SimpleContext context = newContext();
+        DynamoDBAuditStore invalidReadCapacity = DynamoDBAuditStore.from(initializedTargetSystem(context))
+                .withAuditRepositoryName(auditTableName)
+                .withLockRepositoryName(lockTableName)
+                .withJournalRepositoryName(journalTableName)
+                .withReadCapacityUnits(0L);
+        DynamoDBAuditStore invalidWriteCapacity = DynamoDBAuditStore.from(initializedTargetSystem(context))
+                .withAuditRepositoryName(auditTableName)
+                .withLockRepositoryName(lockTableName)
+                .withJournalRepositoryName(journalTableName)
+                .withWriteCapacityUnits(-1L);
+
+        assertThrows(FlamingockException.class, () -> invalidReadCapacity.initialize(context));
+        assertThrows(FlamingockException.class, () -> invalidWriteCapacity.initialize(context));
+        assertTrue(client.listTables().tableNames().isEmpty());
+    }
+
+    @Test
+    @DisplayName("manual setup validates the audit table before the journal table")
+    void manualSetupValidatesAuditTableBeforeJournalSetup() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        SimpleContext context = newContext();
+        DynamoDBAuditStore auditStore = DynamoDBAuditStore.from(initializedTargetSystem(context))
+                .withAuditRepositoryName(auditTableName)
+                .withLockRepositoryName(lockTableName)
+                .withJournalRepositoryName(journalTableName)
+                .withAutoCreate(false);
+        auditStore.initialize(context);
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> auditStore.getPersistenceFactory().get(STAGE_ONE));
+
+        assertTrue(exception.getMessage().contains("audit table"));
+        assertFalse(client.listTables().tableNames().contains(journalTableName));
+    }
+
+    @Test
+    @DisplayName("journal-enabled persistence remains stage-aware while the reader stays available")
+    void journalEnabledPersistenceRemainsStageAwareAndKeepsReaderAvailable() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        SimpleContext context = newContext();
+        DynamoDBAuditStore auditStore = initializeStore(context);
+
+        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get(STAGE_ONE);
         persistence.writeEntry(auditEntry("deprecated-direct-write"));
 
         assertEquals(1, persistence.getAuditHistory().size());
-        assertFalse(client.listTables().tableNames().contains(journalTableName));
+        assertEquals(1, auditStore.getAuditReader().getAuditHistory().size(),
+                "journal-enabled history reads must use the independent audit reader");
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(1, events.size());
+        assertEquals(STAGE_ONE, events.get(0).getStreamId());
+        assertEquals(1L, events.get(0).getStreamSequence());
     }
 
     @Test
@@ -176,6 +237,7 @@ class DynamoDBAuditStoreJournalTest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
+                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
                 .collect(Collectors.toList());
     }

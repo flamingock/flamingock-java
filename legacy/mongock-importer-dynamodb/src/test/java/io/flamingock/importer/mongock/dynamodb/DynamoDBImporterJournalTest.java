@@ -210,6 +210,7 @@ class DynamoDBImporterJournalTest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
+                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
                 .collect(Collectors.toList());
     }

@@ -42,24 +42,28 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.Projection;
 import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * DynamoDB implementation of the local journal ({@code flamingockJournalEvents}).
@@ -68,14 +72,14 @@ import java.util.stream.Collectors;
  * <p>
  * The table has a base key of {@code (streamId, streamSequence)} with two GSIs:
  * <ul>
- *   <li>{@code PendingEventsIndex} — a sparse GSI over {@code (pendingStreamId, streamSequence)} that only
- *       contains unacknowledged events and serves the ordered unacknowledged batch scan;</li>
+ *   <li>{@code PendingEventsIndex} — a sparse GSI over a constant pending partition and an order key that only
+ *       contains unacknowledged events and serves the ordered unacknowledged batch query;</li>
  *   <li>{@code EventIdIndex} — a deliberately non-unique GSI over {@code eventId} serving the
- *       acknowledgement lookup only. It MUST NOT enforce eventId uniqueness; only the
- *       {@code (streamId, streamSequence)} position guard restricts appends.</li>
+ *       acknowledgement lookup only. It MUST NOT enforce eventId uniqueness; the
+ *       reserved journal item and {@code (streamId, streamSequence)} position guard restrict appends.</li>
  * </ul>
  * Reads and acknowledgements are exposed through {@link JournalEventStore}. The append
- * ({@link #write(TransactWriteItemsEnhancedRequest.Builder, JournalEvent)}) deliberately is not: it stages a
+ * ({@link #contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder, JournalEvent)}) deliberately is not: it stages a
  * conditional put on the shared transaction builder so the event lands in the same transaction as the audit
  * entry it mirrors, and a transaction-request builder has no place in a core interface. Only
  * {@link DynamoDBAuditPersistence} — which owns that transaction boundary — calls it.
@@ -83,6 +87,8 @@ import java.util.stream.Collectors;
 public class DynamoDBJournalEventStore implements JournalEventStore {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoDBJournal");
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+    private static final int MAX_DYNAMODB_PARTITION_KEY_BYTES = 2048;
 
     private final DynamoDBUtil dynamoDBUtil;
     private final String tableName;
@@ -104,38 +110,76 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
     }
 
     /**
-     * Initializes the store, gated by the {@link Features#JOURNAL_EVENTS} feature flag: when the flag is off
-     * nothing happens (no table, no indexes). When it is on, {@code autoCreate} creates the table (ignoring
-     * {@code ResourceInUseException} when it already exists) or asserts that it exists.
+     * Encodes an event ID into the reserved stream namespace. The byte-length prefix and UTF-8 hex
+     * representation make the encoding injective even when event IDs contain delimiters or non-ASCII
+     * characters.
      *
-     * @param autoCreate whether to create the table when missing
+     * @param eventId event ID to encode
+     * @return reserved stream identifier
      */
-    public void initialize(boolean autoCreate) {
-        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> {
-            if (autoCreate) {
-                createTable();
-            } else {
-                assertTableExists();
-            }
-            table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(JournalEventEntity.class));
-            pendingEventsIndex = table.index(JournalEventFieldConstants.PENDING_EVENTS_INDEX);
-            eventIdIndex = table.index(JournalEventFieldConstants.EVENT_ID_INDEX);
-        });
+    static String reservationStreamId(String eventId) {
+        if (eventId == null || eventId.trim().isEmpty()) {
+            throw new IllegalArgumentException("eventId must not be blank");
+        }
+        byte[] bytes = eventId.getBytes(StandardCharsets.UTF_8);
+        StringBuilder encoded = new StringBuilder(
+                JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX.length() + 12 + bytes.length * 2);
+        encoded.append(JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX)
+                .append(bytes.length)
+                .append(':');
+        for (byte value : bytes) {
+            encoded.append(HEX_DIGITS[(value >>> 4) & 0x0F]);
+            encoded.append(HEX_DIGITS[value & 0x0F]);
+        }
+        String reservationStreamId = encoded.toString();
+        if (reservationStreamId.getBytes(StandardCharsets.UTF_8).length > MAX_DYNAMODB_PARTITION_KEY_BYTES) {
+            throw new IllegalArgumentException("eventId reservation key exceeds DynamoDB's 2048-byte partition-key limit");
+        }
+        return reservationStreamId;
     }
 
     /**
-     * Stages a conditional append of the event on the caller's transaction builder. No server call happens
-     * until the caller commits the transaction. If another event already occupies
-     * {@code (streamId, streamSequence)}, the commit is cancelled and the failure surfaces as a
-     * {@code DatabaseTransactionException} (mapped by {@code DynamoDBTxWrapper}).
+     * Initializes the store, gated by the {@link Features#JOURNAL_EVENTS} feature flag: when the flag is off
+     * nothing happens (no table, no indexes). When it is on, {@code autoCreate} creates and waits for the
+     * configured table when needed; otherwise the manually configured table is checked for the required shape.
+     *
+     * @param autoCreate whether to create the table when missing
+     */
+    public synchronized void initialize(boolean autoCreate) {
+        if (!isJournalEventsEnabled() || table != null) {
+            return;
+        }
+        if (autoCreate) {
+            createTable();
+        }
+        validateSchema();
+        table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(JournalEventEntity.class));
+        pendingEventsIndex = table.index(JournalEventFieldConstants.PENDING_EVENTS_INDEX);
+        eventIdIndex = table.index(JournalEventFieldConstants.EVENT_ID_INDEX);
+    }
+
+    /**
+     * Stages a permanent conditional event-ID reservation and a conditional event append on the caller's
+     * transaction builder. No server call happens until the caller commits the transaction. If the event ID
+     * or {@code (streamId, streamSequence)} is already occupied, the complete transaction is cancelled and
+     * the failure surfaces as a {@code DatabaseTransactionException} (mapped by {@code DynamoDBTxWrapper}).
      *
      * @param builder the shared {@code TransactWriteItemsEnhancedRequest} builder
      * @param event   the event to append
      */
-    public void write(TransactWriteItemsEnhancedRequest.Builder builder, JournalEvent<AuditEntry> event) {
+    void contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder builder, JournalEvent<AuditEntry> event) {
         if (table == null) {
             throw new IllegalStateException("DynamoDB journal store is not initialized");
         }
+        JournalEventEntity reservation = new JournalEventEntity();
+        reservation.setStreamId(reservationStreamId(event.getEventId()));
+        reservation.setStreamSequence(JournalEventFieldConstants.EVENT_ID_RESERVATION_SEQUENCE);
+        builder.addPutItem(table, PutItemEnhancedRequest.builder(JournalEventEntity.class)
+                .item(reservation)
+                .conditionExpression(Expression.builder()
+                        .expression("attribute_not_exists(" + JournalEventFieldConstants.KEY_STREAM_ID + ")")
+                        .build())
+                .build());
         builder.addPutItem(table, PutItemEnhancedRequest.builder(JournalEventEntity.class)
                 .item(DynamoDBJournalEventMapper.toEntity(event))
                 .conditionExpression(Expression.builder()
@@ -148,7 +192,7 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
 
     @Override
     public Optional<JournalEvent<AuditEntry>> getLastEventByStream(String streamId) {
-        if (table == null) {
+        if (table == null || DynamoDBJournalEventMapper.isReservationStream(streamId)) {
             return Optional.empty();
         }
         PageIterable<JournalEventEntity> pages = table.query(lastEventQuery(streamId));
@@ -175,14 +219,25 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
         if (pendingEventsIndex == null) {
             return Collections.emptyList();
         }
-        List<JournalEventEntity> entities = new ArrayList<>();
-        pendingEventsIndex.scan().forEach(page -> entities.addAll(page.items()));
-        entities.sort(Comparator.comparing(JournalEventEntity::getPendingStreamId)
-                .thenComparing(JournalEventEntity::getStreamSequence));
-        return entities.stream()
+
+        List<JournalEvent<AuditEntry>> events = new ArrayList<>();
+        Iterator<Page<JournalEventEntity>> pages = pendingEventsIndex.query(pendingEventsQuery(limit)).iterator();
+        if (!pages.hasNext()) {
+            return events;
+        }
+        for (JournalEventEntity entity : pages.next().items()) {
+            events.add(DynamoDBJournalEventMapper.fromEntity(entity));
+        }
+        return events;
+    }
+
+    static QueryEnhancedRequest pendingEventsQuery(int limit) {
+        return QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(
+                        Key.builder().partitionValue(JournalEventFieldConstants.PENDING_PARTITION_VALUE).build()))
+                .scanIndexForward(true)
                 .limit(limit)
-                .map(DynamoDBJournalEventMapper::fromEntity)
-                .collect(Collectors.toList());
+                .build();
     }
 
     @Override
@@ -191,11 +246,14 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
             return 0L;
         }
         long acknowledged = 0L;
-        for (String eventId : eventIds) {
+        for (String eventId : new LinkedHashSet<>(eventIds)) {
+            if (eventId == null || eventId.trim().isEmpty()) {
+                continue;
+            }
             QueryConditional queryConditional = QueryConditional.keyEqualTo(Key.builder().partitionValue(eventId).build());
             for (Page<JournalEventEntity> page : eventIdIndex.query(queryConditional)) {
                 for (JournalEventEntity entity : page.items()) {
-                    if (removePendingAttribute(entity)) {
+                    if (removePendingAttributes(entity)) {
                         acknowledged++;
                     }
                 }
@@ -205,12 +263,12 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
     }
 
     /**
-     * Drops the {@code pendingStreamId} attribute, which removes the item from the sparse pending GSI.
-     * Conditioned on the attribute existing so re-acknowledging an already acknowledged event is a no-op.
+     * Drops both pending attributes, which removes the item from the sparse pending GSI. Conditioned on both
+     * attributes existing so re-acknowledging an already acknowledged event is a no-op.
      *
      * @return {@code true} when the item was actually updated
      */
-    private boolean removePendingAttribute(JournalEventEntity entity) {
+    private boolean removePendingAttributes(JournalEventEntity entity) {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put(JournalEventFieldConstants.KEY_STREAM_ID, AttributeValue.builder().s(entity.getStreamId()).build());
         key.put(JournalEventFieldConstants.KEY_STREAM_SEQUENCE,
@@ -219,8 +277,10 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
             dynamoDBUtil.getDynamoDBClient().updateItem(UpdateItemRequest.builder()
                     .tableName(tableName)
                     .key(key)
-                    .updateExpression("REMOVE " + JournalEventFieldConstants.KEY_PENDING_STREAM_ID)
-                    .conditionExpression("attribute_exists(" + JournalEventFieldConstants.KEY_PENDING_STREAM_ID + ")")
+                    .updateExpression("REMOVE " + JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY + ", "
+                            + JournalEventFieldConstants.KEY_PENDING_ORDER_KEY)
+                    .conditionExpression("attribute_exists(" + JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY
+                            + ") AND attribute_exists(" + JournalEventFieldConstants.KEY_PENDING_ORDER_KEY + ")")
                     .build());
             return true;
         } catch (ConditionalCheckFailedException ex) {
@@ -241,7 +301,11 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
                 .attributeType(ScalarAttributeType.N)
                 .build());
         attributeDefinitions.add(AttributeDefinition.builder()
-                .attributeName(JournalEventFieldConstants.KEY_PENDING_STREAM_ID)
+                .attributeName(JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY)
+                .attributeType(ScalarAttributeType.S)
+                .build());
+        attributeDefinitions.add(AttributeDefinition.builder()
+                .attributeName(JournalEventFieldConstants.KEY_PENDING_ORDER_KEY)
                 .attributeType(ScalarAttributeType.S)
                 .build());
         attributeDefinitions.add(AttributeDefinition.builder()
@@ -254,11 +318,11 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
                 .indexName(JournalEventFieldConstants.PENDING_EVENTS_INDEX)
                 .keySchema(Arrays.asList(
                         KeySchemaElement.builder()
-                                .attributeName(JournalEventFieldConstants.KEY_PENDING_STREAM_ID)
+                                .attributeName(JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY)
                                 .keyType(KeyType.HASH)
                                 .build(),
                         KeySchemaElement.builder()
-                                .attributeName(JournalEventFieldConstants.KEY_STREAM_SEQUENCE)
+                                .attributeName(JournalEventFieldConstants.KEY_PENDING_ORDER_KEY)
                                 .keyType(KeyType.RANGE)
                                 .build()))
                 .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
@@ -270,7 +334,7 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
                         .attributeName(JournalEventFieldConstants.KEY_EVENT_ID)
                         .keyType(KeyType.HASH)
                         .build()))
-                .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                .projection(Projection.builder().projectionType(ProjectionType.KEYS_ONLY).build())
                 .provisionedThroughput(dynamoDBUtil.getProvisionedThroughput(readCapacityUnits, writeCapacityUnits))
                 .build());
 
@@ -284,7 +348,79 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
                 globalSecondaryIndexes);
     }
 
-    private void assertTableExists() {
-        dynamoDBUtil.getDynamoDBClient().describeTable(DescribeTableRequest.builder().tableName(tableName).build());
+    private void validateSchema() {
+        TableDescription description;
+        try {
+            description = dynamoDBUtil.getDynamoDBClient().describeTable(
+                    DescribeTableRequest.builder().tableName(tableName).build()).table();
+        } catch (ResourceNotFoundException exception) {
+            throw new IllegalStateException("DynamoDB journal table '" + tableName
+                    + "' is missing or has an invalid schema", exception);
+        }
+
+        boolean baseKeysValid = hasKeySchema(description.keySchema(), JournalEventFieldConstants.KEY_STREAM_ID,
+                KeyType.HASH.toString(), JournalEventFieldConstants.KEY_STREAM_SEQUENCE, KeyType.RANGE.toString());
+        GlobalSecondaryIndexDescription pendingIndex = findIndex(description, JournalEventFieldConstants.PENDING_EVENTS_INDEX);
+        GlobalSecondaryIndexDescription eventIdIndex = findIndex(description, JournalEventFieldConstants.EVENT_ID_INDEX);
+        boolean indexesValid = pendingIndex != null
+                && hasKeySchema(pendingIndex.keySchema(), JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY,
+                KeyType.HASH.toString(), JournalEventFieldConstants.KEY_PENDING_ORDER_KEY, KeyType.RANGE.toString())
+                && pendingIndex.projection() != null
+                && pendingIndex.projection().projectionType() == ProjectionType.ALL
+                && eventIdIndex != null
+                && hasKeySchema(eventIdIndex.keySchema(), JournalEventFieldConstants.KEY_EVENT_ID, KeyType.HASH.toString())
+                && eventIdIndex.projection() != null
+                && eventIdIndex.projection().projectionType() == ProjectionType.KEYS_ONLY;
+        boolean attributesValid = hasAttribute(description, JournalEventFieldConstants.KEY_STREAM_ID, ScalarAttributeType.S)
+                && hasAttribute(description, JournalEventFieldConstants.KEY_STREAM_SEQUENCE, ScalarAttributeType.N)
+                && hasAttribute(description, JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY, ScalarAttributeType.S)
+                && hasAttribute(description, JournalEventFieldConstants.KEY_PENDING_ORDER_KEY, ScalarAttributeType.S)
+                && hasAttribute(description, JournalEventFieldConstants.KEY_EVENT_ID, ScalarAttributeType.S);
+        if (!baseKeysValid || !indexesValid || !attributesValid) {
+            throw new IllegalStateException("DynamoDB journal table '" + tableName
+                    + "' has an invalid key or index schema");
+        }
+    }
+
+    private GlobalSecondaryIndexDescription findIndex(TableDescription description, String indexName) {
+        if (description.globalSecondaryIndexes() == null) {
+            return null;
+        }
+        for (GlobalSecondaryIndexDescription index : description.globalSecondaryIndexes()) {
+            if (indexName.equals(index.indexName())) {
+                return index;
+            }
+        }
+        return null;
+    }
+
+    private boolean hasAttribute(TableDescription description, String name, ScalarAttributeType type) {
+        if (description.attributeDefinitions() == null) {
+            return false;
+        }
+        return description.attributeDefinitions().stream()
+                .anyMatch(attribute -> name.equals(attribute.attributeName()) && type == attribute.attributeType());
+    }
+
+    private boolean hasKeySchema(List<KeySchemaElement> schema, String... expected) {
+        if (schema == null || schema.size() * 2 != expected.length) {
+            return false;
+        }
+        for (int i = 0; i < schema.size(); i++) {
+            KeySchemaElement element = schema.get(i);
+            if (!expected[2 * i].equals(element.attributeName())
+                    || !expected[2 * i + 1].equals(element.keyType().toString())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isJournalEventsEnabled() {
+        try {
+            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
+        } catch (RuntimeException exception) {
+            return false;
+        }
     }
 }

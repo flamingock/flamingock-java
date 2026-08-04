@@ -31,6 +31,7 @@ import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.DynamoDBTestContainer;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
 import org.junit.jupiter.api.AfterEach;
@@ -49,6 +50,8 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +63,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 /**
  * Drives the DynamoDB persistence directly so the audit put and journal put can be verified at one transaction
@@ -139,6 +145,53 @@ class DynamoDBAuditPersistenceJournalTest {
         assertEquals(entry.getChangeId(), event.getData().getChangeId());
     }
 
+        @Test
+    @DisplayName("journal-enabled persistence creates the journal beside an existing audit table")
+    void journalEnabledCreatesJournalFromAuditOnlyInstallation() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        new DynamoDBAuditor(client).initialize(true, auditTableName, 5L, 5L);
+
+        DynamoDBAuditPersistence persistence = persistenceFor(newSequencer());
+        persistence.writeEntry(auditEntry("audit-only-change", AuditEntry.Status.APPLIED));
+
+        assertTrue(tableExists(auditTableName));
+        assertTrue(tableExists(journalTableName));
+        assertEquals(1, storedEvents().size());
+        assertEquals("audit-only-change", storedEvents().get(0).getData().getChangeId());
+    }
+
+    @Test
+    @DisplayName("persistence uses current envelope time and retains historical imported timestamp")
+    void journalEnabledSeparatesEnvelopeAndImportedEntryTimes() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        DynamoDBAuditPersistence persistence = persistenceFor(newSequencer());
+        LocalDateTime historical = LocalDateTime.of(2020, 1, 2, 3, 4, 5);
+        AuditEntry imported = importedAuditEntry("legacy-timestamp", historical);
+
+        persistence.writeEntry(imported);
+
+        JournalEvent<AuditEntry> event = storedEvents().get(0);
+        assertEquals(historical, event.getData().getCreatedAt());
+        assertTrue(event.getOccurredAt().isAfter(historical.toInstant(ZoneOffset.UTC)));
+    }
+
+    @Test
+    @DisplayName("persistence uses injected reader and writer collaborators for the append path")
+    void persistenceUsesInjectedReaderAndWriterCollaborators() {
+        DynamoDBAuditor reader = mock(DynamoDBAuditor.class);
+        DynamoDBAuditWriter writer = mock(DynamoDBAuditWriter.class);
+        AuditEntry entry = auditEntry("injected-change", AuditEntry.Status.APPLIED);
+        when(reader.getAuditHistory()).thenReturn(java.util.Collections.singletonList(entry));
+
+        DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
+                new CommunityConfiguration(), reader, writer, null, null, null, null,
+                auditTableName, 5L, 5L, true);
+        persistence.initialize(RunnerId.generate());
+
+        assertEquals(java.util.Collections.singletonList(entry), persistence.getAuditHistory());
+        persistence.writeEntry(entry);
+    }
+
     @Test
     @DisplayName("journal enabled collapses successive states to one current audit record while retaining both events")
     void journalEnabledKeepsCurrentStateAuditRecordAndJournalHistory() {
@@ -156,6 +209,26 @@ class DynamoDBAuditPersistenceJournalTest {
         assertEquals(2, events.size(), "every state transition must remain in the journal");
         assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 1L));
         assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 2L));
+    }
+
+    @Test
+    @DisplayName("duplicate event IDs abort the audit and journal writes together")
+    void duplicateEventIdAbortsCompleteJournalWrite() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        AuditEntry firstAudit = auditEntry("first-change", AuditEntry.Status.APPLIED);
+        AuditEntry secondAudit = auditEntry("second-change", AuditEntry.Status.APPLIED);
+        JournalEvent<AuditEntry> firstEvent = journalEvent("reserved-event", 1L, firstAudit);
+        JournalEvent<AuditEntry> secondEvent = journalEvent("reserved-event", 2L, secondAudit);
+        JournalEventSequencer sequencer = mock(JournalEventSequencer.class);
+        when(sequencer.newEvent(any(AuditEntry.class))).thenReturn(firstEvent, secondEvent);
+        DynamoDBAuditPersistence persistence = persistenceFor(sequencer);
+
+        persistence.writeEntry(firstAudit);
+        assertThrows(DatabaseTransactionException.class, () -> persistence.writeEntry(secondAudit));
+
+        assertEquals(1, storedAuditRecords().size(), "the first current-state audit write must remain");
+        assertEquals(1, storedEvents().size(), "the duplicate event must not append a journal row");
+        assertEquals("reserved-event", storedEvents().get(0).getEventId());
     }
 
     @Test
@@ -213,16 +286,20 @@ class DynamoDBAuditPersistenceJournalTest {
     }
 
     private DynamoDBAuditPersistence persistenceFor(JournalEventSequencer sequencer) {
+        JournalEventSequencerFactory sequencerFactory = mock(JournalEventSequencerFactory.class);
+        when(sequencerFactory.forStream(STREAM_ID)).thenReturn(sequencer);
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
-                client,
-                txWrapper,
+                new CommunityConfiguration(),
+                new DynamoDBAuditor(client),
+                new DynamoDBAuditWriter(client),
                 journalEventStore,
-                sequencer,
+                txWrapper,
+                sequencerFactory,
+                STREAM_ID,
                 auditTableName,
                 5L,
                 5L,
-                true,
-                new CommunityConfiguration());
+                true);
         persistence.initialize(io.flamingock.internal.util.id.RunnerId.generate());
         return persistence;
     }
@@ -264,6 +341,7 @@ class DynamoDBAuditPersistenceJournalTest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
+                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -318,6 +396,43 @@ class DynamoDBAuditPersistenceJournalTest {
                 auditEntry.getOrder(),
                 auditEntry.getRecoveryStrategy(),
                 auditEntry.getTransactionFlag());
+    }
+
+    private static AuditEntry importedAuditEntry(String changeId, LocalDateTime createdAt) {
+        AuditEntry source = legacyAuditEntry(changeId, AuditEntry.Status.APPLIED);
+        return new AuditEntry(
+                source.getExecutionId(),
+                source.getStageId(),
+                source.getChangeId(),
+                source.getAuthor(),
+                createdAt,
+                source.getState(),
+                source.getType(),
+                source.getClassName(),
+                source.getMethodName(),
+                source.getSourceFile(),
+                source.getExecutionMillis(),
+                source.getExecutionHostname(),
+                source.getMetadata(),
+                source.getSystemChange(),
+                source.getErrorTrace(),
+                source.getTxType(),
+                source.getTargetSystemId(),
+                source.getOrder(),
+                source.getRecoveryStrategy(),
+                source.getTransactionFlag());
+    }
+
+    private static JournalEvent<AuditEntry> journalEvent(String eventId,
+                                                         long sequence,
+                                                         AuditEntry auditEntry) {
+        return new JournalEvent<>(
+                eventId,
+                JournalEventType.CHANGE_STATE,
+                STREAM_ID,
+                sequence,
+                Instant.now(),
+                auditEntry);
     }
 
     private static String tableName(String prefix) {

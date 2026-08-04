@@ -16,23 +16,21 @@
 package io.flamingock.store.dynamodb;
 
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.common.core.pipeline.PipelineHelper;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
-import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
-import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
+import io.flamingock.store.dynamodb.internal.DynamoDBAuditWriter;
+import io.flamingock.store.dynamodb.internal.DynamoDBAuditor;
 import io.flamingock.store.dynamodb.internal.DynamoDBJournalEventStore;
 import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
 import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
@@ -46,11 +44,11 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     private final DynamoDBExternalSystem targetSystem;
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private DynamoDBAuditPersistence legacyPersistence;
     private DynamoDBLockService lockService;
-    private TransactionWrapper txWrapper;
     private DynamoDBJournalEventStore journalEventStore;
     private JournalEventSequencerFactory journalEventSequencerFactory;
+    private DynamoDBAuditor auditReader;
+    private DynamoDBAuditWriter auditWriter;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private String journalRepositoryName = DEFAULT_JOURNAL_REPOSITORY_NAME;
@@ -115,71 +113,30 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-        txWrapper = targetSystem.getTxWrapper();
         journalEventStore = new DynamoDBJournalEventStore(
                 client,
                 journalRepositoryName,
                 readCapacityUnits,
                 writeCapacityUnits);
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+        auditReader = new DynamoDBAuditor(client);
+        auditWriter = new DynamoDBAuditWriter(client);
         this.validate();
-    }
-
-    @Override
-    public synchronized CommunityAuditPersistence getPersistence() {
-        if (legacyPersistence == null) {
-            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-                journalEventStore.initialize(autoCreate);
-                JournalEventSequencer journalEventSequencer =
-                        journalEventSequencerFactory.forStream(PipelineHelper.LEGACY_STAGE_ID);
-                legacyPersistence = new DynamoDBAuditPersistence(
-                        client,
-                        txWrapper,
-                        journalEventStore,
-                        journalEventSequencer,
-                        journalEventSequencerFactory,
-                        auditRepositoryName,
-                        readCapacityUnits,
-                        writeCapacityUnits,
-                        autoCreate,
-                        communityConfiguration);
-            } else {
-                legacyPersistence = new DynamoDBAuditPersistence(
-                        client,
-                        auditRepositoryName,
-                        readCapacityUnits,
-                        writeCapacityUnits,
-                        autoCreate,
-                        communityConfiguration);
-            }
-            legacyPersistence.initialize(runnerId);
-        }
-        return legacyPersistence;
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-                return getPersistence();
-            }
-
-            journalEventStore.initialize(autoCreate);
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
-            DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
-                    client,
-                    txWrapper,
-                    journalEventStore,
-                    journalEventSequencer,
-                    journalEventSequencerFactory,
-                    auditRepositoryName,
-                    readCapacityUnits,
-                    writeCapacityUnits,
-                    autoCreate,
-                    communityConfiguration);
+            DynamoDBAuditPersistence persistence = createPersistence(stageId);
             persistence.initialize(runnerId);
             return persistence;
         };
+    }
+
+    @Override
+    public synchronized AuditReader getAuditReader() {
+        auditReader.initialize(autoCreate, auditRepositoryName, readCapacityUnits, writeCapacityUnits);
+        return auditReader;
     }
 
     @Override
@@ -213,6 +170,14 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'journalRepositoryName' property is required.");
         }
 
+        if (readCapacityUnits <= 0) {
+            throw new FlamingockException("The 'readCapacityUnits' property must be greater than zero.");
+        }
+
+        if (writeCapacityUnits <= 0) {
+            throw new FlamingockException("The 'writeCapacityUnits' property must be greater than zero.");
+        }
+
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
@@ -225,4 +190,20 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
     }
+
+    private DynamoDBAuditPersistence createPersistence(String stageId) {
+        return new DynamoDBAuditPersistence(
+                communityConfiguration,
+                auditReader,
+                auditWriter,
+                journalEventStore,
+                targetSystem.getTxWrapper(),
+                journalEventSequencerFactory,
+                stageId,
+                auditRepositoryName,
+                readCapacityUnits,
+                writeCapacityUnits,
+                autoCreate);
+    }
+
 }

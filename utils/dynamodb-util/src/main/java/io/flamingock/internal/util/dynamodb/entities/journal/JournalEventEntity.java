@@ -24,9 +24,10 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 /**
  * DynamoDB persistence representation of a {@code JournalEvent} carrying an {@code AuditEntry} payload.
  * <p>
- * Base key: {@code (streamId, streamSequence)}. {@code pendingStreamId} is a sparse attribute: it is only
- * present while the event has not been acknowledged, which is what makes the event visible in
- * {@code PendingEventsIndex}. The payload is the JSON serialization of the embedded {@code AuditEntryEntity}
+ * Base key: {@code (streamId, streamSequence)}. {@code pendingPartitionKey} and {@code pendingOrderKey} are
+ * sparse attributes: they are only present while the event has not been acknowledged, which is what makes
+ * the event visible in {@code PendingEventsIndex}. The payload is the JSON serialization of the embedded
+ * {@code AuditEntryEntity}
  * ({@code AuditEntry} itself has no no-arg constructor, so it cannot be a {@code @DynamoDbBean}).
  */
 @DynamoDbBean
@@ -34,7 +35,8 @@ public class JournalEventEntity {
 
     private String streamId;
     private Long streamSequence;
-    private String pendingStreamId;
+    private String pendingPartitionKey;
+    private String pendingOrderKey;
     private String eventId;
     private String eventType;
     private String occurredAt;
@@ -54,7 +56,6 @@ public class JournalEventEntity {
     }
 
     @DynamoDbSortKey
-    @DynamoDbSecondarySortKey(indexNames = JournalEventFieldConstants.PENDING_EVENTS_INDEX)
     public Long getStreamSequence() {
         return streamSequence;
     }
@@ -64,12 +65,21 @@ public class JournalEventEntity {
     }
 
     @DynamoDbSecondaryPartitionKey(indexNames = JournalEventFieldConstants.PENDING_EVENTS_INDEX)
-    public String getPendingStreamId() {
-        return pendingStreamId;
+    public String getPendingPartitionKey() {
+        return pendingPartitionKey;
     }
 
-    public void setPendingStreamId(String pendingStreamId) {
-        this.pendingStreamId = pendingStreamId;
+    public void setPendingPartitionKey(String pendingPartitionKey) {
+        this.pendingPartitionKey = pendingPartitionKey;
+    }
+
+    @DynamoDbSecondarySortKey(indexNames = JournalEventFieldConstants.PENDING_EVENTS_INDEX)
+    public String getPendingOrderKey() {
+        return pendingOrderKey;
+    }
+
+    public void setPendingOrderKey(String pendingOrderKey) {
+        this.pendingOrderKey = pendingOrderKey;
     }
 
     @DynamoDbSecondaryPartitionKey(indexNames = JournalEventFieldConstants.EVENT_ID_INDEX)

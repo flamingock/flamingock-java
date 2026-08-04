@@ -15,31 +15,29 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
-import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements AuditWriter, CommunityAuditReader {
-
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
+public class DynamoDBAuditor implements CommunityAuditReader {
 
     private final DynamoDBUtil dynamoDBUtil;
     protected DynamoDbTable<AuditEntryEntity> table;
@@ -48,8 +46,14 @@ public class DynamoDBAuditor implements AuditWriter, CommunityAuditReader {
         this.dynamoDBUtil = new DynamoDBUtil(client);
     }
 
-    protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
-        if (autoCreate) {
+    public synchronized void initialize(Boolean autoCreate,
+                                        String tableName,
+                                        long readCapacityUnits,
+                                        long writeCapacityUnits) {
+        if (table != null) {
+            return;
+        }
+        if (Boolean.TRUE.equals(autoCreate)) {
             dynamoDBUtil.createTable(
                     dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
                     dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
@@ -59,42 +63,38 @@ public class DynamoDBAuditor implements AuditWriter, CommunityAuditReader {
                     emptyList()
             );
         }
+        validateSchema(tableName);
         table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(AuditEntryEntity.class));
     }
 
-    @Override
-    public Result writeEntry(AuditEntry auditEntry) {
-        AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
-        logger.debug("Saving audit entry with key {}", entity.getPartitionKey());
+    private void validateSchema(String tableName) {
+        TableDescription description;
         try {
-            table.putItem(
-                    PutItemEnhancedRequest.builder(AuditEntryEntity.class)
-                            .item(entity)
-                            .build()
-            );
-        } catch (ConditionalCheckFailedException ex) {
-            logger.warn("Error saving audit entry with key {}", entity.getPartitionKey(), ex);
-            throw ex;
+            description = dynamoDBUtil.getDynamoDBClient().describeTable(
+                    DescribeTableRequest.builder().tableName(tableName).build()).table();
+        } catch (ResourceNotFoundException exception) {
+            throw new IllegalStateException("DynamoDB audit table '" + tableName
+                    + "' is missing or has an invalid schema", exception);
         }
-        return Result.OK();
+
+        boolean keyValid = description.keySchema() != null
+                && description.keySchema().size() == 1
+                && hasKey(description.keySchema().get(0), DynamoDBConstants.AUDIT_LOG_PK, KeyType.HASH);
+        boolean attributeValid = description.attributeDefinitions() != null
+                && description.attributeDefinitions().stream()
+                .anyMatch(attribute -> hasAttribute(attribute, DynamoDBConstants.AUDIT_LOG_PK, ScalarAttributeType.S));
+        if (!keyValid || !attributeValid) {
+            throw new IllegalStateException("DynamoDB audit table '" + tableName
+                    + "' has an invalid key schema");
+        }
     }
 
-    /**
-     * Stages a current-state audit write in a caller-owned DynamoDB transaction.
-     *
-     * <p>The change identifier is the partition key in journal mode, so successive state transitions replace
-     * the current audit record while the journal keeps the complete transition history.</p>
-     *
-     * @param builder   the transaction builder that owns the audit write
-     * @param auditEntry the audit entry to stage
-     */
-    void stageWrite(TransactWriteItemsEnhancedRequest.Builder builder, AuditEntry auditEntry) {
-        AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
-        entity.setPartitionKey(auditEntry.getChangeId());
-        builder.addPutItem(table, PutItemEnhancedRequest.builder(AuditEntryEntity.class)
-                .item(entity)
-                .build());
-        logger.debug("Staged current-state audit entry with key {}", entity.getPartitionKey());
+    private boolean hasKey(KeySchemaElement key, String name, KeyType type) {
+        return key != null && name.equals(key.attributeName()) && type == key.keyType();
+    }
+
+    private boolean hasAttribute(AttributeDefinition attribute, String name, ScalarAttributeType type) {
+        return attribute != null && name.equals(attribute.attributeName()) && type == attribute.attributeType();
     }
 
     @Override

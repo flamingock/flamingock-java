@@ -29,134 +29,117 @@ import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
 
 public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private final DynamoDbClient client;
+    private final DynamoDBAuditor auditReader;
+    private final DynamoDBAuditWriter auditWriter;
     private final String auditTableName;
     private final long readCapacityUnits;
     private final long writeCapacityUnits;
     private final boolean autoCreate;
     private final TransactionWrapper txWrapper;
     private final DynamoDBJournalEventStore journalEventStore;
-    private final JournalEventSequencer journalEventSequencer;
     private final JournalEventSequencerFactory journalEventSequencerFactory;
-
-    private DynamoDBAuditor auditor;
-
-    public DynamoDBAuditPersistence(DynamoDbClient client,
-                                    String auditTableName,
-                                    long readCapacityUnits,
-                                    long writeCapacityUnits,
-                                    boolean autoCreate,
-                                    CommunityConfigurable localConfiguration) {
-        this(client, null, null, null, null, auditTableName, readCapacityUnits, writeCapacityUnits,
-                autoCreate, localConfiguration);
-    }
+    private final String stageId;
+    private JournalEventSequencer journalEventSequencer;
 
     /**
-     * Creates a persistence that can atomically stage an audit record and its journal event.
+     * Creates a persistence over explicitly supplied audit, journal and transaction collaborators.
      *
-     * @param client               DynamoDB client used by the audit and journal stores
-     * @param txWrapper            transaction wrapper shared with the target system
-     * @param journalEventStore    journal store receiving staged events
-     * @param journalEventSequencer per-stage sequencer for the journal stream
-     * @param journalEventSequencerFactory factory used to route imported events to their destination stage
-     * @param auditTableName       audit table name
-     * @param readCapacityUnits   audit and journal read capacity
-     * @param writeCapacityUnits  audit and journal write capacity
-     * @param autoCreate           whether missing tables may be created
-     * @param localConfiguration   community configuration
+     * @param localConfiguration          community configuration
+     * @param auditReader                 reader for the audit table
+     * @param auditWriter                 writer for append and current-state writes
+     * @param journalEventStore           journal store receiving staged events
+     * @param txWrapper                   transaction wrapper shared with the target system
+     * @param journalEventSequencerFactory factory for per-stage journal sequencers
+     * @param stageId                     stage whose journal stream receives events
+     * @param auditTableName              audit table name
+     * @param readCapacityUnits           audit and journal read capacity
+     * @param writeCapacityUnits          audit and journal write capacity
+     * @param autoCreate                  whether missing tables may be created
      */
-    public DynamoDBAuditPersistence(DynamoDbClient client,
-                                    TransactionWrapper txWrapper,
-                                    DynamoDBJournalEventStore journalEventStore,
-                                    JournalEventSequencer journalEventSequencer,
-                                    JournalEventSequencerFactory journalEventSequencerFactory,
-                                    String auditTableName,
-                                    long readCapacityUnits,
-                                    long writeCapacityUnits,
-                                    boolean autoCreate,
-                                    CommunityConfigurable localConfiguration) {
+    public DynamoDBAuditPersistence(CommunityConfigurable localConfiguration,
+                                     DynamoDBAuditor auditReader,
+                                     DynamoDBAuditWriter auditWriter,
+                                     DynamoDBJournalEventStore journalEventStore,
+                                     TransactionWrapper txWrapper,
+                                     JournalEventSequencerFactory journalEventSequencerFactory,
+                                     String stageId,
+                                     String auditTableName,
+                                     long readCapacityUnits,
+                                     long writeCapacityUnits,
+                                     boolean autoCreate) {
         super(localConfiguration);
-        this.client = client;
+        this.auditReader = auditReader;
+        this.auditWriter = auditWriter;
+        this.journalEventStore = journalEventStore;
         this.auditTableName = auditTableName;
         this.readCapacityUnits = readCapacityUnits;
         this.writeCapacityUnits = writeCapacityUnits;
         this.autoCreate = autoCreate;
         this.txWrapper = txWrapper;
-        this.journalEventStore = journalEventStore;
-        this.journalEventSequencer = journalEventSequencer;
         this.journalEventSequencerFactory = journalEventSequencerFactory;
-    }
-
-    /**
-     * Creates a persistence with a fixed journal stream sequencer.
-     *
-     * @param client               DynamoDB client used by the audit and journal stores
-     * @param txWrapper            transaction wrapper shared with the target system
-     * @param journalEventStore    journal store receiving staged events
-     * @param journalEventSequencer sequencer for the persistence stream
-     * @param auditTableName       audit table name
-     * @param readCapacityUnits   audit and journal read capacity
-     * @param writeCapacityUnits  audit and journal write capacity
-     * @param autoCreate           whether missing tables may be created
-     * @param localConfiguration   community configuration
-     */
-    public DynamoDBAuditPersistence(DynamoDbClient client,
-                                    TransactionWrapper txWrapper,
-                                    DynamoDBJournalEventStore journalEventStore,
-                                    JournalEventSequencer journalEventSequencer,
-                                    String auditTableName,
-                                    long readCapacityUnits,
-                                    long writeCapacityUnits,
-                                    boolean autoCreate,
-                                    CommunityConfigurable localConfiguration) {
-        this(client, txWrapper, journalEventStore, journalEventSequencer, null, auditTableName,
-                readCapacityUnits, writeCapacityUnits, autoCreate, localConfiguration);
+        this.stageId = stageId;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditor = new DynamoDBAuditor(client);
-        auditor.initialize(
+        auditReader.initialize(
                 autoCreate,
                 auditTableName,
                 readCapacityUnits,
                 writeCapacityUnits);
-        if (journalEventStore != null) {
-            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate));
+        auditWriter.initialize(
+                autoCreate,
+                auditTableName,
+                readCapacityUnits,
+                writeCapacityUnits);
+        if (isJournalEventsEnabled()) {
+            requireJournalWiring();
+            journalEventStore.initialize(autoCreate);
+            journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
         }
     }
 
     @Override
     public List<AuditEntry> getAuditHistory() {
-        return auditor.getAuditHistory();
+        return auditReader.getAuditHistory();
     }
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-            if (txWrapper == null || journalEventStore == null || journalEventSequencer == null) {
-                throw new IllegalStateException("Journal-enabled persistence requires transaction and journal wiring");
-            }
-            JournalEventSequencer sequencer = journalEventSequencer;
+        if (isJournalEventsEnabled()) {
+            requireJournalWiring();
             RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
             Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
                 TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
                         .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
-                JournalEvent<AuditEntry> journalEvent = sequencer.newEvent(auditEntry);
-                journalEventStore.write(builder, journalEvent);
-                auditor.stageWrite(builder, auditEntry);
+                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+                journalEventStore.contributeToTransaction(builder, journalEvent);
+                auditWriter.contributeToTransaction(builder, auditEntry);
                 return Result.OK();
             });
-            sequencer.confirm();
+            journalEventSequencer.confirm();
             return result;
         }
-        return auditor.writeEntry(auditEntry);
+        return auditWriter.writeEntry(auditEntry);
+    }
+
+    private void requireJournalWiring() {
+        if (txWrapper == null || journalEventStore == null || journalEventSequencerFactory == null) {
+            throw new IllegalStateException("Journal-enabled persistence requires transaction, journal, and sequencer wiring");
+        }
+    }
+
+    private static boolean isJournalEventsEnabled() {
+        try {
+            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
+        } catch (RuntimeException exception) {
+            return false;
+        }
     }
 
 }

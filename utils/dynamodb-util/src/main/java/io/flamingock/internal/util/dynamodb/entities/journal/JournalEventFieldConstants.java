@@ -20,19 +20,25 @@ package io.flamingock.internal.util.dynamodb.entities.journal;
  * ({@code flamingockJournalEvents}).
  * <p>
  * The base key is {@code (streamId, streamSequence)}; the sparse pending GSI
- * ({@link #PENDING_EVENTS_INDEX}) carries only items with a {@code pendingStreamId},
+ * ({@link #PENDING_EVENTS_INDEX}) carries only items with a {@code pendingPartitionKey} and
+ * {@code pendingOrderKey},
  * and the non-unique eventId GSI ({@link #EVENT_ID_INDEX}) serves acknowledgement
- * lookups only (it MUST NOT enforce eventId uniqueness).
+ * lookups only. Event identity is enforced transactionally by a reserved item in this table.
  */
 public final class JournalEventFieldConstants {
 
     public static final String KEY_STREAM_ID = "streamId";
     public static final String KEY_STREAM_SEQUENCE = "streamSequence";
-    public static final String KEY_PENDING_STREAM_ID = "pendingStreamId";
+    public static final String KEY_PENDING_PARTITION_KEY = "pendingPartitionKey";
+    public static final String KEY_PENDING_ORDER_KEY = "pendingOrderKey";
     public static final String KEY_EVENT_ID = "eventId";
+
+    public static final String PENDING_PARTITION_VALUE = "pending";
 
     public static final String PENDING_EVENTS_INDEX = "PendingEventsIndex";
     public static final String EVENT_ID_INDEX = "EventIdIndex";
+    public static final String EVENT_ID_RESERVATION_STREAM_PREFIX = "__flamingock_reservation__:";
+    public static final long EVENT_ID_RESERVATION_SEQUENCE = 0L;
 
     private JournalEventFieldConstants() {
     }

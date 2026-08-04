@@ -24,7 +24,9 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
 import io.flamingock.store.dynamodb.changes.audit._001__NonTxTransactionalFalseChange;
@@ -48,7 +50,6 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -81,24 +82,31 @@ class DynamoDBJournalFeatureFlagE2ETest {
     }
 
     @Test
-    @DisplayName("journal disabled: the audit log remains the complete history and no journal table is created")
-    void journalDisabledLeavesNoJournalTable() {
+    @DisplayName("journal disabled: the audit log retains every state transition")
+    void journalDisabledRetainsHistoricalAuditEntries() {
         runPipeline(
                 STARTED("non-tx-transactional-false"),
                 APPLIED("non-tx-transactional-false"));
 
-        assertFalse(client.listTables().tableNames().contains(JOURNAL_TABLE),
-                "the journal table must not exist when the feature is disabled");
+        assertEquals(Arrays.asList(AuditEntry.Status.APPLIED.name(), AuditEntry.Status.STARTED.name()), storedAuditRecords().stream()
+                .map(AuditEntryEntity::getState)
+                .sorted()
+                .collect(Collectors.toList()));
     }
 
     @Test
-    @DisplayName("journal enabled: current state is retained in audit storage and transitions are journaled")
+    @DisplayName("journal enabled: an audit-only installation transparently creates the journal")
     void journalEnabledSplitsCurrentStateFromHistory() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
 
         runPipeline(APPLIED("non-tx-transactional-false"));
 
+        assertTrue(client.listTables().tableNames().contains(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME),
+                "the existing audit log must remain available");
         assertTrue(client.listTables().tableNames().contains(JOURNAL_TABLE));
+        List<AuditEntryEntity> auditRecords = storedAuditRecords();
+        assertEquals(1, auditRecords.size(), "the audit table must retain only the current state when journal is enabled");
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditRecords.get(0).getState());
         List<JournalEvent<AuditEntry>> events = storedEvents();
 
         assertEquals(2, events.size(), "one event must be stored for each audit state transition");
@@ -138,7 +146,18 @@ class DynamoDBJournalFeatureFlagE2ETest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
+                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    private List<AuditEntryEntity> storedAuditRecords() {
+        return new DynamoDBUtil(client)
+                .getEnhancedClient()
+                .table(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME, TableSchema.fromBean(AuditEntryEntity.class))
+                .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
+                .items()
+                .stream()
                 .collect(Collectors.toList());
     }
 }

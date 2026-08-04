@@ -29,8 +29,8 @@ import java.time.Instant;
  * <p>
  * The {@code data} payload is embedded as the JSON serialization of an {@link AuditEntryEntity},
  * so the audit representation stays single-sourced. {@code occurredAt} is stored as an ISO-8601
- * string. {@code pendingStreamId} is present while the event is unacknowledged and absent once
- * acknowledged.
+ * string. {@code pendingPartitionKey} and {@code pendingOrderKey} are present while the event is
+ * unacknowledged and absent once acknowledged.
  * <p>
  * Only {@link JournalEventType#CHANGE_STATE} events carry an {@link AuditEntry} payload today.
  * Other event types carry different payloads and are not yet implemented, so this mapper rejects
@@ -40,6 +40,8 @@ public final class DynamoDBJournalEventMapper {
 
     /** The only event type whose {@code data} is an {@link AuditEntry} and is supported for now. */
     private static final JournalEventType SUPPORTED_EVENT_TYPE = JournalEventType.CHANGE_STATE;
+    private static final int MAX_DYNAMODB_SORT_KEY_BYTES = 1024;
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
     private DynamoDBJournalEventMapper() {
     }
@@ -53,17 +55,31 @@ public final class DynamoDBJournalEventMapper {
         entity.setStreamId(event.getStreamId());
         entity.setStreamSequence(event.getStreamSequence());
         entity.setOccurredAt(event.getOccurredAt().toString());
-        entity.setPendingStreamId(event.isAcknowledged() ? null : event.getStreamId());
+        if (event.isAcknowledged()) {
+            entity.setPendingPartitionKey(null);
+            entity.setPendingOrderKey(null);
+        } else {
+            entity.setPendingPartitionKey(JournalEventFieldConstants.PENDING_PARTITION_VALUE);
+            entity.setPendingOrderKey(pendingOrderKey(event.getStreamId(), event.getStreamSequence()));
+        }
         entity.setPayload(serializePayload(event.getData()));
         return entity;
     }
 
     public static JournalEvent<AuditEntry> fromEntity(JournalEventEntity entity) {
+        if (isReservation(entity)) {
+            throw new IllegalArgumentException("Journal reservation items cannot be mapped as public events");
+        }
         JournalEventType eventType = JournalEventType.valueOf(entity.getEventType());
         requireSupportedType(eventType);
         AuditEntry data = deserializePayload(entity.getPayload());
         Instant occurredAt = Instant.parse(entity.getOccurredAt());
-        boolean acknowledged = entity.getPendingStreamId() == null;
+        boolean partitionKeyMissing = entity.getPendingPartitionKey() == null;
+        boolean orderKeyMissing = entity.getPendingOrderKey() == null;
+        if (partitionKeyMissing != orderKeyMissing) {
+            throw new IllegalStateException("Journal event pending keys must be present together");
+        }
+        boolean acknowledged = partitionKeyMissing;
         return new JournalEvent<>(
                 entity.getEventId(),
                 eventType,
@@ -73,6 +89,61 @@ public final class DynamoDBJournalEventMapper {
                 occurredAt,
                 data,
                 acknowledged);
+    }
+
+    /**
+     * Identifies an internal event-ID reservation item in a journal table scan.
+     *
+     * @param entity persisted journal-table item
+     * @return {@code true} when the item is an internal reservation
+     */
+    public static boolean isReservation(JournalEventEntity entity) {
+        return entity != null
+                && Long.valueOf(JournalEventFieldConstants.EVENT_ID_RESERVATION_SEQUENCE).equals(entity.getStreamSequence())
+                && isReservationStream(entity.getStreamId());
+    }
+
+    /**
+     * Identifies the reserved stream namespace without reading the item payload.
+     *
+     * @param streamId persisted stream identifier
+     * @return {@code true} when the stream belongs to internal reservations
+     */
+    public static boolean isReservationStream(String streamId) {
+        return streamId != null
+                && streamId.startsWith(JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX);
+    }
+
+    /**
+     * Encodes a journal position so DynamoDB's lexicographic sort order matches stream position order.
+     * Java UTF-16 code units are encoded independently to avoid delimiter collisions, and the positive
+     * sequence is rendered as a fixed-width hexadecimal value.
+     *
+     * @param streamId       stream identifier
+     * @param streamSequence positive stream sequence
+     * @return collision-safe pending index sort key
+     */
+    public static String pendingOrderKey(String streamId, Long streamSequence) {
+        if (streamId == null || streamSequence == null) {
+            throw new IllegalArgumentException("streamId and streamSequence are required");
+        }
+        if (streamSequence < 0) {
+            throw new IllegalArgumentException("streamSequence must be non-negative");
+        }
+
+        StringBuilder encoded = new StringBuilder(streamId.length() * 4 + 17);
+        for (char character : streamId.toCharArray()) {
+            encoded.append(HEX_DIGITS[(character >>> 12) & 0x0F]);
+            encoded.append(HEX_DIGITS[(character >>> 8) & 0x0F]);
+            encoded.append(HEX_DIGITS[(character >>> 4) & 0x0F]);
+            encoded.append(HEX_DIGITS[character & 0x0F]);
+        }
+        encoded.append('!');
+        encoded.append(String.format("%016X", streamSequence));
+        if (encoded.length() > MAX_DYNAMODB_SORT_KEY_BYTES) {
+            throw new IllegalArgumentException("pendingOrderKey exceeds DynamoDB's 1024-byte sort-key limit");
+        }
+        return encoded.toString();
     }
 
     private static String serializePayload(AuditEntry auditEntry) {
