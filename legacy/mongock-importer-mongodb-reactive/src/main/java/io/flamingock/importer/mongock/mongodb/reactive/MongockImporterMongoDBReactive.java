@@ -22,8 +22,6 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.reactive.util.PublisherSync;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -34,8 +32,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterMongoDBReactive implements AuditHistoryReader {
-
-    private static final Logger logger = LoggerFactory.getLogger("MongockImporter");
 
     private final MongoCollection<Document> sourceCollection;
 
@@ -57,8 +53,6 @@ public class MongockImporterMongoDBReactive implements AuditHistoryReader {
         MongockAuditEntry changeEntry = toChangeEntry(document);
 
         if (changeEntry.shouldBeIgnored()) {
-            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (change was already executed by Mongock; not imported into Flamingock audit history).",
-                    changeEntry.getChangeId());
             return null;
         }
 

@@ -22,16 +22,12 @@ import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.QueryScanConsistency;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterCouchbase implements AuditHistoryReader {
-
-    private static final Logger logger = LoggerFactory.getLogger("MongockImporter");
 
     private static final String MONGOCK_CHANGE_ENTRY_DOCTYPE = "mongockChangeEntry";
 
@@ -68,8 +64,6 @@ public class MongockImporterCouchbase implements AuditHistoryReader {
 
     private static AuditEntry toAuditEntry(CouchbaseChangeEntry entry) {
         if (entry.shouldBeIgnored()) {
-            logger.info("Skipping Mongock audit entry with changeId[{}]: state=IGNORED (change was already executed by Mongock; not imported into Flamingock audit history).",
-                    entry.getChangeId());
             return null;
         }
         return entry.toAuditEntry();
