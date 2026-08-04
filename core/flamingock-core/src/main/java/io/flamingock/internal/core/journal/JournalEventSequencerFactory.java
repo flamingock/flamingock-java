@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation.issue;
+package io.flamingock.internal.core.journal;
 
-import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.operation.Operation;
+public class JournalEventSequencerFactory {
 
-public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {
+    private final JournalEventReader journalEventReader;
 
-    private final AuditReader auditReader;
-
-    public IssueListOperation(AuditReader auditReader) {
-        this.auditReader = auditReader;
+    public JournalEventSequencerFactory(JournalEventReader journalEventReader) {
+        this.journalEventReader = journalEventReader;
     }
 
-    @Override
-    public IssueListResult execute(IssueListArgs args) {
-        return new IssueListResult(auditReader.getAuditIssues());
+    public JournalEventSequencer forStream(String streamId) {
+        long initialSequence = journalEventReader.getLastEventByStream(streamId)
+                .map(e -> e.getStreamSequence() + 1)
+                .orElse(1L);
+        return new JournalEventSequencer(streamId, initialSequence);
     }
 }

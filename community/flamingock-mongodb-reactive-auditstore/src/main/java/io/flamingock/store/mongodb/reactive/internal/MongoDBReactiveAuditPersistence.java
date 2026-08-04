@@ -65,11 +65,6 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
         auditor.initialize(autoCreate);
     }
 
-    @Deprecated
-    @Override
-    public Set<Class<?>> getNonGuardedTypes() {
-        return new HashSet<>(Collections.singletonList(ClientSession.class));
-    }
 
     @Override
     public List<AuditEntry> getAuditHistory() {

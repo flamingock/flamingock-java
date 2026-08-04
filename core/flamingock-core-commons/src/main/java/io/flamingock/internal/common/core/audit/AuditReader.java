@@ -20,6 +20,7 @@ import io.flamingock.internal.common.core.audit.issue.AuditEntryIssueFactory;
 import io.flamingock.internal.common.core.audit.issue.NonIssue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,12 @@ public interface AuditReader extends AuditHistoryReader, AuditIssueReader {
                 .stream()
                 .filter(entry -> changeId.equals(entry.getChangeId()))
                 .findFirst();
+    }
+
+    default Map<String, AuditEntry> getAuditSnapshotByChangeId() {
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
+        getAuditHistory().forEach(builder::addEntry);
+        return builder.buildMap();
     }
 
 }

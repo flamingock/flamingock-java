@@ -54,20 +54,7 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
         this.executionPlanner = executionPlanner;
     }
 
-    @Override
-    public EnvironmentId getEnvironmentId() {
-        return environmentId;
-    }
 
-    @Override
-    public ServiceId getServiceId() {
-        return serviceId;
-    }
-
-    @Override
-    public String getJwt() {
-        return jwt;
-    }
 
     @Override
     public ExecutionPlanner getExecutionPlanner() {
