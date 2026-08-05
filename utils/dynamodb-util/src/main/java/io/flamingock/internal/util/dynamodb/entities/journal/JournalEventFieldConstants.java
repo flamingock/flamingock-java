@@ -27,6 +27,8 @@ package io.flamingock.internal.util.dynamodb.entities.journal;
  */
 public final class JournalEventFieldConstants {
 
+    public static final String DEFAULT_JOURNAL_REPOSITORY_NAME = "flamingockJournalEvents";
+
     public static final String KEY_STREAM_ID = "streamId";
     public static final String KEY_STREAM_SEQUENCE = "streamSequence";
     public static final String KEY_PENDING_PARTITION_KEY = "pendingPartitionKey";
@@ -37,8 +39,6 @@ public final class JournalEventFieldConstants {
 
     public static final String PENDING_EVENTS_INDEX = "PendingEventsIndex";
     public static final String EVENT_ID_INDEX = "EventIdIndex";
-    public static final String EVENT_ID_RESERVATION_STREAM_PREFIX = "__flamingock_reservation__:";
-    public static final long EVENT_ID_RESERVATION_SEQUENCE = 0L;
 
     private JournalEventFieldConstants() {
     }

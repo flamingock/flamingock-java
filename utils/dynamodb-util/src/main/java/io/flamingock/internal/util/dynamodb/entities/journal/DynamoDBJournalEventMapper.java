@@ -67,9 +67,6 @@ public final class DynamoDBJournalEventMapper {
     }
 
     public static JournalEvent<AuditEntry> fromEntity(JournalEventEntity entity) {
-        if (isReservation(entity)) {
-            throw new IllegalArgumentException("Journal reservation items cannot be mapped as public events");
-        }
         JournalEventType eventType = JournalEventType.valueOf(entity.getEventType());
         requireSupportedType(eventType);
         AuditEntry data = deserializePayload(entity.getPayload());
@@ -89,29 +86,6 @@ public final class DynamoDBJournalEventMapper {
                 occurredAt,
                 data,
                 acknowledged);
-    }
-
-    /**
-     * Identifies an internal event-ID reservation item in a journal table scan.
-     *
-     * @param entity persisted journal-table item
-     * @return {@code true} when the item is an internal reservation
-     */
-    public static boolean isReservation(JournalEventEntity entity) {
-        return entity != null
-                && Long.valueOf(JournalEventFieldConstants.EVENT_ID_RESERVATION_SEQUENCE).equals(entity.getStreamSequence())
-                && isReservationStream(entity.getStreamId());
-    }
-
-    /**
-     * Identifies the reserved stream namespace without reading the item payload.
-     *
-     * @param streamId persisted stream identifier
-     * @return {@code true} when the stream belongs to internal reservations
-     */
-    public static boolean isReservationStream(String streamId) {
-        return streamId != null
-                && streamId.startsWith(JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX);
     }
 
     /**

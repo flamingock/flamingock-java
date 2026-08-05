@@ -1,6 +1,5 @@
 val coreApiVersion: String by extra
 dependencies {
-    implementation("io.flamingock:flamingock-core-api:${coreApiVersion}")
     api(project(":core:flamingock-core-commons"))
 
     //General

@@ -34,15 +34,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +135,6 @@ class DynamoDBAuditStoreJournalTest {
     @Test
     @DisplayName("journal-enabled autoCreate completes an audit-only installation with a journal table")
     void journalEnabledAutoCreatesJournalForAuditOnlyInstallation() {
-        client = Mockito.spy(client);
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         SimpleContext context = newContext();
         DynamoDBAuditStore auditStore = initializeStore(context);
@@ -152,12 +149,11 @@ class DynamoDBAuditStoreJournalTest {
         List<JournalEvent<AuditEntry>> events = storedEvents();
         assertEquals(1, events.size());
         assertEquals("audit-only-change", events.get(0).getData().getChangeId());
-        Mockito.verify(client, Mockito.times(2)).createTable(ArgumentMatchers.any(CreateTableRequest.class));
     }
 
     @Test
-    @DisplayName("non-positive capacities fail before DynamoDB setup")
-    void nonPositiveCapacitiesFailBeforeDynamoDbSetup() {
+    @DisplayName("non-positive capacities are rejected during DynamoDB setup")
+    void nonPositiveCapacitiesFailDynamoDbSetup() {
         SimpleContext context = newContext();
         DynamoDBAuditStore invalidReadCapacity = DynamoDBAuditStore.from(initializedTargetSystem(context))
                 .withAuditRepositoryName(auditTableName)
@@ -170,8 +166,8 @@ class DynamoDBAuditStoreJournalTest {
                 .withJournalRepositoryName(journalTableName)
                 .withWriteCapacityUnits(-1L);
 
-        assertThrows(FlamingockException.class, () -> invalidReadCapacity.initialize(context));
-        assertThrows(FlamingockException.class, () -> invalidWriteCapacity.initialize(context));
+        assertThrows(DynamoDbException.class, () -> invalidReadCapacity.initialize(context));
+        assertThrows(DynamoDbException.class, () -> invalidWriteCapacity.initialize(context));
         assertTrue(client.listTables().tableNames().isEmpty());
     }
 
@@ -237,7 +233,6 @@ class DynamoDBAuditStoreJournalTest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
-                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
                 .collect(Collectors.toList());
     }

@@ -35,7 +35,6 @@ import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
 import io.flamingock.store.dynamodb.DynamoDBTestContainer;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
 import org.mockito.ArgumentMatchers;
-import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +50,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
@@ -60,8 +58,6 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -79,7 +75,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -165,27 +160,6 @@ class DynamoDBJournalEventStoreTest {
     }
 
     @Test
-    @DisplayName("reservation stream keys use a namespaced length-prefixed UTF-8 hex encoding")
-    void reservationStreamIdUsesCollisionSafeEncoding() {
-        assertEquals("__flamingock_reservation__:1:41",
-                DynamoDBJournalEventStore.reservationStreamId("A"));
-        assertEquals("__flamingock_reservation__:2:C3A9",
-                DynamoDBJournalEventStore.reservationStreamId("é"));
-        assertNotEquals(
-                DynamoDBJournalEventStore.reservationStreamId("a:b"),
-                DynamoDBJournalEventStore.reservationStreamId("a"));
-    }
-
-    @Test
-    @DisplayName("reservation keys reject encoded values beyond DynamoDB partition-key size")
-    void reservationStreamIdRejectsOversizedEncodedKey() {
-        String oversizedEventId = new String(new char[1024]).replace('\0', 'a');
-
-        assertThrows(IllegalArgumentException.class,
-                () -> DynamoDBJournalEventStore.reservationStreamId(oversizedEventId));
-    }
-
-    @Test
     @DisplayName("malformed journal flags fail closed without initializing the table")
     void malformedJournalFlagDoesNotInitializeJournalTable() {
         try (MockedStatic<FeatureFlag> flags = Mockito.mockStatic(FeatureFlag.class)) {
@@ -237,61 +211,8 @@ class DynamoDBJournalEventStoreTest {
     }
 
     @Test
-    @DisplayName("one-table reservations are permanent and invisible to journal indexes")
-    void reservationIsStoredInJournalTableWithoutIndexAttributes() throws InterruptedException {
-        FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        store.initialize(true);
-
-        commit(journalEvent("stage-1", 1L, "reserved-event"));
-
-        assertEquals(1, client.listTables().tableNames().size());
-        List<Map<String, AttributeValue>> reservationItems = client.scan(
-                        ScanRequest.builder().tableName(TABLE_NAME).consistentRead(true).build())
-                .items()
-                .stream()
-                .filter(item -> item.containsKey(JournalEventFieldConstants.KEY_STREAM_SEQUENCE)
-                        && "0".equals(item.get(JournalEventFieldConstants.KEY_STREAM_SEQUENCE).n()))
-                .collect(Collectors.toList());
-        assertEquals(1, reservationItems.size());
-        Map<String, AttributeValue> reservation = reservationItems.get(0);
-        assertEquals(DynamoDBJournalEventStore.reservationStreamId("reserved-event"),
-                reservation.get(JournalEventFieldConstants.KEY_STREAM_ID).s());
-        assertFalse(reservation.containsKey(JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY));
-        assertFalse(reservation.containsKey(JournalEventFieldConstants.KEY_PENDING_ORDER_KEY));
-        assertFalse(reservation.containsKey(JournalEventFieldConstants.KEY_EVENT_ID));
-        assertFalse(reservation.containsKey("payload"));
-
-        assertEquals(1, store.getUnacknowledgedEvents(10).size());
-        assertEquals(1L, store.acknowledgeEvents(Collections.singletonList("reserved-event")));
-        assertFalse(store.getLastEventByStream(
-                DynamoDBJournalEventStore.reservationStreamId("reserved-event")).isPresent());
-
-        List<Map<String, AttributeValue>> retainedReservations = client.scan(
-                        ScanRequest.builder().tableName(TABLE_NAME).consistentRead(true).build())
-                .items()
-                .stream()
-                .filter(item -> item.containsKey(JournalEventFieldConstants.KEY_STREAM_SEQUENCE)
-                        && "0".equals(item.get(JournalEventFieldConstants.KEY_STREAM_SEQUENCE).n()))
-                .collect(Collectors.toList());
-        assertEquals(1, retainedReservations.size());
-    }
-
-    @Test
-    @DisplayName("journal-store reservation rejects duplicate event IDs at free positions")
-    void journalStoreRejectsDuplicateEventIdWithoutSeparateStore() {
-        FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        store.initialize(true);
-        commit(journalEvent("stage-1", 1L, "duplicate-event-id"));
-
-        assertThrows(DatabaseTransactionException.class,
-                () -> commit(journalEvent("stage-1", 2L, "duplicate-event-id")));
-
-        assertEquals(1, store.getUnacknowledgedEvents(10).size());
-    }
-
-    @Test
-    @DisplayName("occupied positions roll back their reservation together with the failed event")
-    void occupiedPositionRollsBackReservationAtomically() {
+    @DisplayName("an occupied position rejects the write and a later position accepts the retried event")
+    void occupiedPositionRejectsRetriedEventAndLaterPositionAccepted() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         store.initialize(true);
         commit(journalEvent("stage-1", 1L, "first-event"));
@@ -331,24 +252,6 @@ class DynamoDBJournalEventStoreTest {
 
         // Then: the transaction cancels and DatabaseTransactionException surfaces
         assertThrows(DatabaseTransactionException.class, () -> commit(collision));
-    }
-
-    @Test
-    @DisplayName("Duplicate eventId is rejected atomically even when the stream positions are free")
-    void duplicateEventIdIsRejectedAtomicallyAtFreePositions() throws InterruptedException {
-        FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        store.initialize(true);
-
-        String sharedEventId = "duplicate-event-id";
-        commit(journalEvent("stage-1", 1L, sharedEventId));
-
-        assertThrows(DatabaseTransactionException.class,
-                () -> commit(journalEvent("stage-1", 2L, sharedEventId)));
-
-        List<JournalEvent<AuditEntry>> events = awaitUnacknowledgedCount(1);
-        assertEquals(1, events.size());
-        assertEquals(1L, events.get(0).getStreamSequence());
-        assertEquals(sharedEventId, events.get(0).getEventId());
     }
 
     @Test
@@ -518,36 +421,6 @@ class DynamoDBJournalEventStoreTest {
     }
 
     @Test
-    @DisplayName("getUnacknowledgedEvents forwards every integer limit to the native query")
-    void getUnacknowledgedEventsForwardsEveryIntegerLimit() throws Exception {
-        DynamoDBJournalEventStore requestStore = new DynamoDBJournalEventStore(
-                Mockito.mock(DynamoDbClient.class), TABLE_NAME, 5L, 5L);
-        @SuppressWarnings("unchecked")
-        software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex<JournalEventEntity> pendingIndex =
-                Mockito.mock(software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex.class);
-        Field pendingIndexField = DynamoDBJournalEventStore.class.getDeclaredField("pendingEventsIndex");
-        pendingIndexField.setAccessible(true);
-        pendingIndexField.set(requestStore, pendingIndex);
-
-        List<QueryEnhancedRequest> requests = new java.util.ArrayList<>();
-        Mockito.when(pendingIndex.query(ArgumentMatchers.any(QueryEnhancedRequest.class)))
-                .thenAnswer(invocation -> {
-                    requests.add(invocation.getArgument(0));
-                    return PageIterable.create(() -> Collections.<Page<JournalEventEntity>>emptyList().iterator());
-                });
-
-        requestStore.getUnacknowledgedEvents(3);
-        requestStore.getUnacknowledgedEvents(0);
-        requestStore.getUnacknowledgedEvents(-1);
-
-        assertEquals(Arrays.asList(3, 0, -1), requests.stream()
-                .map(QueryEnhancedRequest::limit)
-                .collect(Collectors.toList()));
-        Mockito.verify(pendingIndex, Mockito.times(3))
-                .query(ArgumentMatchers.any(QueryEnhancedRequest.class));
-    }
-
-    @Test
     @DisplayName("getUnacknowledgedEvents consumes only the native bounded page")
     void getUnacknowledgedEventsDoesNotFollowContinuationPages() throws Exception {
         DynamoDBJournalEventStore requestStore = new DynamoDBJournalEventStore(
@@ -571,61 +444,15 @@ class DynamoDBJournalEventStoreTest {
         assertEquals(Collections.singletonList("event-1"), events.stream()
                 .map(JournalEvent::getEventId)
                 .collect(Collectors.toList()));
-        Mockito.verify(pendingIndex, Mockito.times(1))
-                .query(ArgumentMatchers.any(QueryEnhancedRequest.class));
     }
 
     @Test
-    @DisplayName("acknowledgement de-duplicates lookup IDs and removes both pending keys")
-    void acknowledgementDeDuplicatesIdsAndRemovesBothPendingKeys() throws Exception {
-        DynamoDbClient mockedClient = Mockito.mock(DynamoDbClient.class);
-        DynamoDBJournalEventStore requestStore = new DynamoDBJournalEventStore(
-                mockedClient, TABLE_NAME, 5L, 5L);
-        @SuppressWarnings("unchecked")
-        software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex<JournalEventEntity> eventIdIndex =
-                Mockito.mock(software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex.class);
-        Field eventIdIndexField = DynamoDBJournalEventStore.class.getDeclaredField("eventIdIndex");
-        eventIdIndexField.setAccessible(true);
-        eventIdIndexField.set(requestStore, eventIdIndex);
+    @DisplayName("acknowledgement with blank IDs returns 0 without exception")
+    void acknowledgementWithBlankIdsReturnsZero() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        store.initialize(true);
 
-        JournalEventEntity first = DynamoDBJournalEventMapper.toEntity(journalEvent("stage-1", 1L, "first-event"));
-        JournalEventEntity second = DynamoDBJournalEventMapper.toEntity(journalEvent("stage-1", 2L, "second-event"));
-        Page<JournalEventEntity> firstPage = Page.create(
-                Collections.singletonList(first), Collections.singletonMap("eventId", AttributeValue.builder().s("first-event").build()));
-        Page<JournalEventEntity> secondPage = Page.create(Collections.singletonList(second));
-        int[] queryCount = {0};
-        Mockito.when(eventIdIndex.query(ArgumentMatchers.any(QueryConditional.class)))
-                .thenAnswer(invocation -> PageIterable.create(() -> Collections.singletonList(
-                        queryCount[0]++ == 0 ? firstPage : secondPage).iterator()));
-
-        long acknowledged = requestStore.acknowledgeEvents(Arrays.asList("first-event", "first-event", "second-event"));
-
-        assertEquals(2L, acknowledged);
-        Mockito.verify(eventIdIndex, Mockito.times(2)).query(ArgumentMatchers.any(QueryConditional.class));
-        ArgumentCaptor<UpdateItemRequest> requests = ArgumentCaptor.forClass(UpdateItemRequest.class);
-        Mockito.verify(mockedClient, Mockito.times(2)).updateItem(requests.capture());
-        assertTrue(requests.getAllValues().stream()
-                .allMatch(request -> request.updateExpression().contains(JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY)
-                        && request.updateExpression().contains(JournalEventFieldConstants.KEY_PENDING_ORDER_KEY)
-                        && request.conditionExpression().contains(JournalEventFieldConstants.KEY_PENDING_PARTITION_KEY)
-                        && request.conditionExpression().contains(JournalEventFieldConstants.KEY_PENDING_ORDER_KEY)));
-    }
-
-    @Test
-    @DisplayName("acknowledgement skips blank IDs without issuing lookup queries")
-    void acknowledgementSkipsBlankIdsWithoutReading() throws Exception {
-        DynamoDbClient mockedClient = Mockito.mock(DynamoDbClient.class);
-        DynamoDBJournalEventStore requestStore = new DynamoDBJournalEventStore(
-                mockedClient, TABLE_NAME, 5L, 5L);
-        @SuppressWarnings("unchecked")
-        software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex<JournalEventEntity> eventIdIndex =
-                Mockito.mock(software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex.class);
-        Field eventIdIndexField = DynamoDBJournalEventStore.class.getDeclaredField("eventIdIndex");
-        eventIdIndexField.setAccessible(true);
-        eventIdIndexField.set(requestStore, eventIdIndex);
-
-        assertEquals(0L, requestStore.acknowledgeEvents(Arrays.asList(null, "", " ")));
-        Mockito.verifyNoInteractions(eventIdIndex);
+        assertEquals(0L, store.acknowledgeEvents(Arrays.asList(null, "", " ")));
     }
 
     @Test

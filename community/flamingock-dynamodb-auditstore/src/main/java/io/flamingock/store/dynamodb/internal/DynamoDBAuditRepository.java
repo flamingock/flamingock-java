@@ -15,14 +15,18 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
-import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
@@ -37,12 +41,14 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements CommunityAuditReader {
+public class DynamoDBAuditRepository {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoDBAuditRepository");
 
     private final DynamoDBUtil dynamoDBUtil;
     protected DynamoDbTable<AuditEntryEntity> table;
 
-    public DynamoDBAuditor(DynamoDbClient client) {
+    public DynamoDBAuditRepository(DynamoDbClient client) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
     }
 
@@ -53,7 +59,7 @@ public class DynamoDBAuditor implements CommunityAuditReader {
         if (table != null) {
             return;
         }
-        if (Boolean.TRUE.equals(autoCreate)) {
+        if (autoCreate) {
             dynamoDBUtil.createTable(
                     dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
                     dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
@@ -97,7 +103,40 @@ public class DynamoDBAuditor implements CommunityAuditReader {
         return attribute != null && name.equals(attribute.attributeName()) && type == attribute.attributeType();
     }
 
-    @Override
+    /**
+     * Appends an audit entry using the historical append key.
+     *
+     * @param auditEntry entry to append
+     * @return successful write result
+     */
+    Result writeEntry(AuditEntry auditEntry) {
+        AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
+        logger.debug("Saving audit entry with key {}", entity.getPartitionKey());
+        table.putItem(PutItemEnhancedRequest.builder(AuditEntryEntity.class)
+            .item(entity)
+            .build());
+        return Result.OK();
+    }
+
+    /**
+     * Stages a current-state audit write in a caller-owned DynamoDB transaction.
+     *
+     * @param builder transaction builder receiving the audit write
+     * @param auditEntry entry to stage
+     */
+    Result contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder builder, AuditEntry auditEntry) {
+        if (table == null) {
+            throw new IllegalStateException("DynamoDB audit writer is not initialized");
+        }
+        AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
+        entity.setPartitionKey(auditEntry.getChangeId());
+        builder.addPutItem(table, PutItemEnhancedRequest.builder(AuditEntryEntity.class)
+            .item(entity)
+            .build());
+        logger.debug("Staged current-state audit entry with key {}", entity.getPartitionKey());
+        return Result.OK();
+    }
+
     public List<AuditEntry> getAuditHistory() {
         return table
                 .scan(ScanEnhancedRequest.builder()

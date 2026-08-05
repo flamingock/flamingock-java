@@ -31,7 +31,6 @@ import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.DynamoDBTestContainer;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
 import org.junit.jupiter.api.AfterEach;
@@ -63,9 +62,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.any;
 
 /**
  * Drives the DynamoDB persistence directly so the audit put and journal put can be verified at one transaction
@@ -149,7 +145,7 @@ class DynamoDBAuditPersistenceJournalTest {
     @DisplayName("journal-enabled persistence creates the journal beside an existing audit table")
     void journalEnabledCreatesJournalFromAuditOnlyInstallation() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        new DynamoDBAuditor(client).initialize(true, auditTableName, 5L, 5L);
+        new DynamoDBAuditRepository(client).initialize(true, auditTableName, 5L, 5L);
 
         DynamoDBAuditPersistence persistence = persistenceFor(newSequencer());
         persistence.writeEntry(auditEntry("audit-only-change", AuditEntry.Status.APPLIED));
@@ -176,23 +172,6 @@ class DynamoDBAuditPersistenceJournalTest {
     }
 
     @Test
-    @DisplayName("persistence uses injected reader and writer collaborators for the append path")
-    void persistenceUsesInjectedReaderAndWriterCollaborators() {
-        DynamoDBAuditor reader = mock(DynamoDBAuditor.class);
-        DynamoDBAuditWriter writer = mock(DynamoDBAuditWriter.class);
-        AuditEntry entry = auditEntry("injected-change", AuditEntry.Status.APPLIED);
-        when(reader.getAuditHistory()).thenReturn(java.util.Collections.singletonList(entry));
-
-        DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
-                new CommunityConfiguration(), reader, writer, null, null, null, null,
-                auditTableName, 5L, 5L, true);
-        persistence.initialize(RunnerId.generate());
-
-        assertEquals(java.util.Collections.singletonList(entry), persistence.getAuditHistory());
-        persistence.writeEntry(entry);
-    }
-
-    @Test
     @DisplayName("journal enabled collapses successive states to one current audit record while retaining both events")
     void journalEnabledKeepsCurrentStateAuditRecordAndJournalHistory() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
@@ -209,26 +188,6 @@ class DynamoDBAuditPersistenceJournalTest {
         assertEquals(2, events.size(), "every state transition must remain in the journal");
         assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 1L));
         assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 2L));
-    }
-
-    @Test
-    @DisplayName("duplicate event IDs abort the audit and journal writes together")
-    void duplicateEventIdAbortsCompleteJournalWrite() {
-        FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        AuditEntry firstAudit = auditEntry("first-change", AuditEntry.Status.APPLIED);
-        AuditEntry secondAudit = auditEntry("second-change", AuditEntry.Status.APPLIED);
-        JournalEvent<AuditEntry> firstEvent = journalEvent("reserved-event", 1L, firstAudit);
-        JournalEvent<AuditEntry> secondEvent = journalEvent("reserved-event", 2L, secondAudit);
-        JournalEventSequencer sequencer = mock(JournalEventSequencer.class);
-        when(sequencer.newEvent(any(AuditEntry.class))).thenReturn(firstEvent, secondEvent);
-        DynamoDBAuditPersistence persistence = persistenceFor(sequencer);
-
-        persistence.writeEntry(firstAudit);
-        assertThrows(DatabaseTransactionException.class, () -> persistence.writeEntry(secondAudit));
-
-        assertEquals(1, storedAuditRecords().size(), "the first current-state audit write must remain");
-        assertEquals(1, storedEvents().size(), "the duplicate event must not append a journal row");
-        assertEquals("reserved-event", storedEvents().get(0).getEventId());
     }
 
     @Test
@@ -286,16 +245,12 @@ class DynamoDBAuditPersistenceJournalTest {
     }
 
     private DynamoDBAuditPersistence persistenceFor(JournalEventSequencer sequencer) {
-        JournalEventSequencerFactory sequencerFactory = mock(JournalEventSequencerFactory.class);
-        when(sequencerFactory.forStream(STREAM_ID)).thenReturn(sequencer);
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
                 new CommunityConfiguration(),
-                new DynamoDBAuditor(client),
-                new DynamoDBAuditWriter(client),
+                new DynamoDBAuditRepository(client),
                 journalEventStore,
+                sequencer,
                 txWrapper,
-                sequencerFactory,
-                STREAM_ID,
                 auditTableName,
                 5L,
                 5L,
@@ -341,7 +296,6 @@ class DynamoDBAuditPersistenceJournalTest {
                 .scan(ScanEnhancedRequest.builder().consistentRead(true).build())
                 .items()
                 .stream()
-                .filter(entity -> !DynamoDBJournalEventMapper.isReservation(entity))
                 .map(DynamoDBJournalEventMapper::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -421,18 +375,6 @@ class DynamoDBAuditPersistenceJournalTest {
                 source.getOrder(),
                 source.getRecoveryStrategy(),
                 source.getTransactionFlag());
-    }
-
-    private static JournalEvent<AuditEntry> journalEvent(String eventId,
-                                                         long sequence,
-                                                         AuditEntry auditEntry) {
-        return new JournalEvent<>(
-                eventId,
-                JournalEventType.CHANGE_STATE,
-                STREAM_ID,
-                sequence,
-                Instant.now(),
-                auditEntry);
     }
 
     private static String tableName(String prefix) {

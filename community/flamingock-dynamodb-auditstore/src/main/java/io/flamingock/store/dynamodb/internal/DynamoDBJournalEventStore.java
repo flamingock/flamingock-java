@@ -20,6 +20,7 @@ import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.core.journal.JournalEventStore;
 import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
@@ -53,7 +54,6 @@ import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,15 +68,15 @@ import java.util.Optional;
 /**
  * DynamoDB implementation of the local journal ({@code flamingockJournalEvents}).
  * <p>
- * Sibling of {@link DynamoDBAuditor}/{@link DynamoDBLockService}: it owns its own table and index setup.
+ * Sibling of {@link DynamoDBAuditRepository}/{@link DynamoDBLockService}: it owns its own table and index setup.
  * <p>
  * The table has a base key of {@code (streamId, streamSequence)} with two GSIs:
  * <ul>
  *   <li>{@code PendingEventsIndex} — a sparse GSI over a constant pending partition and an order key that only
  *       contains unacknowledged events and serves the ordered unacknowledged batch query;</li>
- *   <li>{@code EventIdIndex} — a deliberately non-unique GSI over {@code eventId} serving the
- *       acknowledgement lookup only. It MUST NOT enforce eventId uniqueness; the
- *       reserved journal item and {@code (streamId, streamSequence)} position guard restrict appends.</li>
+ *   <li>{@code EventIdIndex} — a deliberately non-unique GSI over {@code eventId}. It serves only the
+ *       acknowledgement lookup; appends are guarded exclusively by the
+ *       {@code (streamId, streamSequence)} position guard.</li>
  * </ul>
  * Reads and acknowledgements are exposed through {@link JournalEventStore}. The append
  * ({@link #contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder, JournalEvent)}) deliberately is not: it stages a
@@ -87,8 +87,6 @@ import java.util.Optional;
 public class DynamoDBJournalEventStore implements JournalEventStore {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoDBJournal");
-    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
-    private static final int MAX_DYNAMODB_PARTITION_KEY_BYTES = 2048;
 
     private final DynamoDBUtil dynamoDBUtil;
     private final String tableName;
@@ -110,42 +108,13 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
     }
 
     /**
-     * Encodes an event ID into the reserved stream namespace. The byte-length prefix and UTF-8 hex
-     * representation make the encoding injective even when event IDs contain delimiters or non-ASCII
-     * characters.
-     *
-     * @param eventId event ID to encode
-     * @return reserved stream identifier
-     */
-    static String reservationStreamId(String eventId) {
-        if (eventId == null || eventId.trim().isEmpty()) {
-            throw new IllegalArgumentException("eventId must not be blank");
-        }
-        byte[] bytes = eventId.getBytes(StandardCharsets.UTF_8);
-        StringBuilder encoded = new StringBuilder(
-                JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX.length() + 12 + bytes.length * 2);
-        encoded.append(JournalEventFieldConstants.EVENT_ID_RESERVATION_STREAM_PREFIX)
-                .append(bytes.length)
-                .append(':');
-        for (byte value : bytes) {
-            encoded.append(HEX_DIGITS[(value >>> 4) & 0x0F]);
-            encoded.append(HEX_DIGITS[value & 0x0F]);
-        }
-        String reservationStreamId = encoded.toString();
-        if (reservationStreamId.getBytes(StandardCharsets.UTF_8).length > MAX_DYNAMODB_PARTITION_KEY_BYTES) {
-            throw new IllegalArgumentException("eventId reservation key exceeds DynamoDB's 2048-byte partition-key limit");
-        }
-        return reservationStreamId;
-    }
-
-    /**
      * Initializes the store, gated by the {@link Features#JOURNAL_EVENTS} feature flag: when the flag is off
      * nothing happens (no table, no indexes). When it is on, {@code autoCreate} creates and waits for the
      * configured table when needed; otherwise the manually configured table is checked for the required shape.
      *
      * @param autoCreate whether to create the table when missing
      */
-    public synchronized void initialize(boolean autoCreate) {
+    protected synchronized void initialize(boolean autoCreate) {
         if (!isJournalEventsEnabled() || table != null) {
             return;
         }
@@ -159,40 +128,33 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
     }
 
     /**
-     * Stages a permanent conditional event-ID reservation and a conditional event append on the caller's
-     * transaction builder. No server call happens until the caller commits the transaction. If the event ID
-     * or {@code (streamId, streamSequence)} is already occupied, the complete transaction is cancelled and
-     * the failure surfaces as a {@code DatabaseTransactionException} (mapped by {@code DynamoDBTxWrapper}).
+     * Stages a conditional event append on the caller's transaction builder. No server call happens until
+     * the caller commits the transaction. If the {@code (streamId, streamSequence)} position is already
+     * occupied, the complete transaction is cancelled and the failure surfaces as a
+     * {@code DatabaseTransactionException} (mapped by {@code DynamoDBTxWrapper}).
      *
      * @param builder the shared {@code TransactWriteItemsEnhancedRequest} builder
      * @param event   the event to append
      */
-    void contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder builder, JournalEvent<AuditEntry> event) {
+    Result contributeToTransaction(TransactWriteItemsEnhancedRequest.Builder builder, JournalEvent<AuditEntry> event) {
         if (table == null) {
             throw new IllegalStateException("DynamoDB journal store is not initialized");
         }
-        JournalEventEntity reservation = new JournalEventEntity();
-        reservation.setStreamId(reservationStreamId(event.getEventId()));
-        reservation.setStreamSequence(JournalEventFieldConstants.EVENT_ID_RESERVATION_SEQUENCE);
+        JournalEventEntity eventEntity = DynamoDBJournalEventMapper.toEntity(event);
         builder.addPutItem(table, PutItemEnhancedRequest.builder(JournalEventEntity.class)
-                .item(reservation)
-                .conditionExpression(Expression.builder()
-                        .expression("attribute_not_exists(" + JournalEventFieldConstants.KEY_STREAM_ID + ")")
-                        .build())
-                .build());
-        builder.addPutItem(table, PutItemEnhancedRequest.builder(JournalEventEntity.class)
-                .item(DynamoDBJournalEventMapper.toEntity(event))
+                .item(eventEntity)
                 .conditionExpression(Expression.builder()
                         .expression("attribute_not_exists(" + JournalEventFieldConstants.KEY_STREAM_ID + ")")
                         .build())
                 .build());
         logger.debug("Journal event staged for commit [eventId={} type={} stream={} sequence={}]",
                 event.getEventId(), event.getEventType(), event.getStreamId(), event.getStreamSequence());
+        return Result.OK();
     }
 
     @Override
     public Optional<JournalEvent<AuditEntry>> getLastEventByStream(String streamId) {
-        if (table == null || DynamoDBJournalEventMapper.isReservationStream(streamId)) {
+        if (table == null) {
             return Optional.empty();
         }
         PageIterable<JournalEventEntity> pages = table.query(lastEventQuery(streamId));
