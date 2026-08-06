@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.externalsystem.couchbase.api;
+package io.flamingock.internal.common.couchbase.journal;
 
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.Cluster;
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+/**
+ * Default persistence name for the local event buffer, mirroring the (external, un-extendable)
+ * {@code CommunityPersistenceConstants} defaults used for the audit and lock collections.
+ */
+public final class JournalEventPersistenceConstants {
 
-public interface CouchbaseExternalSystem extends TransactionalExternalSystem {
-    Cluster getCluster();
+    public static final String DEFAULT_JOURNAL_STORE_NAME = "flamingockJournalEvents";
 
-    Bucket getBucket();
-
-    String getBucketName();
+    private JournalEventPersistenceConstants() {
+    }
 }
