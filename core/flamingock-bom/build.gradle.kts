@@ -26,7 +26,6 @@ dependencies {
         api("io.flamingock:flamingock-community:${version}")
         api("io.flamingock:flamingock-mongodb-reactive-auditstore:$version")
         api("io.flamingock:flamingock-mongodb-sync-auditstore:$version")
-        api("io.flamingock:flamingock-mongodb-springdata-auditstore:${version}")
         api("io.flamingock:flamingock-couchbase-auditstore:$version")
         api("io.flamingock:flamingock-dynamodb-auditstore:$version")
         api("io.flamingock:flamingock-sql-auditstore:$version")

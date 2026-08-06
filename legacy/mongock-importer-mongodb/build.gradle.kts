@@ -1,6 +1,6 @@
 dependencies {
-    implementation(project(":core:flamingock-core-commons"))
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    api(project(":core:flamingock-core-commons"))
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:4.0.0")
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testAnnotationProcessor(project(":legacy:mongock-support"))

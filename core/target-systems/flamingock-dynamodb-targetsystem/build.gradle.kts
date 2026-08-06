@@ -5,7 +5,7 @@ dependencies {
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":legacy:mongock-importer-dynamodb"))
 
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
+    compileOnlyApi("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
     testImplementation("software.amazon.awssdk:dynamodb:2.25.29")
     testImplementation("software.amazon.awssdk:dynamodb-enhanced:2.25.29")

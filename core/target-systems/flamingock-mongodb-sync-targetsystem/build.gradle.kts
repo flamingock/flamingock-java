@@ -8,7 +8,7 @@ dependencies {
     api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 
     //General
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:4.0.0")
 
     //Test
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")

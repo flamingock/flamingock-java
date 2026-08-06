@@ -1,9 +1,9 @@
 val coreApiVersion: String by extra
 dependencies {
-    implementation("io.flamingock:flamingock-core-api:${coreApiVersion}")
+    api("io.flamingock:flamingock-core-api:${coreApiVersion}")
 
     //General
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
+    compileOnlyApi("software.amazon.awssdk:dynamodb:2.25.29")
 }
 
 description = "DynamoDB external system api"
