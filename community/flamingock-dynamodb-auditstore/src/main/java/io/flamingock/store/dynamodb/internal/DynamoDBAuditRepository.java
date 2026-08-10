@@ -45,17 +45,24 @@ public class DynamoDBAuditRepository {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoDBAuditRepository");
 
+    private final String tableName;
+    private final long readCapacityUnits;
+    private final long writeCapacityUnits;
+
     private final DynamoDBUtil dynamoDBUtil;
     protected DynamoDbTable<AuditEntryEntity> table;
 
-    public DynamoDBAuditRepository(DynamoDbClient client) {
+    public DynamoDBAuditRepository(DynamoDbClient client,
+                                   String tableName,
+                                   long readCapacityUnits,
+                                   long writeCapacityUnits) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
+        this.tableName = tableName;
+        this.readCapacityUnits = readCapacityUnits;
+        this.writeCapacityUnits = writeCapacityUnits;
     }
 
-    public synchronized void initialize(Boolean autoCreate,
-                                        String tableName,
-                                        long readCapacityUnits,
-                                        long writeCapacityUnits) {
+    public synchronized void initialize(Boolean autoCreate) {
         if (table != null) {
             return;
         }

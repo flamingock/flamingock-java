@@ -38,9 +38,6 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     private final DynamoDBJournalEventStore journalEventStore;
     private JournalEventSequencer journalEventSequencer;
     private final TransactionWrapper txWrapper;
-    private final String auditTableName;
-    private final long readCapacityUnits;
-    private final long writeCapacityUnits;
     private final boolean autoCreate;
 
     /**
@@ -51,9 +48,6 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
      * @param journalEventStore           journal store receiving staged events
      * @param journalEventSequencer       sequencer for the stage journal stream
      * @param txWrapper                   transaction wrapper shared with the target system
-     * @param auditTableName              audit table name
-     * @param readCapacityUnits           audit and journal read capacity
-     * @param writeCapacityUnits          audit and journal write capacity
      * @param autoCreate                  whether missing tables may be created
      */
     public DynamoDBAuditPersistence(CommunityConfigurable localConfiguration,
@@ -61,28 +55,18 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
                                     DynamoDBJournalEventStore journalEventStore,
                                     JournalEventSequencer journalEventSequencer,
                                     TransactionWrapper txWrapper,
-                                    String auditTableName,
-                                    long readCapacityUnits,
-                                    long writeCapacityUnits,
                                     boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
         this.journalEventStore = journalEventStore;
         this.journalEventSequencer = journalEventSequencer;
         this.txWrapper = txWrapper;
-        this.auditTableName = auditTableName;
-        this.readCapacityUnits = readCapacityUnits;
-        this.writeCapacityUnits = writeCapacityUnits;
         this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditRepository.initialize(
-                autoCreate,
-                auditTableName,
-                readCapacityUnits,
-                writeCapacityUnits);
+        auditRepository.initialize(autoCreate);
         if (isJournalEventsEnabled()) {
             journalEventStore.initialize(autoCreate);
         }

@@ -113,7 +113,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-        auditRepository = new DynamoDBAuditRepository(client);
+        auditRepository = new DynamoDBAuditRepository(client, auditRepositoryName, readCapacityUnits, writeCapacityUnits);
         journalEventStore = new DynamoDBJournalEventStore(
                 client,
                 journalRepositoryName,
@@ -122,13 +122,14 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         );
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
 
-        lockService = new DynamoDBLockService(client, TimeService.getDefault());
-        lockService.initialize(
-                autoCreate,
-                lockRepositoryName,
-                readCapacityUnits,
-                writeCapacityUnits
+        lockService = new DynamoDBLockService(
+            client,
+            lockRepositoryName,
+            readCapacityUnits,
+            writeCapacityUnits,
+            TimeService.getDefault()
         );
+        lockService.initialize(autoCreate);
         this.validate();
     }
 
@@ -142,9 +143,6 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
                 journalEventStore,
                 journalEventSequencer,
                 targetSystem.getTxWrapper(),
-                auditRepositoryName,
-                readCapacityUnits,
-                writeCapacityUnits,
                 autoCreate
             );
             persistence.initialize(runnerId);
@@ -154,7 +152,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
     @Override
     public AuditReader getAuditReader() {
-        auditRepository.initialize(autoCreate, auditRepositoryName, readCapacityUnits, writeCapacityUnits);
+        auditRepository.initialize(autoCreate);
         return () -> auditRepository.getAuditHistory();
     }
 

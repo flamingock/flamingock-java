@@ -145,7 +145,7 @@ class DynamoDBAuditPersistenceJournalTest {
     @DisplayName("journal-enabled persistence creates the journal beside an existing audit table")
     void journalEnabledCreatesJournalFromAuditOnlyInstallation() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        new DynamoDBAuditRepository(client).initialize(true, auditTableName, 5L, 5L);
+        new DynamoDBAuditRepository(client, auditTableName, 5L, 5L).initialize(true);
 
         DynamoDBAuditPersistence persistence = persistenceFor(newSequencer());
         persistence.writeEntry(auditEntry("audit-only-change", AuditEntry.Status.APPLIED));
@@ -247,13 +247,10 @@ class DynamoDBAuditPersistenceJournalTest {
     private DynamoDBAuditPersistence persistenceFor(JournalEventSequencer sequencer) {
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
                 new CommunityConfiguration(),
-                new DynamoDBAuditRepository(client),
+                new DynamoDBAuditRepository(client, auditTableName, 5L, 5L),
                 journalEventStore,
                 sequencer,
                 txWrapper,
-                auditTableName,
-                5L,
-                5L,
                 true);
         persistence.initialize(io.flamingock.internal.util.id.RunnerId.generate());
         return persistence;
