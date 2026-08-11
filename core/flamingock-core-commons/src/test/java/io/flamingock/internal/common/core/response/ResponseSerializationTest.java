@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import io.flamingock.internal.common.core.response.data.AuditListResponseData;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
@@ -30,8 +29,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +44,6 @@ class ResponseSerializationTest {
         // JsonObjectMapper.DEFAULT_INSTANCE already includes JavaTimeModule
         objectMapper = JsonObjectMapper.DEFAULT_INSTANCE.copy();
         objectMapper.registerSubtypes(
-                new NamedType(AuditListResponseData.class, "audit_list"),
                 new NamedType(ExecuteResponseData.class, "execute")
         );
     }
@@ -100,50 +96,6 @@ class ResponseSerializationTest {
         assertTrue(deserialized.getStages().get(0).getState().isCompleted());
         assertEquals(1, deserialized.getStages().get(0).getChanges().size());
         assertEquals("change-001", deserialized.getStages().get(0).getChanges().get(0).getChangeId());
-    }
-
-    @Test
-    @DisplayName("Should serialize and deserialize AuditListResponseData")
-    void shouldSerializeAndDeserializeAuditListResponseData() throws Exception {
-        // Given
-        AuditListResponseData original = new AuditListResponseData(Arrays.asList(
-                new AuditListResponseData.AuditEntryDto(
-                        "change-001",
-                        "developer",
-                        "APPLIED",
-                        "stage-1",
-                        LocalDateTime.of(2026, 2, 9, 10, 0, 0),
-                        100
-                ),
-                new AuditListResponseData.AuditEntryDto(
-                        "change-002",
-                        "developer",
-                        "APPLIED",
-                        "stage-1",
-                        LocalDateTime.of(2026, 2, 9, 10, 0, 1),
-                        150
-                )
-        ));
-
-        // When
-        String json = objectMapper.writeValueAsString(original);
-        AuditListResponseData deserialized = objectMapper.readValue(json, AuditListResponseData.class);
-
-        // Then
-        assertNotNull(deserialized);
-        assertNotNull(deserialized.getEntries());
-        assertEquals(2, deserialized.getEntries().size());
-
-        AuditListResponseData.AuditEntryDto first = deserialized.getEntries().get(0);
-        assertEquals("change-001", first.getChangeId());
-        assertEquals("developer", first.getAuthor());
-        assertEquals("APPLIED", first.getState());
-        assertEquals("stage-1", first.getStageId());
-        assertEquals(100, first.getExecutionMillis());
-
-        AuditListResponseData.AuditEntryDto second = deserialized.getEntries().get(1);
-        assertEquals("change-002", second.getChangeId());
-        assertEquals(150, second.getExecutionMillis());
     }
 
     @Test
