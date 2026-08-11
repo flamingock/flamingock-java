@@ -180,7 +180,15 @@ public class MongockAuditEntry {
         this.systemChange = systemChange;
     }
 
+    public boolean shouldBeIgnored() {
+        return MongockChangeState.valueOf(state) == MongockChangeState.IGNORED;
+    }
+
     public AuditEntry toAuditEntry() {
+        if (shouldBeIgnored()) {
+            return null;
+        }
+
         long epochMillis;
         try {
             epochMillis = Long.parseLong(timestamp);

@@ -499,6 +499,65 @@ public class MongoDBImporterTest {
     }
 
     @Test
+    @DisplayName("GIVEN Mongock audit history contains an IGNORED entry " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should skip the IGNORED entry without crashing " +
+            "AND import the rest of the history normally")
+    void GIVEN_ignoredAuditEntry_WHEN_migratingToFlamingockCommunity_THEN_shouldSkipIgnoredAndImportRest() throws java.text.ParseException {
+        // Regression test for IGNORED-state null leak in MongockImporterMongoDB.toAuditEntry().
+        // Before the fix, the importer returned null for IGNORED entries and the caller
+        // (MongockImportChange.importHistory) crashed with:
+        //   NullPointerException: Cannot invoke "AuditEntry.getSystemChange()"
+        //                        because "auditEntryFromOrigin" is null
+        // The fix filters nulls at both layers and logs the skipped entry.
+
+        mongockTestHelper.setupBasicScenario();
+        mongockTestHelper.write(new MongockChangeEntry(
+                "ignored-execution-1",
+                "ignored-change",
+                "mongock",
+                MongockTestHelper.DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.200Z"),
+                MongockChangeState.IGNORED,
+                io.flamingock.common.test.mongock.MongockChangeType.EXECUTION,
+                "io.example.IgnoredChangeUnit",
+                "apply",
+                null,
+                0L,
+                MongockTestHelper.DEFAULT_HOSTNAME,
+                null,
+                false,
+                null
+        ));
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .build();
+
+        flamingock.run();
+
+        // IGNORED entry must NOT appear in the Flamingock audit store.
+        assertNull(getAuditEntryByChangeId("ignored-change"),
+                "IGNORED Mongock entry must not be imported into the Flamingock audit store");
+
+        // Remaining basic-scenario entries imported as normal, plus native changes executed.
+        auditHelper.verifyAuditSequenceStrict(
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+    }
+
+    @Test
     @DisplayName("GIVEN relaxed import flag with invalid value " +
             "WHEN migrating to Flamingock Community " +
             "THEN should throw exception")

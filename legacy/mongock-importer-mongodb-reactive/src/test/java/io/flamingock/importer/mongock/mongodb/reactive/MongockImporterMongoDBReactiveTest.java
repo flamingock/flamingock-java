@@ -92,17 +92,16 @@ class MongockImporterMongoDBReactiveTest {
     }
 
     @Test
-    @DisplayName("Should map an IGNORED legacy entry to null")
-    void shouldMapIgnoredEntryToNull() {
+    @DisplayName("Should skip an IGNORED legacy entry")
+    void shouldSkipIgnoredEntry() {
         seed(document("users-initialization", "EXECUTED", "EXECUTION", "pretend-mongock-run"));
         seed(document("ghost-extra", "IGNORED", "EXECUTION", null));
 
         MongockImporterMongoDBReactive importer = new MongockImporterMongoDBReactive(database, LEGACY_COLLECTION);
         List<AuditEntry> history = importer.getAuditHistory();
 
-        Assertions.assertEquals(2, history.size());
+        Assertions.assertEquals(1, history.size());
         Assertions.assertEquals("users-initialization", history.get(0).getChangeId());
-        Assertions.assertNull(history.get(1));
     }
 
     @Test
