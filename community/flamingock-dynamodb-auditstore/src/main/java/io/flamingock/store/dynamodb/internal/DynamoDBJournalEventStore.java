@@ -114,7 +114,7 @@ public class DynamoDBJournalEventStore implements JournalEventStore {
      *
      * @param autoCreate whether to create the table when missing
      */
-    protected synchronized void initialize(boolean autoCreate) {
+    public synchronized void initialize(boolean autoCreate) {
         if (!isJournalEventsEnabled() || table != null) {
             return;
         }
