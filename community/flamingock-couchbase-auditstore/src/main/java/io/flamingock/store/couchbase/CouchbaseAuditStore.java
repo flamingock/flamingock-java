@@ -23,6 +23,7 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
@@ -30,6 +31,7 @@ import io.flamingock.internal.core.external.store.lock.community.CommunityLockSe
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.common.couchbase.journal.JournalEventPersistenceConstants;
@@ -133,6 +135,10 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
+            // Must run before forStream(stageId): forStream seeds the sequence from the last persisted event,
+            // which Couchbase reports as empty until the journal store is initialized. Idempotent and
+            // synchronized, so repeating it in CouchbaseAuditPersistence#doInitialize is safe.
+            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             CouchbaseAuditPersistence persistence = new CouchbaseAuditPersistence(
                     communityConfiguration,
