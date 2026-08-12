@@ -87,9 +87,9 @@ public class CouchbaseJournalEventStore implements JournalEventStore {
     /**
      * Creates the collection and its indexes (or validates them, when {@code autoCreate} is {@code false}).
      * A no-op if already initialized, or gated out entirely by the caller under
-     * {@code Features.JOURNAL_EVENTS} — see {@link CouchbaseAuditPersistence#doInitialize}.
+     * {@code Features.JOURNAL_EVENTS} — see {@link io.flamingock.store.couchbase.CouchbaseAuditStore#getPersistenceFactory}.
      */
-    synchronized void initialize(boolean autoCreate, String scopeName, String collectionName) {
+    public synchronized void initialize(boolean autoCreate, String scopeName, String collectionName) {
         if (initialized) {
             return;
         }

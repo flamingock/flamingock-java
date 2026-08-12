@@ -70,6 +70,8 @@ public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence
         // this keeps it from ever appearing while the flag is off. It must stay in step with the append in
         // writeEntry: skipping setup while still appending would let ctx.insert create the collection
         // implicitly and without indexes, voiding the stream-position and eventId-lookup guarantees.
+        // Also repeated (idempotently) in CouchbaseAuditStore#getPersistenceFactory, which must run this
+        // before seeding the JournalEventSequencer via forStream(stageId).
         FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
     }
 
