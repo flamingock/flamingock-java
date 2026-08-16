@@ -16,6 +16,7 @@
 package io.flamingock.cloud;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.context.ContextContributor;
 import io.flamingock.internal.util.Result;
@@ -24,7 +25,6 @@ import io.flamingock.internal.util.id.JwtProperty;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.external.store.audit.cloud.CloudAuditPersistence;
 import io.flamingock.internal.common.core.context.ContextInjectable;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
 
     private final ServiceId serviceId;
 
-    private final LifecycleAuditWriter auditWriter;
+    private final AuditWriter auditWriter;
 
     private final ExecutionPlanner executionPlanner;
     private final String jwt;
@@ -44,7 +44,7 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
     CloudAuditPersistenceImpl(EnvironmentId environmentId,
                               ServiceId serviceId,
                               String jwt,
-                              LifecycleAuditWriter auditWriter,
+                              AuditWriter auditWriter,
                               ExecutionPlanner executionPlanner,
                               Runnable closer) {
         this.environmentId =environmentId;
@@ -54,20 +54,7 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
         this.executionPlanner = executionPlanner;
     }
 
-    @Override
-    public EnvironmentId getEnvironmentId() {
-        return environmentId;
-    }
 
-    @Override
-    public ServiceId getServiceId() {
-        return serviceId;
-    }
-
-    @Override
-    public String getJwt() {
-        return jwt;
-    }
 
     @Override
     public ExecutionPlanner getExecutionPlanner() {

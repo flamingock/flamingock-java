@@ -284,7 +284,7 @@ public final class MockRunnerServer {
             String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/change/{changeId}/audit"///{auditId}"
                     .replace("{environmentId}", String.valueOf(environmentId))
                     .replace("{serviceId}", String.valueOf(serviceId))
-                    .replace("{executionId}", auditWrite.getExecutionId());
+                    .replace("{executionId}", String.valueOf(auditWrite.getExecutionId()));
 
             PrototypeChange changePrototype = getChangePrototype(auditWrite.getChangeId());
             String auditUrl = auditUrlTemplate.replace("{auditId}", changePrototype.getChangeId());

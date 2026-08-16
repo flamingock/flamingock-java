@@ -24,6 +24,7 @@ val communityProjects = setOf(
     "flamingock-community-bom",
     "flamingock-community",
     "flamingock-mongodb-sync-auditstore",
+    "flamingock-mongodb-reactive-auditstore",
     "flamingock-couchbase-auditstore",
     "flamingock-dynamodb-auditstore",
     "flamingock-sql-auditstore",
@@ -38,7 +39,9 @@ val pluginProjects = setOf(
 val targetSystemProjects = setOf(
     "flamingock-nontransactional-targetsystem",
     "flamingock-mongodb-sync-targetsystem",
+    "flamingock-mongodb-reactive-targetsystem",
     "flamingock-mongodb-springdata-targetsystem",
+    "flamingock-mongodb-springdata-reactive-targetsystem",
     "flamingock-sql-targetsystem",
     "flamingock-dynamodb-targetsystem",
     "flamingock-couchbase-targetsystem"
@@ -46,6 +49,7 @@ val targetSystemProjects = setOf(
 
 val externalSystemProjects = setOf(
     "flamingock-mongodb-externalsystem-api",
+    "flamingock-mongodb-reactive-externalsystem-api",
     "flamingock-couchbase-externalsystem-api",
     "flamingock-dynamodb-externalsystem-api",
     "flamingock-sql-externalsystem-api"
@@ -55,6 +59,9 @@ val utilProjects = setOf(
     "general-util",
     "test-util",
     "mongodb-util",
+    "mongodb-sync-util",
+    "mongodb-reactive-util",
+    "flamingock-reactive-util",
     "dynamodb-util",
     "couchbase-util"
 )
@@ -62,12 +69,14 @@ val utilProjects = setOf(
 val legacyProjects = setOf(
     "mongock-support",
     "mongock-importer-mongodb",
+    "mongock-importer-mongodb-reactive",
     "mongock-importer-dynamodb",
     "mongock-importer-couchbase"
 )
 
 val testKitsProjects = setOf(
     "mongodb-test-kit",
+    "mongodb-reactive-test-kit",
     "dynamodb-test-kit",
     "sql-test-kit",
     "couchbase-test-kit"

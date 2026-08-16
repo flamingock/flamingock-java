@@ -31,7 +31,7 @@ import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -103,7 +103,26 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     }
 
     public TransactionManager<ClientSession> getTxManager() {
-        return txWrapper.getTxManager();
+        return getSyncTxWrapper().getTxManager();
+    }
+
+    /**
+     * Builds the transaction wrapper on first use rather than in {@link #initialize(ContextResolver)}.
+     * <p>
+     * It only needs the {@code mongoClient}, which is a constructor argument — the same reason
+     * {@link #getMongoDatabase()} works before initialization. This matters because
+     * {@code MongoDBSyncAuditStore.from(targetSystem)} reuses only the MongoDB instance and does not
+     * require the target system to be registered with the builder, so the store can be asked for a
+     * transaction wrapper on a target system that is never initialized.
+     */
+    private synchronized MongoDBSyncTxWrapper getSyncTxWrapper() {
+        if (txWrapper == null) {
+            if (mongoClient == null) {
+                throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance is required.");
+            }
+            txWrapper = new MongoDBSyncTxWrapper(new TransactionManager<>(mongoClient::startSession));
+        }
+        return txWrapper;
     }
 
     @Override
@@ -117,8 +136,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
                 .withWriteConcern(writeConcern);
         targetSystemContext.addDependency(database);
 
-        TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
-        txWrapper = new MongoDBSyncTxWrapper(txManager);
+        TransactionManager<ClientSession> txManager = getSyncTxWrapper().getTxManager();
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
 
         auditMarker = edition == COMMUNITY
@@ -155,7 +173,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
 
     @Override
     public TransactionWrapper getTxWrapper() {
-        return txWrapper;
+        return getSyncTxWrapper();
     }
 
     @Override

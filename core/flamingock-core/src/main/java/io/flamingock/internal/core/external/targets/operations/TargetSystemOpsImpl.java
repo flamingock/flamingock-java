@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.external.targets.operations;
 
-import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.external.targets.AbstractTargetSystem;
 
 import java.util.function.Function;

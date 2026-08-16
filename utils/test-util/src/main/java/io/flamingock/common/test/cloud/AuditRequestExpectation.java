@@ -20,9 +20,9 @@ import io.flamingock.cloud.api.vo.CloudAuditStatus;
 public class AuditRequestExpectation {
     private final String changeId;
     private final CloudAuditStatus state;
-    private final String executionId;
+    private final Long executionId;
 
-    public AuditRequestExpectation(String executionId, String changeId, CloudAuditStatus state) {
+    public AuditRequestExpectation(Long executionId, String changeId, CloudAuditStatus state) {
         this.executionId = executionId;
         this.changeId = changeId;
         this.state = state;
@@ -36,7 +36,7 @@ public class AuditRequestExpectation {
         return state;
     }
 
-    public String getExecutionId() {
+    public Long getExecutionId() {
         return executionId;
     }
 }

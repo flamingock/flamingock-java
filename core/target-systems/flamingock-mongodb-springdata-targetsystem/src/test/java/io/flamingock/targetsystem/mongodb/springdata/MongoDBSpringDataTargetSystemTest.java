@@ -134,7 +134,7 @@ public class MongoDBSpringDataTargetSystemTest {
     @Test
     @DisplayName("Should follow the targetSystem lifecycle")
     void happyPath() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
@@ -184,7 +184,7 @@ public class MongoDBSpringDataTargetSystemTest {
     @Test
     @DisplayName("Should rollback the ongoing deletion when a change fails")
     void failedChanges() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
@@ -240,7 +240,7 @@ public class MongoDBSpringDataTargetSystemTest {
     @Disabled("adapt when adding cloud support")
     @DisplayName("Should send ongoing change in execution when is present in local database")
     void shouldSendOngoingChangeInExecutionPlan() {
-        String executionId = "execution-1";
+        long executionId = 1L;
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(

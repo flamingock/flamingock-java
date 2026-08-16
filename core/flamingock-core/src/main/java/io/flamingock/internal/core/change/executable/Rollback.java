@@ -15,13 +15,13 @@
  */
 package io.flamingock.internal.core.change.executable;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.common.core.context.RuntimeContext;
 
 public interface Rollback {
 
     ExecutableChange getChange();
 
-    void rollback(ExecutionRuntime runtimeHelper);
+    void rollback(RuntimeContext runtimeHelper);
 
     String getRollbackMethodName();
 }

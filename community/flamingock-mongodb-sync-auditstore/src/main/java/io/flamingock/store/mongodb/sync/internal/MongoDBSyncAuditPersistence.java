@@ -15,70 +15,90 @@
  */
 package io.flamingock.store.mongodb.sync.internal;
 
-import com.mongodb.ReadConcern;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.JournalEvent;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private MongoDBSyncAuditor auditor;
-    private final MongoDatabase database;
-    private final String auditCollectionName;
-    private final ReadConcern readConcern;
-    private final ReadPreference readPreference;
-    private final WriteConcern writeConcern;
+    private final MongoDBSyncAuditRepository auditRepository;
+    private final MongoDBSyncJournalEventStore journalEventStore;
+    private final JournalEventSequencer journalEventSequencer;
+    private final TransactionWrapper txWrapper;
     private final boolean autoCreate;
 
 
     public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
-                                     MongoDatabase database,
-                                     String auditCollectionName,
-                                     ReadConcern readConcern,
-                                     ReadPreference readPreference,
-                                     WriteConcern writeConcern,
-                                     boolean autoCreate) {
+                                       MongoDBSyncAuditRepository auditRepository,
+                                       MongoDBSyncJournalEventStore journalEventStore,
+                                       JournalEventSequencer journalEventSequencer,
+                                       TransactionWrapper txWrapper,
+                                       boolean autoCreate) {
         super(localConfiguration);
-        this.database = database;
-        this.auditCollectionName = auditCollectionName;
-        this.readConcern = readConcern;
-        this.readPreference = readPreference;
-        this.writeConcern = writeConcern;
+        this.auditRepository = auditRepository;
+        this.journalEventStore = journalEventStore;
+        this.journalEventSequencer = journalEventSequencer;
+        this.txWrapper = txWrapper;
         this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        //Auditor
-        auditor = new MongoDBSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
-        auditor.initialize(autoCreate);
+        auditRepository.initialize(autoCreate);
+        // Creating the indexes is what brings the journal collection into existence — there is no explicit
+        // createCollection call — so skipping this keeps it from ever appearing. It must stay in step with the
+        // append in writeEntry: skipping setup while still appending would let insertOne create the collection
+        // implicitly and without indexes, voiding the unique (streamId, streamSequence) and eventId guarantees.
+        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate));
     }
 
-    @Deprecated
-    @Override
-    public Set<Class<?>> getNonGuardedTypes() {
-        return new HashSet<>(Collections.singletonList(ClientSession.class));
-    }
 
     @Override
     public List<AuditEntry> getAuditHistory() {
-        return auditor.getAuditHistory();
+        return auditRepository.getAuditHistory();
     }
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        return auditor.writeEntry(auditEntry);
+        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+        // Read once rather than per branch: the journal append and the audit write shape are two halves of one
+        // model. With events, the audit record is the change's current state and the journal is the history;
+        // without them, the audit record set is itself the history.
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+            Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+                ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+                journalEventStore.write(clientSession, journalEvent);
+                return auditRepository.save(clientSession, auditEntry);
+
+            });
+            // Spends the stream position, and only a committed transaction may reach this line. In general a
+            // normal return from wrapInTransaction does NOT mean commit — a FailedStep result is returned
+            // after a rollback, without an exception. It is sound here because this operation returns a
+            // Result, which can never be a FailedStep, so the commit branch is the only graceful path; a
+            // failing commit is caught and rethrown as DatabaseTransactionException. Keep that true: an
+            // operation that could return a failed step would silently burn a position and gap the stream,
+            // and a contiguous sequence is what lets a consumer tell "in flight" from "lost".
+            journalEventSequencer.confirm();
+            return result;
+        } else {
+            return auditRepository.append(auditEntry);
+        }
+
+
+
     }
 
 }

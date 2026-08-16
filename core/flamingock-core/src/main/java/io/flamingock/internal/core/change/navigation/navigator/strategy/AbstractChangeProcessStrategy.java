@@ -17,12 +17,12 @@ package io.flamingock.internal.core.change.navigation.navigator.strategy;
 
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
-import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.runtime.DefaultExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
@@ -80,7 +80,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
 
     protected final TS_OPS targetSystemOps;
 
-    protected final ExecutionContext executionContext;
+    protected final io.flamingock.internal.core.pipeline.execution.ExecutionContext executionContext;
 
     protected final ChangeResultBuilder resultBuilder;
 
@@ -93,7 +93,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     protected final TimeService timeService;
 
     protected AbstractChangeProcessStrategy(ExecutableChange change,
-                                            ExecutionContext executionContext,
+                                            io.flamingock.internal.core.pipeline.execution.ExecutionContext executionContext,
                                             TS_OPS targetSystemOps,
                                             AuditStoreStepOperations auditStoreOperations,
                                             ChangeResultBuilder resultBuilder,
@@ -142,7 +142,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      * @return The executable step ready for execution
      */
     protected ExecutableStep auditAndLogStartExecution(StartStep startStep,
-                                                       ExecutionContext executionContext) {
+                                                       io.flamingock.internal.core.pipeline.execution.ExecutionContext executionContext) {
         Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditStartResult(auditResult, startStep.getLoadedChange().getId());
         ExecutableStep executableStep = startStep.start();
@@ -166,13 +166,13 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     }
 
 
-    protected void auditAndLogManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext) {
+    protected void auditAndLogManualRollback(ManualRolledBackStep rolledBackStep, io.flamingock.internal.core.pipeline.execution.ExecutionContext executionContext) {
         Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditManualRollbackResult(auditResult, rolledBackStep.getLoadedChange());
         CompletedFailedManualRollback failedStep = rolledBackStep.applyAuditResult(auditResult);
     }
 
-    protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext) {
+    protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, io.flamingock.internal.core.pipeline.execution.ExecutionContext executionContext) {
         Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditAutoRollbackResult(auditResult, rolledBackStep.getLoadedChange());
     }
@@ -188,7 +188,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      */
     protected ExecutionRuntime buildExecutionRuntime() {
         Context changeSessionContext = new PriorityContext(new SimpleContext(), baseContext);
-        return ExecutionRuntime.builder()
+        return DefaultExecutionRuntime.builder()
                 .setSessionId(change.getId())
                 .setDependencyContext(changeSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)

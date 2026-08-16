@@ -17,13 +17,13 @@ package io.flamingock.targetsystem.sql;
 
 import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -80,7 +80,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
+    protected void enhanceExecutionRuntime(RuntimeContext executionRuntime, boolean isTransactional) {
         //if transactional, the connection is injected in the wrapInTransaction
         if (!isTransactional) {
             try {

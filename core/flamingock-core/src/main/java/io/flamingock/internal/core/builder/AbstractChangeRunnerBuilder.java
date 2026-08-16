@@ -16,6 +16,8 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.external.TargetSystem;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -30,7 +32,7 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.OperationResolver;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
@@ -51,6 +53,7 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
+import io.flamingock.internal.core.builder.runner.DisabledRunner;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.builder.runner.RunnerFactory;
@@ -191,6 +194,15 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      */
     @Override
     public final Runner build() {
+        FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
+
+        // Kill switch for the auto-execution path: when `flamingock.enabled=false` and we're
+        // not in CLI mode, return a no-op runner before any side-effectful setup runs (no
+        // template scan, no plugin init, no audit-store connection, no lock attempt, no
+        // pipeline load). Explicitly-invoked CLI commands ignore the flag — user intent wins.
+        if (!flamingockArgs.isCliMode() && !coreConfiguration.isEnabled()) {
+            return new DisabledRunner();
+        }
 
         ChangeTemplateManager.loadTemplates();
         pluginManager.initialize(context);
@@ -209,8 +221,12 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
-        //Configure the persistence from the auditStore
-        AuditPersistence persistence = getAuditPersistence(hierarchicalContext);
+        // Registered under the interface, not via new Dependency(instance): the factory is a lambda,
+        // so the single-argument constructor would key it by its synthetic class and rely on the
+        // resolver's assignable-scan fallback — and would raise a bare NullPointerException, instead
+        // of Dependency's "dependency instance cannot be null", when a store supplies no factory.
+        hierarchicalContext.addDependency(
+                new Dependency(AuditPersistenceFactory.class, auditStore.getPersistenceFactory()));
 
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
@@ -221,25 +237,23 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         pipeline.validate();
         pipeline.contributeToContext(hierarchicalContext);
 
-        FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
-
         OperationResolver operationResolver = new OperationResolver(
                 runnerId,
                 flamingockArgs,
                 pipeline,
-                persistence,
+                auditStore,
                 buildExecutionPlanner(runnerId),
                 targetSystemManager,
                 coreConfiguration,
                 buildEventPublisher(),
                 hierarchicalContext,
-                persistence.getNonGuardedTypes(),
+                auditStore.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
-                persistence.getCloser()
+                auditStore.getCloser()
         );
         RunnableOperation<?, ?> operation = operationResolver.getOperation();
 
-        return new RunnerFactory(runnerId, flamingockArgs, operation, persistence.getCloser()).create();
+        return new RunnerFactory(runnerId, flamingockArgs, operation, auditStore.getCloser()).create();
     }
 
 

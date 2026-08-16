@@ -25,9 +25,12 @@ import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.StageResponse;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
+import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.CloudApiMapper;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.core.pipeline.run.StageRunBlock;
@@ -72,10 +75,16 @@ public final class CloudExecutionPlanMapper {
             List<StageRequest> blockStages = new ArrayList<>(block.getStageRuns().size());
             for (StageRun stageRun : block.getStageRuns()) {
                 AbstractLoadedStage currentStage = stageRun.getLoadedStage();
+                // Per-change current status from the operation's recorded ChangeResult records.
+                // This is what the server uses as informational input to apply its
+                // "respect the client's report" rule (e.g. don't re-offer a FAILED change for
+                // retry, don't downgrade a client-reported APPLIED to ALREADY_APPLIED).
+                Map<String, ChangeStatus> currentStatusByChangeId = currentStatusMap(stageRun);
                 List<ChangeRequest> stageChanges = currentStage
                         .getChanges()
                         .stream()
-                        .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
+                        .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(
+                                descriptor, ongoingStatusesMap, currentStatusByChangeId))
                         .collect(Collectors.toList());
                 CloudStageStatus status = CloudApiMapper.toCloud(stageRun.getState());
                 blockStages.add(new StageRequest(currentStage.getName(), stageOrder++, status, stageChanges));
@@ -86,13 +95,27 @@ public final class CloudExecutionPlanMapper {
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestBlocks);
     }
 
+    private static Map<String, ChangeStatus> currentStatusMap(StageRun stageRun) {
+        List<ChangeResult> changes = stageRun.getResult().getChanges();
+        if (changes == null || changes.isEmpty()) return Collections.emptyMap();
+        Map<String, ChangeStatus> result = new HashMap<>(changes.size());
+        for (ChangeResult cr : changes) {
+            if (cr == null || cr.getChangeId() == null) continue;
+            result.put(cr.getChangeId(), cr.getStatus());
+        }
+        return result;
+    }
+
     private static ChangeRequest mapToChangeRequest(AbstractLoadedChange descriptor,
-                                                    Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
+                                                    Map<String, TargetSystemAuditMarkType> ongoingStatusesMap,
+                                                    Map<String, ChangeStatus> currentStatusByChangeId) {
         TargetSystemAuditMarkType domainStatus = ongoingStatusesMap.get(descriptor.getId());
         CloudTargetSystemAuditMarkType cloudStatus = domainStatus != null
                 ? CloudApiMapper.toCloud(domainStatus)
                 : CloudTargetSystemAuditMarkType.NONE;
-        return new ChangeRequest(descriptor.getId(), cloudStatus, descriptor.isTransactional());
+        CloudChangeStatus currentStatus = CloudApiMapper.toCloud(
+                currentStatusByChangeId.get(descriptor.getId()));
+        return new ChangeRequest(descriptor.getId(), cloudStatus, currentStatus, descriptor.isTransactional());
     }
 
     static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<AbstractLoadedStage> loadedStages) {

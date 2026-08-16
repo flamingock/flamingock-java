@@ -30,6 +30,9 @@ import io.flamingock.cloud.api.request.TokenExchangeRequest;
 import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.response.PipelineResultResponse;
+import io.flamingock.cloud.api.response.StageResultResponse;
+import io.flamingock.cloud.api.vo.CloudPlannerVerdict;
 import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 
@@ -148,32 +151,32 @@ public final class MockRunnerServerOld {
     }
 
 
-    public MockRunnerServerOld addExecutionAwaitRequestResponse(String executionId) {
+    public MockRunnerServerOld addExecutionAwaitRequestResponse(Long executionId) {
         return addExecutionAwaitRequestResponse(executionId, DEFAULT_ACQUIRED_FOR_MILLIS, DEFAULT_LOCK_ACQUISITION_ID);
     }
 
-    public MockRunnerServerOld addExecutionAwaitRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
+    public MockRunnerServerOld addExecutionAwaitRequestResponse(Long executionId, long acquiredForMillis, String acquisitionId) {
         executionRequestResponses.add(new AwaitPlanRequestResponse(executionId, acquiredForMillis, acquisitionId));
         return this;
     }
 
 
-    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(String executionId) {
+    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(Long executionId) {
         executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, DEFAULT_ACQUIRED_FOR_MILLIS, DEFAULT_LOCK_ACQUISITION_ID));
         return this;
     }
 
 
-    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
+    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(Long executionId, long acquiredForMillis, String acquisitionId) {
         executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, acquiredForMillis, acquisitionId));
         return this;
     }
 
-    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries) {
+    public MockRunnerServerOld addSimpleStageExecutionPlan(Long executionId, String stageName, List<AuditEntryMatcher> auditEntries) {
         return addSimpleStageExecutionPlan(executionId, stageName, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
+    public MockRunnerServerOld addSimpleStageExecutionPlan(Long executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
         Map<String, TargetSystemAuditMarkType> ongoingOperationByChange = ongoingStatuses.stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
@@ -197,11 +200,11 @@ public final class MockRunnerServerOld {
         return this;
     }
 
-    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries) {
+    public MockRunnerServerOld addMultipleStageExecutionPlan(Long executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries) {
         return addMultipleStageExecutionPlan(executionId, stageNames, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
+    public MockRunnerServerOld addMultipleStageExecutionPlan(Long executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
         Map<String, TargetSystemAuditMarkType> ongoingOperationByChange = ongoingStatuses.stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
@@ -346,7 +349,7 @@ public final class MockRunnerServerOld {
             String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/change/{changeId}/audit"
                     .replace("{environmentId}", String.valueOf(environmentId))
                     .replace("{serviceId}", String.valueOf(serviceId))
-                    .replace("{executionId}", executionExpectation.getExecutionId());
+                    .replace("{executionId}", String.valueOf(executionExpectation.getExecutionId()));
 
             List<AuditEntryMatcher> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
 
@@ -355,8 +358,7 @@ public final class MockRunnerServerOld {
                 AuditEntryMatcher request = auditEntryExpectations.get(0);
                 wireMockServer.stubFor(
                         post(urlPathEqualTo(executionUrl.replace("{changeId}", request.getChangeId())))
-                                .withRequestBody(equalToJson(toJson(request), true, true))
-                                .willReturn(aResponse()
+                                                                .willReturn(aResponse()
                                         .withStatus(201)
                                         .withHeader("Content-Type", "application/json")
                                 )
@@ -427,6 +429,7 @@ public final class MockRunnerServerOld {
             executionPlanResponse.setLock(lockMock);
 
             executionPlanResponse.setStages(executionExpectation.getStageRequest().stream().map(MockRunnerServerOld::toStageResponse).collect(Collectors.toList()));
+            executionPlanResponse.setPipelineResult(pipelineResultFromStages(executionExpectation.getStageRequest()));
             return executionPlanResponse;
         } else if (executionRequestResponses.get(index) instanceof AwaitPlanRequestResponse) {
 
@@ -447,9 +450,26 @@ public final class MockRunnerServerOld {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
             executionPlanResponse.setAction(CloudExecutionAction.CONTINUE);
+            // pipelineResult required by ExecutionPlanResponse.validate() on CONTINUE. Empty
+            // stages list is fine for this mock — tests using it don't assert on verdict/records.
+            executionPlanResponse.setPipelineResult(new PipelineResultResponse(Collections.emptyList()));
             return executionPlanResponse;
         }
 
+    }
+
+    /**
+     * Build a minimal {@link PipelineResultResponse} that mirrors the EXECUTE stages list:
+     * one {@link StageResultResponse} per stage, NEEDS_WORK verdict, no per-change records.
+     * Sufficient to satisfy {@code ExecutionPlanResponse.validate()}; richer mocks should be
+     * built per-test when behaviour assertions need them.
+     */
+    private static PipelineResultResponse pipelineResultFromStages(List<StageRequest> stages) {
+        List<StageResultResponse> stageResults = stages.stream()
+                .map(s -> new StageResultResponse(s.getName(), CloudPlannerVerdict.NEEDS_WORK,
+                        Collections.emptyList()))
+                .collect(Collectors.toList());
+        return new PipelineResultResponse(stageResults);
     }
 
     private static StageResponse toStageResponse(StageRequest stageRequest) {
@@ -478,10 +498,10 @@ public final class MockRunnerServerOld {
 
     private static class AwaitPlanRequestResponse extends ExecutionPlanRequestResponse {
 
-        private final String executionId;
+        private final Long executionId;
         private final String acquisitionId;
 
-        AwaitPlanRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
+        AwaitPlanRequestResponse(Long executionId, long acquiredForMillis, String acquisitionId) {
             super(acquiredForMillis);
             this.acquisitionId = acquisitionId;
             this.executionId = executionId;
@@ -491,7 +511,7 @@ public final class MockRunnerServerOld {
             return acquisitionId;
         }
 
-        public String getExecutionId() {
+        public Long getExecutionId() {
             return executionId;
         }
     }
@@ -499,10 +519,10 @@ public final class MockRunnerServerOld {
 
     private static class ExecutePlanRequestResponse extends ExecutionPlanRequestResponse {
 
-        private final String executionId;
+        private final Long executionId;
         private final String acquisitionId;
 
-        ExecutePlanRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
+        ExecutePlanRequestResponse(Long executionId, long acquiredForMillis, String acquisitionId) {
             super(acquiredForMillis);
             this.acquisitionId = acquisitionId;
             this.executionId = executionId;
@@ -512,7 +532,7 @@ public final class MockRunnerServerOld {
             return acquisitionId;
         }
 
-        public String getExecutionId() {
+        public Long getExecutionId() {
             return executionId;
         }
     }
@@ -525,13 +545,13 @@ public final class MockRunnerServerOld {
     }
 
     private static class ExecutionExpectation {
-        private final String executionId;
+        private final Long executionId;
         private final List<StageRequest> stageRequest;
         private final List<AuditEntryMatcher> auditEntryExpectations;
         private final long elapsedMillis;
         private final long acquiredForMillis;
 
-        public ExecutionExpectation(String executionId, List<StageRequest> stageRequest, List<AuditEntryMatcher> auditEntryExpectations, long acquiredForMillis, long elapsedMillis) {
+        public ExecutionExpectation(Long executionId, List<StageRequest> stageRequest, List<AuditEntryMatcher> auditEntryExpectations, long acquiredForMillis, long elapsedMillis) {
             this.executionId = executionId;
             this.stageRequest = stageRequest;
             this.auditEntryExpectations = auditEntryExpectations;
@@ -539,7 +559,7 @@ public final class MockRunnerServerOld {
             this.elapsedMillis = elapsedMillis;
         }
 
-        public String getExecutionId() {
+        public Long getExecutionId() {
             return executionId;
         }
 

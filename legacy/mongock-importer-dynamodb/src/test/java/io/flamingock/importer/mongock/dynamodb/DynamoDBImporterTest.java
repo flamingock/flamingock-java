@@ -17,6 +17,8 @@ package io.flamingock.importer.mongock.dynamodb;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.common.test.mongock.MongockChangeEntry;
+import io.flamingock.common.test.mongock.MongockChangeState;
 import io.flamingock.store.dynamodb.DynamoDBAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
@@ -403,6 +405,51 @@ public class DynamoDBImporterTest {
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(dynamodbTargetSystem)
                 .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY, Boolean.TRUE.toString())
+                .build();
+
+        flamingock.run();
+
+        auditHelper.verifyAuditSequenceStrict(
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+                STARTED("create-users-table"),
+                APPLIED("create-users-table")
+        );
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains an IGNORED entry " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should skip the IGNORED entry without crashing " +
+            "AND import the rest of the history normally")
+    void GIVEN_ignoredAuditEntry_WHEN_migratingToFlamingockCommunity_THEN_shouldSkipIgnoredAndImportRest() throws java.text.ParseException {
+        mongockTestHelper.setupBasicScenario();
+        mongockTestHelper.write(new MongockChangeEntry(
+                "ignored-execution-1",
+                "ignored-change",
+                "mongock",
+                io.flamingock.common.test.mongock.MongockTestHelper.DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.200Z"),
+                MongockChangeState.IGNORED,
+                io.flamingock.common.test.mongock.MongockChangeType.EXECUTION,
+                "io.example.IgnoredChangeUnit",
+                "apply",
+                null,
+                0L,
+                io.flamingock.common.test.mongock.MongockTestHelper.DEFAULT_HOSTNAME,
+                null,
+                false,
+                null
+        ));
+
+        DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(dynamodbTargetSystem)
                 .build();
 
         flamingock.run();

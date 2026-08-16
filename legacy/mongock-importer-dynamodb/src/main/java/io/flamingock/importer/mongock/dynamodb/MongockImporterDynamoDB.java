@@ -23,6 +23,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -44,7 +45,15 @@ public class MongockImporterDynamoDB implements AuditHistoryReader {
                 .collect(Collectors.toList());
 
         return entries.stream()
-                .map(MongockAuditEntry::toAuditEntry)
+                .map(MongockImporterDynamoDB::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private static AuditEntry toAuditEntry(MongockAuditEntry entry) {
+        if (entry.shouldBeIgnored()) {
+            return null;
+        }
+        return entry.toAuditEntry();
     }
 }

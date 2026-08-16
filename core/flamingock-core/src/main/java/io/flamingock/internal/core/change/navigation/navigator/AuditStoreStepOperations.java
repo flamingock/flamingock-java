@@ -15,8 +15,9 @@
  */
 package io.flamingock.internal.core.change.navigation.navigator;
 
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.external.store.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.external.store.audit.domain.RuntimeContext;
@@ -32,11 +33,11 @@ import java.time.LocalDateTime;
 
 public class AuditStoreStepOperations {
 
-    private final LifecycleAuditWriter auditWriter;
+    private final AuditWriter auditWriter;
     private final AuditTxType auditTxType;
     private final String targetSystemId;
 
-    public AuditStoreStepOperations(LifecycleAuditWriter auditWriter, AuditTxType auditTxType, String targetSystemId) {
+    public AuditStoreStepOperations(AuditWriter auditWriter, AuditTxType auditTxType, String targetSystemId) {
         this.auditWriter = auditWriter;
         this.auditTxType = auditTxType;
         this.targetSystemId = targetSystemId;
@@ -44,22 +45,26 @@ public class AuditStoreStepOperations {
 
     public Result auditStartExecution(StartStep startStep, ExecutionContext executionContext, LocalDateTime appliedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setStartStep(startStep).setAppliedAt(appliedAt).build();
-        return auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId));
+        AuditEntry auditEntry = new StartExecutionAuditContextBundle(startStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId).toAuditEntry();
+        return auditWriter.writeEntry(auditEntry);
     }
 
     public Result auditExecution(ExecutionStep executionStep, ExecutionContext executionContext, LocalDateTime appliedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setExecutionStep(executionStep).setAppliedAt(appliedAt).build();
-        return auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId));
+        AuditEntry auditEntry = new ExecutionAuditContextBundle(executionStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId).toAuditEntry();
+        return auditWriter.writeEntry(auditEntry);
     }
 
     public Result auditManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime appliedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setManualRollbackStep(rolledBackStep).setAppliedAt(appliedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId));
+        AuditEntry auditEntry = new RollbackAuditContextBundle(rolledBackStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId).toAuditEntry();
+        return auditWriter.writeEntry(auditEntry);
     }
 
     public Result auditAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime appliedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setAutoRollbackStep(rolledBackStep).setAppliedAt(appliedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId));
+        AuditEntry auditEntry = new RollbackAuditContextBundle(rolledBackStep.getLoadedChange(), executionContext, runtimeContext, auditTxType, targetSystemId).toAuditEntry();
+        return auditWriter.writeEntry(auditEntry);
     }
 
 }

@@ -124,7 +124,7 @@ public class CloudTransactionTest {
     @DisplayName("Should run successfully happy path")
     void happyPath() {
         //GIVEN
-        String executionId = "execution-1";
+        long executionId = 1L;
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntries)
                 .addExecutionWithAllChangesRequestResponse(executionId)

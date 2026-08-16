@@ -21,12 +21,12 @@ import io.flamingock.common.test.cloud.MockRunnerServer;
 
 public class ExecutionPlanRequestResponseMock extends ExecutionBaseRequestResponseMock {
 
-    public ExecutionPlanRequestResponseMock(String executionId, MockRequestResponseChange... stages) {
+    public ExecutionPlanRequestResponseMock(Long executionId, MockRequestResponseChange... stages) {
         this(executionId, MockRunnerServer.DEFAULT_ACQUIRED_FOR_MILLIS, MockRunnerServer.DEFAULT_LOCK_ACQUISITION_ID, stages);
 
     }
 
-    public ExecutionPlanRequestResponseMock(String executionId,
+    public ExecutionPlanRequestResponseMock(Long executionId,
                                             long acquiredForMillis,
                                             String acquisitionId,
                                             MockRequestResponseChange... stages) {

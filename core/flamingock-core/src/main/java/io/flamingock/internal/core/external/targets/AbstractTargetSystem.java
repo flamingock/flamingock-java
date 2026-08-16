@@ -16,11 +16,7 @@
 package io.flamingock.internal.core.external.targets;
 
 import io.flamingock.api.external.TargetSystem;
-import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.common.core.context.ContextConfigurable;
-import io.flamingock.internal.common.core.context.ContextProvider;
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.*;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.Property;
@@ -55,7 +51,7 @@ import java.util.function.Function;
  * including dependencies and properties that will be available to changes
  * during execution.
  * <p>
- * Subclasses should override {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)}
+ * Subclasses should override {@link #enhanceExecutionRuntime(RuntimeContext, boolean)}
  * to inject session-scoped dependencies (e.g., database connections, client sessions)
  * that are obtained fresh for each change execution.
  *
@@ -87,7 +83,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * Applies a change operation with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional change execution.
-     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
      * subclasses to inject session-scoped dependencies before executing the change.
      *
      * @param <T>             the return type of the change operation
@@ -104,7 +100,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * Rolls back (reverts) a previously applied change with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional rollback execution.
-     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
      * subclasses to inject session-scoped dependencies before executing the rollback.
      *
      * @param <T>               the return type of the rollback operation
@@ -136,7 +132,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * @param executionRuntime the runtime to enhance with dependencies
      * @param isTransactional  true if the change will run in a transaction, false otherwise
      */
-    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
+    protected void enhanceExecutionRuntime(RuntimeContext executionRuntime, boolean isTransactional) {
     }
 
     @Override

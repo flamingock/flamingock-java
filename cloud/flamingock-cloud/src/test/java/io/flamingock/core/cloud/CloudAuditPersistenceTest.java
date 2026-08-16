@@ -134,7 +134,7 @@ public class CloudAuditPersistenceTest {
     @DisplayName("Should run successfully happy path")
     void happyPath() {
         //GIVEN
-        String executionId = "execution-1";
+        long executionId = 1L;
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
                 .addExecutionWithAllChangesRequestResponse(executionId)
@@ -157,7 +157,7 @@ public class CloudAuditPersistenceTest {
         try (MockedConstruction<ThreadSleeper> lockThreadSleeperConstructors = Mockito.mockConstruction(ThreadSleeper.class)) {
 
 
-            String executionId = "execution-1";
+            long executionId = 1L;
             mockRunnerServer
                     .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
                     .addExecutionAwaitRequestResponse(executionId)
@@ -185,7 +185,7 @@ public class CloudAuditPersistenceTest {
     void shouldWaitAndEventuallyAbort() {
         ///GIVEN
         String acquisitionId = UUID.randomUUID().toString();
-        String executionId = "execution-1";
+        long executionId = 1L;
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
                 .addExecutionAwaitRequestResponse(executionId, 5000L, acquisitionId)
@@ -218,7 +218,7 @@ public class CloudAuditPersistenceTest {
     @DisplayName("Should wait and retry when lock is initially blocked eventually released")
     void shouldWaitAndRetry() {
         //GIVEN
-        String executionId = "execution-1";
+        long executionId = 1L;
         String acquisitionId = UUID.randomUUID().toString();
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
@@ -243,7 +243,7 @@ public class CloudAuditPersistenceTest {
     @DisplayName("Should continue and not run anything if server returns CONTINUE at first")
     void shouldContinue() {
         mockRunnerServer
-                .addSimpleStageExecutionPlan("execution-1", "changes", auditEntryExpectations)
+                .addSimpleStageExecutionPlan(1L, "changes", auditEntryExpectations)
                 .addExecutionContinueRequestResponse()
                 .start();
 
