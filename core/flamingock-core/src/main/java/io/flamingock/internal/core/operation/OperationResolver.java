@@ -26,6 +26,9 @@ import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.audit.AuditFixArgs;
 import io.flamingock.internal.core.operation.audit.AuditFixOperation;
 import io.flamingock.internal.core.operation.audit.AuditFixResult;
+import io.flamingock.internal.core.operation.audit.AuditListArgs;
+import io.flamingock.internal.core.operation.audit.AuditListOperation;
+import io.flamingock.internal.core.operation.audit.AuditListResult;
 import io.flamingock.internal.core.operation.execute.*;
 import io.flamingock.internal.core.operation.issue.IssueGetArgs;
 import io.flamingock.internal.core.operation.issue.IssueGetOperation;
@@ -45,6 +48,9 @@ import java.util.Set;
 
 public class OperationResolver {
 
+    private static final String ARG_HISTORY = "flamingock.audit.history";
+    private static final String ARG_SINCE = "flamingock.audit.since";
+    private static final String ARG_EXTENDED = "flamingock.audit.extended";
     private static final String ARG_CHANGE_ID = "flamingock.change-id";
     private static final String ARG_RESOLUTION = "flamingock.resolution";
     private static final String ARG_GUIDANCE = "flamingock.guidance";
@@ -97,6 +103,8 @@ public class OperationResolver {
                 return getExecuteApplyOperation();
             case VALIDATE_APPLY:
                 return getValidateApplyOperation();
+            case AUDIT_LIST:
+                return getAuditListOperation();
             case AUDIT_FIX:
                 return getAuditFixOperation();
             case ISSUE_LIST:
@@ -106,6 +114,14 @@ public class OperationResolver {
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", operationType));
         }
+    }
+
+    private RunnableOperation<AuditListArgs, AuditListResult> getAuditListOperation() {
+        boolean history = flamingockArgs.getBooleanOr(ARG_HISTORY, false);
+        java.time.LocalDateTime since = flamingockArgs.getDateTimeOr(ARG_SINCE, null);
+        boolean extended = flamingockArgs.getBooleanOr(ARG_EXTENDED, false);
+        AuditListOperation auditListOperation = new AuditListOperation(auditStore.getAuditReader());
+        return new RunnableOperation<>(auditListOperation, new AuditListArgs(history, since, extended));
     }
 
     private RunnableOperation<AuditFixArgs, AuditFixResult> getAuditFixOperation() {
