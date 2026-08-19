@@ -171,12 +171,6 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         return () -> auditRepository.getAuditHistory();
     }
 
-
-    @Override
-    public CommunityAuditPersistence getPersistence() {
-        throw new RuntimeException("getPersistence shouldn´t be called at MongodbSync ");
-    }
-
     @Override
     public synchronized CommunityLockService getLockService() {
         return lockService;
