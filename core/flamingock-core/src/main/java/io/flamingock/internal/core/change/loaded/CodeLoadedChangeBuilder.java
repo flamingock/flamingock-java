@@ -31,8 +31,10 @@ import io.flamingock.internal.util.ReflectionUtil;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedChange> {
 
@@ -249,12 +251,12 @@ public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedCh
         throw new RuntimeException(lastException);
     }
 
-    private List<ClassLoader> candidateClassLoaders() {
-        return Arrays.asList(
+    private Set<ClassLoader> candidateClassLoaders() {
+        return new LinkedHashSet<>(Arrays.asList(
                 Thread.currentThread().getContextClassLoader(),
                 getClass().getClassLoader(),
                 ClassLoader.getSystemClassLoader()
-        );
+        ));
     }
 
     private Constructor<?> getConstructorFromPreview(CodePreviewChange preview) {
