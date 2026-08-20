@@ -18,6 +18,8 @@ package io.flamingock.internal.core.context;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.util.Property;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -46,6 +48,8 @@ import java.util.UUID;
 
 public class SimpleContext extends AbstractSimpleContextResolver implements Context {
 
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("SimpleContext");
+
     private final Map<String, Dependency> dependenciesByName;
     private final Map<Class<?>, Dependency> dependenciesByExactType;
 
@@ -64,14 +68,35 @@ public class SimpleContext extends AbstractSimpleContextResolver implements Cont
         Optional<Dependency> dependencyByExactClass = Optional.ofNullable(dependenciesByExactType.get(type));
         if (dependencyByExactClass.isPresent()) {
             return dependencyByExactClass;
-        } else {
-            return getFirstAssignableDependency(type);
         }
+        Optional<Dependency> assignableDependency = getFirstAssignableDependency(type);
+        if (assignableDependency.isPresent()) {
+            return assignableDependency;
+        }
+        // Fallback for types with the same fully-qualified name loaded by different classloaders
+        // (e.g. Spring Boot DevTools' restart classloader), where Class<?> identity/assignability
+        // checks above never match even though it's logically the same application type.
+        Optional<Dependency> sameNameDependency = getFirstSameNameDependency(type);
+        if (sameNameDependency.isPresent()) {
+            logger.warn("Dependency[{}] resolved by class name across a classloader boundary " +
+                            "(requested type and registered type share the name but are different Class instances). " +
+                            "This usually happens under a hot-reload classloader (e.g. Spring Boot DevTools). " +
+                            "If this is unexpected, check for duplicate classes on the classpath.",
+                    type.getName());
+        }
+        return sameNameDependency;
     }
 
     private Optional<Dependency> getFirstAssignableDependency(Class<?> type) {
         return dependenciesByExactType.entrySet().stream()
                 .filter(entry -> type.isAssignableFrom(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst();
+    }
+
+    private Optional<Dependency> getFirstSameNameDependency(Class<?> type) {
+        return dependenciesByExactType.entrySet().stream()
+                .filter(entry -> type.getName().equals(entry.getKey().getName()))
                 .map(Map.Entry::getValue)
                 .findFirst();
     }
