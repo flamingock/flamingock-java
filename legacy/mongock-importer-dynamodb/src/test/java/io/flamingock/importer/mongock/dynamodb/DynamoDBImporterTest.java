@@ -25,8 +25,10 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.dynamodb.kit.DynamoDBTableFactory;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -101,6 +103,7 @@ public class DynamoDBImporterTest {
 
     @AfterEach
     void tearDown() {
+        FeatureFlag.remove(Features.JOURNAL_EVENTS);
         // DynamoDB local doesn't need explicit cleanup between tests
         // Tables are automatically cleaned by Testcontainers on restart
         mongockTestHelper.reset();
