@@ -18,38 +18,60 @@ package io.flamingock.store.couchbase;
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.transactions.TransactionAttemptContext;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.internal.common.couchbase.journal.JournalEventPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
+import io.flamingock.store.couchbase.internal.CouchbaseAuditor;
+import io.flamingock.store.couchbase.internal.CouchbaseJournalEventStore;
 import io.flamingock.store.couchbase.internal.CouchbaseLockService;
 import io.flamingock.externalsystem.couchbase.api.CouchbaseExternalSystem;
 
+import java.util.Collections;
+import java.util.Set;
+
 public class CouchbaseAuditStore implements CommunityAuditStore {
 
+    private final CouchbaseExternalSystem targetSystem;
     private final Cluster cluster;
     private final String bucketName;
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
     private Bucket bucket;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+    private String journalRepositoryName = JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
     private boolean autoCreate = true;
+    private CouchbaseAuditor auditor;
+    private CouchbaseJournalEventStore journalEventStore;
+    private JournalEventSequencerFactory journalEventSequencerFactory;
 
 
-    private CouchbaseAuditStore(Cluster cluster, String bucketName) {
-        this.cluster = cluster;
-        this.bucketName = bucketName;
+    private CouchbaseAuditStore(CouchbaseExternalSystem targetSystem) {
+        // Cannot resolve targetSystem.getTxWrapper() here: the target system's own initialize() — which is
+        // what sets it — runs later than this constructor (called eagerly when the caller builds this audit
+        // store), so it would still be null at this point. Kept as a live reference and resolved lazily in
+        // getPersistenceFactory(), by which point both the target system and this audit store are initialized.
+        this.targetSystem = targetSystem;
+        this.cluster = targetSystem.getCluster();
+        this.bucketName = targetSystem.getBucketName();
     }
 
     /**
@@ -63,7 +85,7 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
      * @return a new audit store bound to the same Couchbase instance as the target system
      */
     public static CouchbaseAuditStore from(CouchbaseExternalSystem targetSystem) {
-        return new CouchbaseAuditStore(targetSystem.getCluster(), targetSystem.getBucketName());
+        return new CouchbaseAuditStore(targetSystem);
     }
 
     @Override
@@ -86,6 +108,11 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
         return this;
     }
 
+    public CouchbaseAuditStore withJournalRepositoryName(String journalRepositoryName) {
+        this.journalRepositoryName = journalRepositoryName;
+        return this;
+    }
+
     public CouchbaseAuditStore withAutoCreate(boolean autoCreate) {
         this.autoCreate = autoCreate;
         return this;
@@ -93,36 +120,60 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.validate();
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-        this.validate();
+
+        auditor = new CouchbaseAuditor(cluster, bucket);
+        journalEventStore = new CouchbaseJournalEventStore(cluster, bucket);
+        journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+
+        lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
+        lockService.initialize(autoCreate, scopeName, lockRepositoryName);
     }
 
     @Override
-    public synchronized CommunityAuditPersistence getPersistence() {
-        if (persistence == null) {
-            persistence = new CouchbaseAuditPersistence(
+    public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+        return stageId -> {
+            // Must run before forStream(stageId): forStream seeds the sequence from the last persisted event,
+            // which Couchbase reports as empty until the journal store is initialized. Idempotent and
+            // synchronized, so repeating it in CouchbaseAuditPersistence#doInitialize is safe.
+            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            CouchbaseAuditPersistence persistence = new CouchbaseAuditPersistence(
                     communityConfiguration,
-                    cluster,
-                    bucket,
+                    auditor,
+                    journalEventStore,
+                    journalEventSequencer,
+                    targetSystem.getTxWrapper(),
                     scopeName,
                     auditRepositoryName,
+                    journalRepositoryName,
                     autoCreate);
             persistence.initialize(runnerId);
-        }
-        return persistence;
+            return persistence;
+        };
+    }
+
+    @Override
+    public CommunityAuditPersistence getPersistence() {
+        throw new UnsupportedOperationException("getPersistence shouldn't be called at Couchbase audit store; use getPersistenceFactory(stageId)");
+    }
+
+    @Override
+    public AuditReader getAuditReader() {
+        auditor.initialize(autoCreate, scopeName, auditRepositoryName);
+        return () -> auditor.getAuditHistory();
     }
 
     @Override
     public synchronized CommunityLockService getLockService() {
-        if (lockService == null) {
-            lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
-            lockService.initialize(
-                    autoCreate,
-                    scopeName,
-                    lockRepositoryName);
-        }
         return lockService;
+    }
+
+    @Override
+    public Set<Class<?>> getNonGuardedTypes() {
+        return Collections.singleton(TransactionAttemptContext.class);
     }
 
     private void validate() {
@@ -152,8 +203,20 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
+        if (journalRepositoryName == null || journalRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'journalRepositoryName' property is required.");
+        }
+
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
     }
 }
