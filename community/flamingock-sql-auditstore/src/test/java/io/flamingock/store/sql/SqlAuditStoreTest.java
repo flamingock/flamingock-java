@@ -18,8 +18,18 @@ package io.flamingock.store.sql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestSupport;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
+import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._001__create_index;
@@ -35,10 +45,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.sqlite.SQLiteDataSource;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.mockito.MockedStatic;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,6 +108,7 @@ class SqlAuditStoreTest {
 
     @AfterEach
     void tearDown() throws SQLException {
+        FeatureFlag.remove(Features.JOURNAL_EVENTS);
         if (context != null) {
             context.cleanup();
         }
@@ -394,6 +409,245 @@ class SqlAuditStoreTest {
         // Verify index exists and data state
         SqlAuditTestHelper.verifyIndexExists(context);
         verifyDataState(context, true);
+    }
+
+    @Test
+    @DisplayName("When journal events are enabled the SQL store creates a stage-scoped journal beside current audit state")
+    void journalEnabledUsesStageScopedPersistenceAndIndependentReader() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem)
+                .withAuditRepositoryName("flamingockAuditLog")
+                .withLockRepositoryName("flamingockLock")
+                .withJournalRepositoryName("customJournalEvents");
+        auditStore.initialize(baseContext);
+
+        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("stage-one");
+        persistence.writeEntry(auditEntry("journal-change", AuditEntry.Status.STARTED));
+        persistence.writeEntry(auditEntry("journal-change", AuditEntry.Status.APPLIED));
+
+        assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
+        assertEquals(1, countRows("flamingockAuditLog"));
+        assertEquals(2, countRows("customJournalEvents"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
+    @DisplayName("journal-enabled writes round-trip through every runtime SQL dialect")
+    void journalEnabledRoundTripsAcrossRuntimeDialects(SqlDialect sqlDialect, String dialectName) throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(sqlDialect, dialectName);
+
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("matrix-stage");
+        persistence.writeEntry(auditEntry("matrix-change", AuditEntry.Status.STARTED));
+        persistence.writeEntry(auditEntry("matrix-change", AuditEntry.Status.APPLIED));
+
+        assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
+        assertEquals(2, countRows("flamingockJournalEvents"));
+    }
+
+    @Test
+    @DisplayName("keeps the default Journal repository name private to the SQL audit store")
+    void keepsDefaultJournalRepositoryNamePrivateToSqlAuditStore() throws Exception {
+        Field defaultRepositoryName = SqlAuditStore.class.getDeclaredField("DEFAULT_JOURNAL_REPOSITORY_NAME");
+
+        assertTrue(Modifier.isPrivate(defaultRepositoryName.getModifiers()));
+        assertTrue(Modifier.isStatic(defaultRepositoryName.getModifiers()));
+        assertTrue(Modifier.isFinal(defaultRepositoryName.getModifiers()));
+        defaultRepositoryName.setAccessible(true);
+        assertEquals("flamingockJournalEvents", defaultRepositoryName.get(null));
+    }
+
+    @Test
+    @DisplayName("The journal repository name cannot collide with an audit or lock repository")
+    void journalRepositoryNameMustBeDistinct() throws Exception {
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem)
+                .withAuditRepositoryName("sameRepository")
+                .withLockRepositoryName("differentRepository")
+                .withJournalRepositoryName("sameRepository");
+
+        assertThrows(FlamingockException.class, () -> auditStore.initialize(baseContext));
+    }
+
+    @Test
+    @DisplayName("auto-create disabled validates the audit table before journal readiness")
+    void autoCreateDisabledValidatesAuditBeforeJournal() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem).withAutoCreate(false);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> auditStore.initialize(baseContext));
+
+        assertTrue(exception.getMessage().toLowerCase().contains("audit"),
+                "audit readiness must fail before journal readiness");
+    }
+
+    @Test
+    @DisplayName("auto-create disabled validates the lock table during store initialization")
+    void autoCreateDisabledValidatesLockDuringStoreInitialization() throws Exception {
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore.from(targetSystem).initialize(baseContext);
+        try (Connection connection = context.dataSource.getConnection(); Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE flamingockLock");
+        }
+
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem).withAutoCreate(false);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> auditStore.initialize(baseContext));
+
+        assertTrue(exception.getMessage().toLowerCase().contains("lock"),
+                "lock readiness must fail after audit readiness succeeds");
+    }
+
+    @Test
+    @DisplayName("a stage snapshots the journal flag once and uses the captured value")
+    void stageSnapshotsJournalFlagOnce() throws Exception {
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        AtomicInteger flagReads = new AtomicInteger();
+        try (MockedStatic<FeatureFlag> flags = org.mockito.Mockito.mockStatic(FeatureFlag.class)) {
+            flags.when(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false))
+                    .thenAnswer(invocation -> flagReads.getAndIncrement() == 0);
+
+            CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("captured-stage");
+            persistence.writeEntry(auditEntry("captured-flag", AuditEntry.Status.APPLIED));
+
+            assertEquals(1, countRows("flamingockJournalEvents"));
+            assertEquals(1, flagReads.get());
+            flags.verify(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false), org.mockito.Mockito.times(1));
+        }
+    }
+
+    @Test
+    @DisplayName("a Journal flag lookup failure falls back to disabled without touching Journal storage")
+    void flagLookupFailureFallsBackToDisabledJournal() throws Exception {
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        try (MockedStatic<FeatureFlag> flags = org.mockito.Mockito.mockStatic(FeatureFlag.class)) {
+            flags.when(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false))
+                    .thenThrow(new RuntimeException("flag lookup failed"));
+
+            CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("fallback-stage");
+            persistence.writeEntry(auditEntry("fallback-change", AuditEntry.Status.APPLIED));
+
+            assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
+            assertFalse(tableExists("flamingockJournalEvents"));
+            flags.verify(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false), org.mockito.Mockito.times(1));
+        }
+    }
+
+    @Test
+    @DisplayName("repeated stage initialization validates existing resources without duplicate DDL")
+    void repeatedStageInitializationIsIdempotent() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        auditStore.getPersistenceFactory().get("repeatable-stage");
+        auditStore.getPersistenceFactory().get("repeatable-stage");
+
+        assertEquals(0, countRows("flamingockJournalEvents"));
+    }
+
+    @Test
+    @DisplayName("the stage factory does not reinitialize store-owned audit readiness")
+    void stageFactoryDoesNotReinitializeAuditReadiness() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        try (Connection connection = context.dataSource.getConnection(); Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE flamingockAuditLog");
+        }
+
+        assertNotNull(auditStore.getPersistenceFactory().get("factory-boundary"));
+        assertFalse(tableExists("flamingockAuditLog"));
+        assertTrue(tableExists("flamingockJournalEvents"));
+    }
+
+    private int countRows(String tableName) throws SQLException {
+        try (Connection connection = context.dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+            resultSet.next();
+            return resultSet.getInt(1);
+        }
+    }
+
+    private boolean tableExists(String tableName) throws SQLException {
+        try (Connection connection = context.dataSource.getConnection();
+             ResultSet resultSet = connection.getMetaData().getTables(null, null, null, new String[]{"TABLE"})) {
+            while (resultSet.next()) {
+                if (tableName.equalsIgnoreCase(resultSet.getString("TABLE_NAME"))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private static AuditEntry auditEntry(String changeId, AuditEntry.Status status) {
+        return AuditEntryTestFactory.createTestAuditEntry(changeId, status, AuditTxType.NON_TX, (Class<?>) null);
     }
 
     private void verifyDataState(TestContext context, Boolean partial) throws SQLException {
