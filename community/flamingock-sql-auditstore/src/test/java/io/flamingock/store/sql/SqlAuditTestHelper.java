@@ -48,7 +48,7 @@ public class SqlAuditTestHelper {
     }
 
     private static void dropTablesIfExist(Connection conn, SqlDialect dialect) throws SQLException {
-        String[] tables = {"flamingockAuditLog", "test_table", "flamingockLock"};
+        String[] tables = {"flamingockAuditLog", "flamingockJournalEvents", "test_table", "flamingockLock"};
         for (String table : tables) {
             try {
                 String dropSql = getDropTableSql(table, dialect);
@@ -113,13 +113,13 @@ public class SqlAuditTestHelper {
             case MYSQL:
             case MARIADB:
             case SQLITE:
-            case H2:
                 return "CREATE TABLE flamingockLock (" +
                         "`key` VARCHAR(255) PRIMARY KEY, " +
                         "status VARCHAR(32), " +
                         "owner VARCHAR(255), " +
                         "expires_at TIMESTAMP)";
             case POSTGRESQL:
+            case H2:
                 return "CREATE TABLE flamingockLock (" +
                         "\"key\" VARCHAR(255) PRIMARY KEY," +
                         "status VARCHAR(32)," +
@@ -160,24 +160,6 @@ public class SqlAuditTestHelper {
 
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
-        }
-    }
-
-    public static void verifyPartialDataState(DataSource dataSource) throws SQLException {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-            ps.setString(1, "test-client-Federico");
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next() || !"Federico".equals(rs.getString("name"))) {
-                    throw new AssertionError("Federico not found");
-                }
-            }
-            ps.setString(1, "test-client-Jorge");
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next() || !"Jorge".equals(rs.getString("name"))) {
-                    throw new AssertionError("Jorge not found");
-                }
-            }
         }
     }
 
