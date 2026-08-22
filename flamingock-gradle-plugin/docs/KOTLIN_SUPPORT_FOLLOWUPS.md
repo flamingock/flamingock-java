@@ -1,17 +1,30 @@
 # Kotlin support — deferred follow-ups
 
-**Status:** deferred — captured for a follow-up PR. Surfaced during review of the
+**Status:** Section 1(a) and Section 2 are **implemented** (1.4.2 release). Section 1(b) — the
+KSP port of `flamingock-processor` — remains deferred and awaits a scoping issue before
+implementation. The original analysis is preserved below as context for future work.
+
+Surfaced during review of the
 [#918](https://github.com/flamingock/flamingock-java/issues/918) Kotlin-support fix (auto-apply
 `org.jetbrains.kotlin.kapt` when Kotlin JVM is detected, register `flamingock-processor` under
 the `kapt` configuration, harden the reflective Kotlin-compile-task arg wiring).
 
-Two related concerns are intentionally **not** addressed in the bug-fix PR so the patch release
-stays focused. They are described here in enough detail that the next PR doesn't have to
-re-derive the analysis.
+Two related concerns were intentionally **not** addressed in the original bug-fix PR so the
+patch release stayed focused. They are described here in enough detail that follow-up work
+doesn't have to re-derive the analysis.
 
 ---
 
 ## 1. Kapt auto-apply: opt-out and KSP roadmap
+
+**Status — item (a) opt-out: implemented in 1.4.2.** Exposed as the Gradle property
+`flamingock.autoApplyKapt` (default `true`; opt out with literal case-insensitive `false`).
+Implemented as a Gradle property rather than a `flamingock { … }` DSL setting because the
+`plugins { }` block evaluates before the `flamingock { }` block — a DSL setter would always
+fire too late to influence the auto-apply that already happened during `plugins { }`. See
+`docs/get-started/gradle-plugin.md` (Kotlin support section) for the user-facing documentation.
+
+**Status — item (b) KSP port: still deferred.** Needs its own scoping issue.
 
 ### Current behaviour
 
@@ -75,6 +88,15 @@ should land first so the KSP work has somewhere to plug in.
 ---
 
 ## 2. Mixed Java+Kotlin modules: duplicate same-name default stages
+
+**Status: implemented in 1.4.2 via the recommended merge-layer dedup.**
+`MetadataLoader.CompositePipelineBuilder` now applies the same id-deduplicated same-name
+collapse to **default** stages that has always been applied to **legacy** stages. The two
+helpers were generalised into `collapseStagesByName` + `mergeSameNameStages`. Identity-field
+mismatches (different `type` / `sourcesPackage` / `resourcesDir` on stages sharing a name)
+still emit a WARN for default stages so genuine multi-module misconfigurations stay visible;
+legacy stages remain silent on mismatch by design. The analysis below is preserved for
+context.
 
 ### Mechanism
 
@@ -172,9 +194,7 @@ and one in Kotlin, both under the same `@EnableFlamingock` stage. Assertions:
 
 ## Tracking
 
-When the follow-up PR is filed, please open two issues referencing this document:
-
-1. **Kotlin annotation processing: add opt-out toggle and scope KSP port** — implements
-   Section 1's deferred items (a) and (b).
-2. **MetadataLoader: dedupe same-name default stages across providers** — implements
-   Section 2's solution direction (a).
+- Section 1(a) and Section 2 — implemented in 1.4.2. No further tracking issues needed.
+- Section 1(b) — KSP port of `flamingock-processor`. Still requires a scoping issue before
+  implementation; not every `javax.annotation.processing` API has a direct KSP equivalent
+  and `RoundDiscovery` / the `Filer`-based incremental cache need substantive rework.

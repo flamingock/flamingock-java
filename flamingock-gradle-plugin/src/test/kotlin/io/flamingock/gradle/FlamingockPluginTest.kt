@@ -111,6 +111,59 @@ class FlamingockPluginTest {
     }
 
     @Test
+    fun `shouldAutoApplyKapt returns true when no property is set`() {
+        // The opt-out is read at withId-fire time via Gradle's findProperty. With no value
+        // anywhere (gradle.properties, -P, or env), the helper returns true so kapt is
+        // auto-applied — preserving the 1.4.1 default behaviour.
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        val plugin = FlamingockPlugin()
+
+        assertTrue(
+            plugin.shouldAutoApplyKapt(project),
+            "Default (property unset) must auto-apply kapt"
+        )
+    }
+
+    @Test
+    fun `shouldAutoApplyKapt returns false when flamingock autoApplyKapt is set to false`() {
+        // Simulates a user setting flamingock.autoApplyKapt=false in gradle.properties or
+        // via -Pflamingock.autoApplyKapt=false. ProjectBuilder lets us seed extra properties
+        // via the project's ExtraPropertiesExtension; the same lookup path Gradle uses for
+        // -P / gradle.properties resolves through findProperty().
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        project.extensions.extraProperties.set(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY, "false")
+        val plugin = FlamingockPlugin()
+
+        assertFalse(
+            plugin.shouldAutoApplyKapt(project),
+            "Explicit 'false' must opt out of kapt auto-apply"
+        )
+    }
+
+    @Test
+    fun `shouldAutoApplyKapt treats false-string case-insensitively, other values default to true`() {
+        // Case variants of "false" all opt out; anything else (including "no", "0", "FALSE!",
+        // arbitrary strings) preserves the default. This avoids surprising the user with
+        // values that look like opt-out but aren't (e.g. "no" stays on so the user sees the
+        // auto-apply happen and learns the canonical property name from docs).
+        val plugin = FlamingockPlugin()
+
+        listOf("false", "False", "FALSE").forEach { v ->
+            val p = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+            p.extensions.extraProperties.set(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY, v)
+            assertFalse(plugin.shouldAutoApplyKapt(p), "'$v' must opt out")
+        }
+        listOf("true", "True", "TRUE", "yes", "no", "0", "1", "").forEach { v ->
+            val p = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+            p.extensions.extraProperties.set(FlamingockConstants.AUTO_APPLY_KAPT_PROPERTY, v)
+            assertTrue(
+                plugin.shouldAutoApplyKapt(p),
+                "'$v' must not opt out — only literal case-insensitive 'false' suppresses auto-apply"
+            )
+        }
+    }
+
+    @Test
     fun `applying the plugin creates the flamingock extension`() {
         val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
 
