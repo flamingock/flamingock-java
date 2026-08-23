@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Flamingock (https://www.flamingock.io)
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.externalsystem.dynamodb.api;
+package io.flamingock.internal.core.context.repro;
 
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+public class MigrationConfiguration {
+    private final String configCollection;
 
-public interface DynamoDBExternalSystem extends TransactionalExternalSystem {
-    DynamoDbClient getClient();
+    public MigrationConfiguration(String configCollection) {
+        this.configCollection = configCollection;
+    }
+
+    public String getConfigCollection() {
+        return configCollection;
+    }
 }

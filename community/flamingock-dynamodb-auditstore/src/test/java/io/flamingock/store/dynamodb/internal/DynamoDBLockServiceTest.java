@@ -51,8 +51,13 @@ class DynamoDBLockServiceTest {
         // Clean up any existing tables to ensure test isolation
         cleanupTables();
         
-        lockService = new DynamoDBLockService(client, new TimeService());
-        lockService.initialize(true, CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME, 5L, 5L);
+        lockService = new DynamoDBLockService(
+                client,
+                CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME,
+                5L,
+                5L,
+                new TimeService());
+        lockService.initialize(true);
     }
     
     private void cleanupTables() {

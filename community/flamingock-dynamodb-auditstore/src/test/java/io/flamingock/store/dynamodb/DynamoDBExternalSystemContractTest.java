@@ -13,11 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.externalsystem.dynamodb.api;
+package io.flamingock.store.dynamodb;
 
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-public interface DynamoDBExternalSystem extends TransactionalExternalSystem {
-    DynamoDbClient getClient();
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class DynamoDBExternalSystemContractTest {
+
+    @Test
+    @DisplayName("DynamoDB external systems expose the shared transactional contract")
+    void dynamoDBExternalSystemIsTransactional() {
+        assertTrue(
+                TransactionalExternalSystem.class.isAssignableFrom(DynamoDBExternalSystem.class),
+                "DynamoDBExternalSystem must extend TransactionalExternalSystem"
+        );
+    }
 }

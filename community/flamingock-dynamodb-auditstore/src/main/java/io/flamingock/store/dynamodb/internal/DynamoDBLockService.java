@@ -15,7 +15,6 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
-import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import io.flamingock.internal.util.dynamodb.entities.LockEntryEntity;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
@@ -49,17 +48,26 @@ public class DynamoDBLockService implements CommunityLockService {
 
     private final DynamoDBUtil dynamoDBUtil;
 
+    private final String tableName;
+    private final long readCapacityUnits;
+    private final long writeCapacityUnits;
     private final TimeService timeService;
     protected DynamoDbTable<LockEntryEntity> table;
 
     public DynamoDBLockService(DynamoDbClient client,
-                                  TimeService timeService) {
+                               String tableName,
+                               long readCapacityUnits,
+                               long writeCapacityUnits,
+                               TimeService timeService) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
         this.timeService = timeService;
+        this.tableName = tableName;
+        this.readCapacityUnits = readCapacityUnits;
+        this.writeCapacityUnits = writeCapacityUnits;
     }
 
 
-    public void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
+    public void initialize(Boolean autoCreate) {
         if (autoCreate) {
             dynamoDBUtil.createTable(
                     dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
