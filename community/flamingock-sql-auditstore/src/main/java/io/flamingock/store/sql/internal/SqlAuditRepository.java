@@ -32,28 +32,41 @@ public class SqlAuditRepository {
     private SqlAuditorDialectHelper dialectHelper = null;
 
     public SqlAuditRepository(DataSource dataSource, String auditTableName) {
+        if (dataSource == null) {
+            throw new IllegalArgumentException("dataSource must not be null");
+        }
         JournalEventConstants.validateIdentifier(auditTableName, "auditTableName");
         this.dataSource = dataSource;
         this.auditTableName = auditTableName;
     }
 
     public synchronized void initialize(boolean autoCreate) {
+        this.dialectHelper = null;
+        SqlAuditorDialectHelper initializedDialectHelper;
         try (Connection conn = dataSource.getConnection()) {
-            this.dialectHelper = new SqlAuditorDialectHelper(conn);
+            initializedDialectHelper = new SqlAuditorDialectHelper(conn);
             if (!tableExists(conn.getMetaData())) {
                 if (!autoCreate) {
                     throw new IllegalStateException("SQL audit table '" + auditTableName + "' does not exist");
                 }
                 try (Statement stmt = conn.createStatement()) {
-                    stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
+                    stmt.executeUpdate(initializedDialectHelper.getCreateTableSqlString(auditTableName));
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize audit table", e);
         }
+        this.dialectHelper = initializedDialectHelper;
     }
 
     public Result writeEntry(AuditEntry auditEntry) {
+        if (auditEntry == null) {
+            return new Result.Error(new IllegalArgumentException("auditEntry must not be null"));
+        }
+        if (dialectHelper == null) {
+            return new Result.Error(new IllegalStateException("SQL auditor is not initialized"));
+        }
+
         Connection conn = null;
         try {
             conn = dataSource.getConnection();
@@ -143,6 +156,10 @@ public class SqlAuditRepository {
     }
 
     public List<AuditEntry> getAuditHistory() {
+        if (dialectHelper == null) {
+            throw new IllegalStateException("SQL auditor is not initialized");
+        }
+
         List<AuditEntry> entries = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
