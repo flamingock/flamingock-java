@@ -45,9 +45,10 @@ configurations.testImplementation {
 tasks.test {
     // CI-specific configuration
     val isCI = System.getenv("CI")?.toBoolean() ?: false
-    val enabledDialects = System.getProperty("sql.test.dialects") ?: if (isCI) "mysql,oracle" else "mysql,oracle,sqlserver"
+    val enabledDialects = providers.gradleProperty("sql.test.dialects")
+        .orElse(if (isCI) "mysql,oracle" else "mysql,oracle,sqlserver")
 
-    systemProperty("sql.test.dialects", enabledDialects)
+    systemProperty("sql.test.dialects", enabledDialects.get())
 
     // Parallel execution control
     maxParallelForks = if (isCI) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)

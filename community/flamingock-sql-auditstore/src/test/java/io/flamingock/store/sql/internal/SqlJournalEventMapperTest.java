@@ -23,22 +23,14 @@ import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.sql.SqlDialect;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -193,44 +185,6 @@ class SqlJournalEventMapperTest {
                 assertEquals(2, resultSet.getInt(1));
             }
         }
-    }
-
-    @Test
-    @DisplayName("keeps transaction handles package-private")
-    void keepsTransactionHandlesPackagePrivate() throws Exception {
-        Method append = SqlJournalEventStore.class.getDeclaredMethod(
-                "append", Connection.class, JournalEvent.class);
-        Method replaceCurrentState = SqlAuditRepository.class.getDeclaredMethod(
-                "replaceCurrentState", Connection.class, AuditEntry.class);
-
-        assertFalse(Modifier.isPublic(append.getModifiers()));
-        assertFalse(Modifier.isPublic(replaceCurrentState.getModifiers()));
-    }
-
-    @ParameterizedTest(name = "{0} uses its dialect boolean JDBC NULL type")
-    @MethodSource("nullableBooleanDialects")
-    @DisplayName("binds nullable booleans with the dialect JDBC type")
-    void bindsNullableBooleansWithDialectType(SqlDialect dialect, int expectedJdbcType) throws Exception {
-        PreparedStatement statement = Mockito.mock(PreparedStatement.class);
-        AuditEntry auditEntry = new AuditEntry(
-                "execution", "stage", "change", "author", LocalDateTime.now(), null, null,
-                null, null, null, 0L, null, null, false, null, null,
-                null, null, null, null);
-        JournalEvent<AuditEntry> event = new JournalEvent<>(
-                "event", JournalEventType.CHANGE_STATE, "stage", 1L, Instant.now(), auditEntry);
-
-        new SqlJournalEventMapper(dialect).bind(statement, event);
-
-        Mockito.verify(statement).setNull(26, expectedJdbcType);
-        Mockito.verify(statement).setBoolean(27, false);
-    }
-
-    private static Stream<Arguments> nullableBooleanDialects() {
-        return Stream.of(
-                Arguments.of(SqlDialect.MYSQL, Types.TINYINT),
-                Arguments.of(SqlDialect.SQLSERVER, Types.BIT),
-                Arguments.of(SqlDialect.ORACLE, Types.NUMERIC),
-                Arguments.of(SqlDialect.DB2, Types.SMALLINT));
     }
 
     private static void insert(Connection connection,

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -109,6 +110,48 @@ class SqlJournalEventStoreJdbcTest {
         } finally {
             Files.deleteIfExists(databaseFile);
         }
+    }
+
+    @Test
+    @DisplayName("deletes SQLite database and WAL sidecars after datasource closure")
+    void deletesSQLiteDatabaseAndSidecarsAfterDataSourceClosure() throws Exception {
+        Path databaseFile = Files.createTempFile("sql-journal-wal-", ".db").toAbsolutePath();
+        Path walFile = databaseFile.resolveSibling(databaseFile.getFileName() + "-wal");
+        Path shmFile = databaseFile.resolveSibling(databaseFile.getFileName() + "-shm");
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:sqlite:" + databaseFile);
+        config.setMaximumPoolSize(1);
+        try (HikariDataSource sqliteDataSource = new HikariDataSource(config)) {
+            try (Connection connection = sqliteDataSource.getConnection();
+                 java.sql.Statement statement = connection.createStatement()) {
+                statement.execute("PRAGMA journal_mode=WAL");
+                statement.execute("CREATE TABLE cleanup_probe (id INTEGER PRIMARY KEY, value TEXT)");
+                statement.execute("INSERT INTO cleanup_probe(value) VALUES ('owned')");
+            }
+        }
+
+        Files.createFile(walFile);
+        Files.createFile(shmFile);
+        deleteSQLiteArtifacts(databaseFile);
+        deleteSQLiteArtifacts(databaseFile);
+
+        assertFalse(Files.exists(databaseFile));
+        assertFalse(Files.exists(walFile));
+        assertFalse(Files.exists(shmFile));
+    }
+
+    @Test
+    @DisplayName("deletes SQLite database when WAL sidecars are absent")
+    void deletesSQLiteDatabaseWithoutSidecars() throws Exception {
+        Path databaseFile = Files.createTempFile("sql-journal-no-sidecars-", ".db").toAbsolutePath();
+
+        deleteSQLiteArtifacts(databaseFile);
+        deleteSQLiteArtifacts(databaseFile);
+
+        assertFalse(Files.exists(databaseFile));
+        assertFalse(Files.exists(databaseFile.resolveSibling(databaseFile.getFileName() + "-wal")));
+        assertFalse(Files.exists(databaseFile.resolveSibling(databaseFile.getFileName() + "-shm")));
     }
 
     @Test
@@ -422,6 +465,12 @@ class SqlJournalEventStoreJdbcTest {
             default:
                 throw new AssertionError("Unsupported test column type: " + definition.type);
         }
+    }
+
+    private static void deleteSQLiteArtifacts(Path databaseFile) throws IOException {
+        Files.deleteIfExists(databaseFile);
+        Files.deleteIfExists(databaseFile.resolveSibling(databaseFile.getFileName() + "-wal"));
+        Files.deleteIfExists(databaseFile.resolveSibling(databaseFile.getFileName() + "-shm"));
     }
 
     private static JournalEvent<AuditEntry> event(String streamId,

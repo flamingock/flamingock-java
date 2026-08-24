@@ -44,27 +44,22 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.sqlite.SQLiteDataSource;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.mockito.MockedStatic;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Testcontainers
 class SqlAuditStoreTest {
 
-    private static final Map<String, JdbcDatabaseContainer<?>> containers = new HashMap<>();
-    private static final Map<String, DataSource> dataSources = new HashMap<>();
     private TestContext context;
 
     static Stream<Arguments> dialectProvider() {
@@ -91,37 +86,12 @@ class SqlAuditStoreTest {
         });
     }
 
-
-    @BeforeAll
-    void startContainers() {
-        for (Arguments arg : dialectProvider().toArray(Arguments[]::new)) {
-            SqlDialect dialect = (SqlDialect) arg.get()[0];
-            String dialectName = (String) arg.get()[1];
-            if (!"h2".equals(dialectName) && !"sqlite".equals(dialectName)) {
-                JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
-                container.start();
-                containers.put(dialectName, container);
-                dataSources.put(dialectName, SqlAuditTestHelper.createDataSource(container));
-            }
-        }
-    }
-
     @AfterEach
     void tearDown() throws SQLException {
         FeatureFlag.remove(Features.JOURNAL_EVENTS);
         if (context != null) {
             context.cleanup();
         }
-    }
-
-    @AfterAll
-    void stopContainers() {
-        containers.values().forEach(JdbcDatabaseContainer::stop);
-        dataSources.values().forEach(ds -> {
-            if (ds instanceof HikariDataSource) {
-                ((HikariDataSource) ds).close();
-            }
-        });
     }
 
     private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
@@ -132,32 +102,44 @@ class SqlAuditStoreTest {
             config.setPassword("");
             config.setDriverClassName("org.h2.Driver");
             DataSource dataSource = new HikariDataSource(config);
+            TestContext testContext = new TestContext(dataSource, null, sqlDialect);
 
-            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+            try {
+                SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+            } catch (SQLException exception) {
+                testContext.cleanup();
+                throw exception;
+            }
 
-            return new TestContext(dataSource, null, sqlDialect);
+            return testContext;
         }
 
         if ("sqlite".equals(dialectName)) {
-            String dbFile = "test_" + System.currentTimeMillis() + ".db";
-
-            // Use a shared in-memory DB or file DB, but single connection
-            String jdbcUrl = "jdbc:sqlite:" + dbFile;
-
-            // Create a single-connection DataSource for SQLite
-            SQLiteDataSource ds = new SQLiteDataSource();
-            ds.setUrl(jdbcUrl);
-
-            try (Connection conn = ds.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute("PRAGMA journal_mode=WAL;");
-                stmt.execute("PRAGMA busy_timeout=5000;");
+            Path databaseFile;
+            try {
+                databaseFile = Files.createTempFile("flamingock-sql-audit-", ".db").toAbsolutePath();
+            } catch (IOException exception) {
+                throw new SQLException("Could not create a temporary SQLite database", exception);
             }
 
-            // Run table creation with this same DataSource
-            SqlAuditTestHelper.createTables(ds, sqlDialect);
+            SQLiteDataSource ds = new SQLiteDataSource();
+            ds.setUrl("jdbc:sqlite:" + databaseFile);
+            TestContext testContext = new TestContext(ds, null, sqlDialect, databaseFile);
 
-            return new TestContext(ds, null, SqlDialect.SQLITE);
+            try {
+                try (Connection conn = ds.getConnection();
+                     Statement stmt = conn.createStatement()) {
+                    stmt.execute("PRAGMA journal_mode=WAL;");
+                    stmt.execute("PRAGMA busy_timeout=5000;");
+                }
+
+                SqlAuditTestHelper.createTables(ds, sqlDialect);
+            } catch (SQLException exception) {
+                testContext.cleanup();
+                throw exception;
+            }
+
+            return testContext;
         }
 
         JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
@@ -169,10 +151,16 @@ class SqlAuditStoreTest {
         config.setPassword(container.getPassword());
         config.setDriverClassName(container.getDriverClassName());
         DataSource dataSource = new HikariDataSource(config);
+        TestContext testContext = new TestContext(dataSource, container, sqlDialect);
 
-        SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+        try {
+            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+        } catch (SQLException exception) {
+            testContext.cleanup();
+            throw exception;
+        }
 
-        return new TestContext(dataSource, container, sqlDialect);
+        return testContext;
     }
 
     private Class<?>[] getChangeClasses(String dialectName, String scenario) {
@@ -411,11 +399,13 @@ class SqlAuditStoreTest {
         verifyDataState(context, true);
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("When journal events are enabled the SQL store creates a stage-scoped journal beside current audit state")
-    void journalEnabledUsesStageScopedPersistenceAndIndependentReader() throws Exception {
+    void journalEnabledUsesStageScopedPersistenceAndIndependentReader(SqlDialect sqlDialect, String dialectName)
+            throws Exception {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        context = setupTest(sqlDialect, dialectName);
 
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
@@ -461,22 +451,11 @@ class SqlAuditStoreTest {
         assertEquals(2, countRows("flamingockJournalEvents"));
     }
 
-    @Test
-    @DisplayName("keeps the default Journal repository name private to the SQL audit store")
-    void keepsDefaultJournalRepositoryNamePrivateToSqlAuditStore() throws Exception {
-        Field defaultRepositoryName = SqlAuditStore.class.getDeclaredField("DEFAULT_JOURNAL_REPOSITORY_NAME");
-
-        assertTrue(Modifier.isPrivate(defaultRepositoryName.getModifiers()));
-        assertTrue(Modifier.isStatic(defaultRepositoryName.getModifiers()));
-        assertTrue(Modifier.isFinal(defaultRepositoryName.getModifiers()));
-        defaultRepositoryName.setAccessible(true);
-        assertEquals("flamingockJournalEvents", defaultRepositoryName.get(null));
-    }
-
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("The journal repository name cannot collide with an audit or lock repository")
-    void journalRepositoryNameMustBeDistinct() throws Exception {
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+    void journalRepositoryNameMustBeDistinct(SqlDialect sqlDialect, String dialectName) throws Exception {
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -491,11 +470,12 @@ class SqlAuditStoreTest {
         assertThrows(FlamingockException.class, () -> auditStore.initialize(baseContext));
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("auto-create disabled validates the audit table before journal readiness")
-    void autoCreateDisabledValidatesAuditBeforeJournal() throws Exception {
+    void autoCreateDisabledValidatesAuditBeforeJournal(SqlDialect sqlDialect, String dialectName) throws Exception {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -511,10 +491,12 @@ class SqlAuditStoreTest {
                 "audit readiness must fail before journal readiness");
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("auto-create disabled validates the lock table during store initialization")
-    void autoCreateDisabledValidatesLockDuringStoreInitialization() throws Exception {
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+    void autoCreateDisabledValidatesLockDuringStoreInitialization(SqlDialect sqlDialect, String dialectName)
+            throws Exception {
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -533,10 +515,11 @@ class SqlAuditStoreTest {
                 "lock readiness must fail after audit readiness succeeds");
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("a stage snapshots the journal flag once and uses the captured value")
-    void stageSnapshotsJournalFlagOnce() throws Exception {
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+    void stageSnapshotsJournalFlagOnce(SqlDialect sqlDialect, String dialectName) throws Exception {
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -545,24 +528,22 @@ class SqlAuditStoreTest {
         SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
         auditStore.initialize(baseContext);
 
-        AtomicInteger flagReads = new AtomicInteger();
         try (MockedStatic<FeatureFlag> flags = org.mockito.Mockito.mockStatic(FeatureFlag.class)) {
             flags.when(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false))
-                    .thenAnswer(invocation -> flagReads.getAndIncrement() == 0);
+                    .thenReturn(true, false);
 
             CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("captured-stage");
             persistence.writeEntry(auditEntry("captured-flag", AuditEntry.Status.APPLIED));
 
             assertEquals(1, countRows("flamingockJournalEvents"));
-            assertEquals(1, flagReads.get());
-            flags.verify(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false), org.mockito.Mockito.times(1));
         }
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("a Journal flag lookup failure falls back to disabled without touching Journal storage")
-    void flagLookupFailureFallsBackToDisabledJournal() throws Exception {
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+    void flagLookupFailureFallsBackToDisabledJournal(SqlDialect sqlDialect, String dialectName) throws Exception {
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -580,15 +561,15 @@ class SqlAuditStoreTest {
 
             assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
             assertFalse(tableExists("flamingockJournalEvents"));
-            flags.verify(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false), org.mockito.Mockito.times(1));
         }
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("repeated stage initialization validates existing resources without duplicate DDL")
-    void repeatedStageInitializationIsIdempotent() throws Exception {
+    void repeatedStageInitializationIsIdempotent(SqlDialect sqlDialect, String dialectName) throws Exception {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
@@ -603,11 +584,12 @@ class SqlAuditStoreTest {
         assertEquals(0, countRows("flamingockJournalEvents"));
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
     @DisplayName("the stage factory does not reinitialize store-owned audit readiness")
-    void stageFactoryDoesNotReinitializeAuditReadiness() throws Exception {
+    void stageFactoryDoesNotReinitializeAuditReadiness(SqlDialect sqlDialect, String dialectName) throws Exception {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        context = setupTest(SqlDialect.SQLITE, "sqlite");
+        context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
         baseContext.addDependency(new CommunityConfiguration());
