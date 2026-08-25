@@ -181,7 +181,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_METADATA)
     public String getMetadata() {
-        return metadata.toString();
+        return metadata != null ? metadata.toString() : null;
     }
 
     public void setMetadata(Object metadata) {
@@ -208,7 +208,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_ERROR_TRACE)
     public String getErrorTrace() {
-        return errorTrace.toString();
+        return errorTrace != null ? errorTrace.toString() : null;
     }
 
     public void setErrorTrace(Object errorTrace) {
