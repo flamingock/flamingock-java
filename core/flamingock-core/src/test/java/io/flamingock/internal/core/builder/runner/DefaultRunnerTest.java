@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.builder.runner;
 
-import io.flamingock.internal.core.operation.audit.AuditListArgs;
-import io.flamingock.internal.core.operation.audit.AuditListResult;
+import io.flamingock.internal.core.operation.issue.IssueListArgs;
+import io.flamingock.internal.core.operation.issue.IssueListResult;
 import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.id.RunnerId;
@@ -34,20 +34,20 @@ import static org.mockito.Mockito.*;
 class DefaultRunnerTest {
 
     @Mock
-    private Operation<AuditListArgs, AuditListResult> operation;
+    private Operation<IssueListArgs, IssueListResult> operation;
 
     @Mock
     private Runnable finalizer;
 
     private RunnerId runnerId;
-    private AuditListArgs args;
-    private RunnableOperation<AuditListArgs, AuditListResult> runnableOperation;
+    private IssueListArgs args;
+    private RunnableOperation<IssueListArgs, IssueListResult> runnableOperation;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         runnerId = RunnerId.generate("test-service");
-        args = new AuditListArgs();
+        args = new IssueListArgs();
         runnableOperation = new RunnableOperation<>(operation, args);
     }
 
@@ -55,7 +55,7 @@ class DefaultRunnerTest {
     @DisplayName("Should execute operation when run is called")
     void shouldExecuteOperationWhenRunIsCalled() {
         // Given
-        when(operation.execute(args)).thenReturn(new AuditListResult(Collections.emptyList()));
+        when(operation.execute(args)).thenReturn(new IssueListResult(Collections.emptyList()));
         DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
@@ -69,7 +69,7 @@ class DefaultRunnerTest {
     @DisplayName("Should call finalizer after successful execution")
     void shouldCallFinalizerAfterSuccessfulExecution() {
         // Given
-        when(operation.execute(args)).thenReturn(new AuditListResult(Collections.emptyList()));
+        when(operation.execute(args)).thenReturn(new IssueListResult(Collections.emptyList()));
         DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
@@ -108,7 +108,7 @@ class DefaultRunnerTest {
     @DisplayName("Should pass correct args to operation")
     void shouldPassCorrectArgsToOperation() {
         // Given
-        when(operation.execute(any())).thenReturn(new AuditListResult(Collections.emptyList()));
+        when(operation.execute(any())).thenReturn(new IssueListResult(Collections.emptyList()));
         DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
