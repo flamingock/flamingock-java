@@ -16,9 +16,9 @@
 package io.flamingock.externalsystem.mongodb.reactive.api;
 
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
 
-public interface MongoDBReactiveExternalSystem extends ExternalSystem {
+public interface MongoDBReactiveExternalSystem extends TransactionalExternalSystem {
 
     MongoDatabase getMongoDatabase();
 }

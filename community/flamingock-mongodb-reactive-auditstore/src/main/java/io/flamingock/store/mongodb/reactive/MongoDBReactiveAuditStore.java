@@ -21,22 +21,31 @@ import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.externalsystem.mongodb.reactive.api.MongoDBReactiveExternalSystem;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditPersistence;
+import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditRepository;
+import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveJournalEventStore;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveLockService;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
@@ -46,15 +55,19 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
 
     protected RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private MongoDBReactiveAuditPersistence persistence;
+    private CommunityAuditPersistence persistence;
     private MongoDBReactiveLockService lockService;
     private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
+    private String journalRepositoryName = DEFAULT_JOURNAL_STORE_NAME;
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private boolean autoCreate = true;
+    private MongoDBReactiveAuditRepository auditRepository;
+    private MongoDBReactiveJournalEventStore journalEventStore;
+    private JournalEventSequencerFactory journalEventSequencerFactory;
 
     private MongoDBReactiveAuditStore(MongoDBReactiveExternalSystem mongoDBTargetSystem) {
         this.mongoDBTargetSystem = mongoDBTargetSystem;
@@ -89,6 +102,11 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
         return this;
     }
 
+    public MongoDBReactiveAuditStore withJournalRepositoryName(String journalRepositoryName) {
+        this.journalRepositoryName = journalRepositoryName;
+        return this;
+    }
+
     public MongoDBReactiveAuditStore withReadConcern(ReadConcern readConcern) {
         this.readConcern = readConcern;
         return this;
@@ -114,40 +132,57 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         database = mongoDBTargetSystem.getMongoDatabase();
-        this.validate();
+		this.validate();
+
+        auditRepository = new MongoDBReactiveAuditRepository(
+                database, auditRepositoryName, readConcern, readPreference, writeConcern);
+        journalEventStore = new MongoDBReactiveJournalEventStore(
+                database, journalRepositoryName, readConcern, readPreference, writeConcern);
+        journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+
+        lockService = new MongoDBReactiveLockService(
+                database,
+                lockRepositoryName,
+                readConcern,
+                readPreference,
+                writeConcern,
+                TimeService.getDefault()
+        );
+        lockService.initialize(autoCreate);
     }
 
     @Override
-    public synchronized CommunityAuditPersistence getPersistence() {
-        if (persistence == null) {
-            persistence = new MongoDBReactiveAuditPersistence(
+    public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+        return stageId -> {
+            auditRepository.initialize(autoCreate);
+            if (isJournalEventsEnabled()) {
+                journalEventStore.initialize(autoCreate);
+            }
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            MongoDBReactiveAuditPersistence stagePersistence = new MongoDBReactiveAuditPersistence(
                     communityConfiguration,
-                    database,
-                    auditRepositoryName,
-                    readConcern,
-                    readPreference,
-                    writeConcern,
+                    auditRepository,
+                    journalEventStore,
+                    journalEventSequencer,
+                    mongoDBTargetSystem.getTxWrapper(),
                     autoCreate
             );
-            persistence.initialize(runnerId);
-        }
-        return persistence;
+            stagePersistence.initialize(runnerId);
+            if (persistence == null) {
+                persistence = stagePersistence;
+            }
+            return stagePersistence;
+        };
+    }
+
+    @Override
+    public AuditReader getAuditReader() {
+        auditRepository.initialize(autoCreate);
+        return () -> auditRepository.getAuditHistory();
     }
 
     @Override
     public synchronized CommunityLockService getLockService() {
-        if (lockService == null) {
-            lockService = new MongoDBReactiveLockService(
-                    database,
-                    lockRepositoryName,
-                    readConcern,
-                    readPreference,
-                    writeConcern,
-                    TimeService.getDefault()
-            );
-            lockService.initialize(autoCreate);
-
-        }
         return lockService;
     }
 
@@ -165,8 +200,20 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
+        if (journalRepositoryName == null || journalRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'journalRepositoryName' property is required.");
+        }
+
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
+        }
+
+        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+            throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
 
         if (readConcern == null) {
@@ -179,6 +226,14 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
 
         if (writeConcern == null) {
             throw new FlamingockException("The 'writeConcern' property is required.");
+        }
+    }
+
+    private static boolean isJournalEventsEnabled() {
+        try {
+            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
+        } catch (RuntimeException exception) {
+            return false;
         }
     }
 
