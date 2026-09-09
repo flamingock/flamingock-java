@@ -155,7 +155,7 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
             auditRepository.initialize(autoCreate);
-            if (isJournalEventsEnabled()) {
+			if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
                 journalEventStore.initialize(autoCreate);
             }
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
@@ -226,14 +226,6 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
 
         if (writeConcern == null) {
             throw new FlamingockException("The 'writeConcern' property is required.");
-        }
-    }
-
-    private static boolean isJournalEventsEnabled() {
-        try {
-            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
-        } catch (RuntimeException exception) {
-            return false;
         }
     }
 

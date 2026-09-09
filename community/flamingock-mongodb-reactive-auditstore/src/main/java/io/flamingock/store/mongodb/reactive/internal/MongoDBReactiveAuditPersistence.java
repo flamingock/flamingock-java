@@ -15,11 +15,7 @@
  */
 package io.flamingock.store.mongodb.reactive.internal;
 
-import com.mongodb.ReadConcern;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
@@ -34,8 +30,6 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
-
-import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 
 public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -59,30 +53,10 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
         this.autoCreate = autoCreate;
     }
 
-    /**
-     * Backward-compatible constructor for callers that only need the historical audit path.
-     */
-    public MongoDBReactiveAuditPersistence(CommunityConfigurable localConfiguration,
-                                         MongoDatabase database,
-                                         String auditCollectionName,
-                                         ReadConcern readConcern,
-                                         ReadPreference readPreference,
-                                         WriteConcern writeConcern,
-                                         boolean autoCreate) {
-        this(
-                localConfiguration,
-                new MongoDBReactiveAuditRepository(database, auditCollectionName, readConcern, readPreference, writeConcern),
-                new MongoDBReactiveJournalEventStore(database, DEFAULT_JOURNAL_STORE_NAME,
-                        readConcern, readPreference, writeConcern),
-                null,
-                null,
-                autoCreate);
-    }
-
     @Override
     protected void doInitialize(RunnerId runnerId) {
         auditRepository.initialize(autoCreate);
-        if (isJournalEventsEnabled()) {
+		if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
             journalEventStore.initialize(autoCreate);
         }
     }
@@ -94,7 +68,7 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        if (!isJournalEventsEnabled()) {
+		if (FeatureFlag.isDisabled(Features.JOURNAL_EVENTS, false)) {
             return auditRepository.append(auditEntry);
         }
 
@@ -114,13 +88,5 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
         // whenever control reaches this line; only then is the in-memory stream position spent.
         journalEventSequencer.confirm();
         return result;
-    }
-
-    private static boolean isJournalEventsEnabled() {
-        try {
-            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
-        } catch (RuntimeException exception) {
-            return false;
-        }
     }
 }
