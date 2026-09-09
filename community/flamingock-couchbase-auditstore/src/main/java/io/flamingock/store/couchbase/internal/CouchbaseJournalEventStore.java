@@ -200,8 +200,8 @@ public class CouchbaseJournalEventStore implements JournalEventStore {
             return 0L;
         }
         String query = String.format(
-                "UPDATE `%s`.`%s`.`%s` SET %s = true WHERE %s IN $eventIds RETURNING META().id",
-                collection.bucketName(), collection.scopeName(), collection.name(), KEY_ACKNOWLEDGED, KEY_EVENT_ID);
+                "UPDATE `%s`.`%s`.`%s` SET %s = true WHERE %s IN $eventIds AND %s = false RETURNING META().id",
+                collection.bucketName(), collection.scopeName(), collection.name(), KEY_ACKNOWLEDGED, KEY_EVENT_ID, KEY_ACKNOWLEDGED);
         QueryResult result = cluster.query(query, QueryOptions.queryOptions()
                 .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
                 .parameters(JsonObject.create().put("eventIds", JsonArray.from(new ArrayList<>(eventIds)))));
