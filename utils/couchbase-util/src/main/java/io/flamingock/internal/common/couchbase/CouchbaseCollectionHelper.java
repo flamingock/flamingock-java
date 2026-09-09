@@ -43,6 +43,7 @@ public final class CouchbaseCollectionHelper {
     private final static String CREATE_PRIMARY_INDEX_TEMPLATE = "CREATE PRIMARY INDEX IF NOT EXISTS ON `%s`.`%s`.`%s`";
     private final static String DROP_PRIMARY_INDEX_TEMPLATE = "DROP PRIMARY INDEX IF EXISTS ON `%s`.`%s`.`%s`";
     private final static String DROP_INDEX_TEMPLATE = "DROP INDEX `%s` IF EXISTS ON `%s`.`%s`.`%s`";
+    private final static String CREATE_INDEX_TEMPLATE = "CREATE INDEX `%s` IF NOT EXISTS ON `%s`.`%s`.`%s`(%s)";
 
     private CouchbaseCollectionHelper() {}
 
@@ -165,6 +166,22 @@ public final class CouchbaseCollectionHelper {
 
     public static void createPrimaryIndexIfNotExists(Cluster cluster, String bucketName, String scopeName, String collectionName) {
         cluster.query(String.format(CREATE_PRIMARY_INDEX_TEMPLATE, bucketName, scopeName, collectionName));
+    }
+
+    /**
+     * Creates a named secondary index over the given field list (already comma-separated, e.g.
+     * {@code "streamId, streamSequence"}), optionally scoped to a {@code WHERE} predicate for a partial index.
+     *
+     * @param whereClause N1QL boolean expression (without the {@code WHERE} keyword), or {@code null}/blank
+     *                    for a non-partial index
+     */
+    public static void createIndexIfNotExists(Cluster cluster, String bucketName, String scopeName, String collectionName,
+                                              String indexName, String fields, String whereClause) {
+        String query = String.format(CREATE_INDEX_TEMPLATE, indexName, bucketName, scopeName, collectionName, fields);
+        if (whereClause != null && !whereClause.trim().isEmpty()) {
+            query += " WHERE " + whereClause;
+        }
+        cluster.query(query);
     }
 
     public static void dropPrimaryIndexIfExists(Cluster cluster, String bucketName, String scopeName, String collectionName) {
