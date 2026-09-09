@@ -57,10 +57,10 @@ class SqlAuditRepositoryTest {
 
     @Test
     @DisplayName("returns an explicit error for a null legacy audit entry")
-    void writeEntryRejectsNullEntry() {
+    void appendRejectsNullEntry() {
         SqlAuditRepository repository = initializedRepository();
 
-        Result result = repository.writeEntry(null);
+        Result result = repository.append(null);
 
         Throwable error = errorFrom(result);
         assertEquals(IllegalArgumentException.class, error.getClass());
@@ -68,11 +68,11 @@ class SqlAuditRepositoryTest {
     }
 
     @Test
-    @DisplayName("returns an explicit error when a legacy write happens before initialization")
-    void writeEntryRejectsUninitializedRepository() {
+    @DisplayName("returns an explicit error when a legacy append happens before initialization")
+    void appendRejectsUninitializedRepository() {
         SqlAuditRepository repository = newRepository();
 
-        Result result = repository.writeEntry(auditEntry("uninitialized-write"));
+        Result result = repository.append(auditEntry("uninitialized-write"));
 
         Throwable error = errorFrom(result);
         assertEquals(IllegalStateException.class, error.getClass());

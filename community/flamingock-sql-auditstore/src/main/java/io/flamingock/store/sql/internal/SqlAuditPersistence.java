@@ -26,7 +26,6 @@ import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
 
@@ -79,11 +78,11 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
         return auditRepository.getAuditHistory();
     }
 
-    // Keep the lock through transaction commit: replaceCurrentState uses a caller-owned connection.
+    // Keep the lock through transaction commit: save uses a caller-owned connection.
     @Override
     public synchronized Result writeEntry(AuditEntry auditEntry) {
         if (!journalEventsEnabled) {
-            return auditRepository.writeEntry(auditEntry);
+            return auditRepository.append(auditEntry);
         }
 
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
@@ -91,7 +90,7 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
             Connection connection = runtimeContext.getContext().getRequiredDependencyValue(Connection.class);
             JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
             journalEventStore.append(connection, journalEvent);
-            Result currentStateResult = auditRepository.replaceCurrentState(connection, auditEntry);
+            Result currentStateResult = auditRepository.save(connection, auditEntry);
             if (currentStateResult instanceof Result.Error) {
                 throw new IllegalStateException("Failed to replace local current audit state",
                         ((Result.Error) currentStateResult).getError());

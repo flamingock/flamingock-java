@@ -59,7 +59,7 @@ public class SqlAuditRepository {
         this.dialectHelper = initializedDialectHelper;
     }
 
-    public Result writeEntry(AuditEntry auditEntry) {
+    public Result append(AuditEntry auditEntry) {
         if (auditEntry == null) {
             return new Result.Error(new IllegalArgumentException("auditEntry must not be null"));
         }
@@ -106,7 +106,7 @@ public class SqlAuditRepository {
      * @param auditEntry new current state
      * @return successful result after the update or zero-row insert completes
      */
-    Result replaceCurrentState(Connection connection, AuditEntry auditEntry) {
+    Result save(Connection connection, AuditEntry auditEntry) {
         if (connection == null) {
             throw new IllegalArgumentException("connection must not be null");
         }

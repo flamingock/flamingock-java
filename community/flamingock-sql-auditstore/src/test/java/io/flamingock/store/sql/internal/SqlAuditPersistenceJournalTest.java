@@ -176,11 +176,11 @@ class SqlAuditPersistenceJournalTest {
     void currentStateUpdatesBindNullableValues() throws Exception {
         SqlAuditRepository auditor = new SqlAuditRepository(dataSource, AUDIT_TABLE);
         auditor.initialize(true);
-        auditor.writeEntry(fullAuditEntry("nullable-current", "initial", AuditEntry.Status.STARTED));
+        auditor.append(fullAuditEntry("nullable-current", "initial", AuditEntry.Status.STARTED));
 
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            auditor.replaceCurrentState(connection, nullableAuditEntry("nullable-current"));
+            auditor.save(connection, nullableAuditEntry("nullable-current"));
             connection.commit();
         }
 
@@ -213,7 +213,7 @@ class SqlAuditPersistenceJournalTest {
         SqlAuditRepository auditor = new SqlAuditRepository(dataSource, AUDIT_TABLE);
         auditor.initialize(true);
 
-        Result result = auditor.writeEntry(nullableAuditEntry("nullable-append"));
+        Result result = auditor.append(nullableAuditEntry("nullable-append"));
 
         assertTrue(result instanceof Result.Ok);
         AuditEntry actual = auditor.getAuditHistory().get(0);
@@ -232,7 +232,7 @@ class SqlAuditPersistenceJournalTest {
 
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            auditor.replaceCurrentState(connection,
+            auditor.save(connection,
                     fullAuditEntry("caller-owned", "uncommitted", AuditEntry.Status.APPLIED));
 
             assertFalse(connection.isClosed());
@@ -266,8 +266,8 @@ class SqlAuditPersistenceJournalTest {
         auditor.initialize(true);
         AuditEntry first = fullAuditEntry("duplicate-current", "first", AuditEntry.Status.STARTED);
         AuditEntry second = fullAuditEntry("duplicate-current", "second", AuditEntry.Status.FAILED);
-        auditor.writeEntry(first);
-        auditor.writeEntry(second);
+        auditor.append(first);
+        auditor.append(second);
 
         SqlJournalEventStore journalStore = initializedJournalStore();
         SqlAuditPersistence persistence = persistenceFor(auditor, journalStore, newSequencer(journalStore), true);
@@ -294,7 +294,7 @@ class SqlAuditPersistenceJournalTest {
 
         try (Connection connection = dataSource.getConnection()) {
             assertThrows(IllegalArgumentException.class,
-                    () -> auditor.replaceCurrentState(connection, fullAuditEntry(null, "null-id", AuditEntry.Status.APPLIED)));
+                    () -> auditor.save(connection, fullAuditEntry(null, "null-id", AuditEntry.Status.APPLIED)));
         }
 
         assertEquals(0, auditRowCount(null));
@@ -308,7 +308,7 @@ class SqlAuditPersistenceJournalTest {
 
         try (Connection connection = dataSource.getConnection()) {
             assertThrows(IllegalArgumentException.class,
-                    () -> auditor.replaceCurrentState(connection, fullAuditEntry("   ", "blank-id", AuditEntry.Status.APPLIED)));
+                    () -> auditor.save(connection, fullAuditEntry("   ", "blank-id", AuditEntry.Status.APPLIED)));
         }
 
         assertEquals(0, auditRowCount("   "));
@@ -327,15 +327,15 @@ class SqlAuditPersistenceJournalTest {
     @DisplayName("journal-disabled writes keep append behavior and skip current-state persistence")
     void journalDisabledWritesUseAppendOnlyRepositoryOperation() {
         SqlAuditRepository auditor = mock(SqlAuditRepository.class);
-        when(auditor.writeEntry(ArgumentMatchers.any(AuditEntry.class))).thenReturn(Result.OK());
+        when(auditor.append(ArgumentMatchers.any(AuditEntry.class))).thenReturn(Result.OK());
         SqlAuditPersistence persistence = new SqlAuditPersistence(
                 new CommunityConfiguration(), auditor, null, null, null, false);
 
         Result result = persistence.writeEntry(auditEntry("append-only", AuditEntry.Status.APPLIED));
 
         assertTrue(result instanceof Result.Ok);
-        verify(auditor).writeEntry(ArgumentMatchers.any(AuditEntry.class));
-        verify(auditor, never()).replaceCurrentState(
+        verify(auditor).append(ArgumentMatchers.any(AuditEntry.class));
+        verify(auditor, never()).save(
                 ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class));
     }
 
@@ -348,7 +348,7 @@ class SqlAuditPersistenceJournalTest {
         AuditEntry auditEntry = auditEntry("ordered-write", AuditEntry.Status.APPLIED);
         JournalEvent<AuditEntry> event = event(STREAM_ID, 1L, "ordered-event", auditEntry.getChangeId());
         when(sequencer.newEvent(auditEntry)).thenReturn(event);
-        when(auditor.replaceCurrentState(
+        when(auditor.save(
                 ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class)))
                 .thenReturn(Result.OK());
         SqlAuditPersistence persistence = persistenceFor(auditor, journalStore, sequencer, true);
@@ -358,7 +358,7 @@ class SqlAuditPersistenceJournalTest {
         org.mockito.InOrder order = inOrder(sequencer, journalStore, auditor);
         order.verify(sequencer).newEvent(auditEntry);
         order.verify(journalStore).append(ArgumentMatchers.any(Connection.class), ArgumentMatchers.same(event));
-        order.verify(auditor).replaceCurrentState(
+        order.verify(auditor).save(
                 ArgumentMatchers.any(Connection.class), ArgumentMatchers.same(auditEntry));
         order.verify(sequencer).confirm();
     }
@@ -368,7 +368,7 @@ class SqlAuditPersistenceJournalTest {
     void journalEnabledDoesNotBackfillExistingAuditHistory() throws Exception {
         SqlAuditRepository auditor = new SqlAuditRepository(dataSource, AUDIT_TABLE);
         auditor.initialize(true);
-        auditor.writeEntry(auditEntry("legacy-change", AuditEntry.Status.APPLIED));
+        auditor.append(auditEntry("legacy-change", AuditEntry.Status.APPLIED));
 
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         SqlJournalEventStore journalStore = initializedJournalStore();
@@ -405,7 +405,7 @@ class SqlAuditPersistenceJournalTest {
         SqlAuditRepository failingAuditor = mock(SqlAuditRepository.class);
         doThrow(new IllegalStateException("audit write failed"))
                 .when(failingAuditor)
-                .replaceCurrentState(ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class));
+                .save(ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class));
         SqlAuditPersistence persistence = persistenceFor(failingAuditor, journalStore, newSequencer(journalStore), true);
 
         assertThrows(DatabaseTransactionException.class,
@@ -423,12 +423,12 @@ class SqlAuditPersistenceJournalTest {
         SqlAuditRepository failingAuditor = mock(SqlAuditRepository.class);
         doThrow(new IllegalStateException("audit write failed"))
                 .when(failingAuditor)
-                .replaceCurrentState(ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class));
+                .save(ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class));
         SqlAuditPersistence persistence = persistenceFor(failingAuditor, journalStore, sequencer, true);
 
         assertThrows(DatabaseTransactionException.class,
                 () -> persistence.writeEntry(auditEntry("first-attempt", AuditEntry.Status.APPLIED)));
-        when(failingAuditor.replaceCurrentState(
+        when(failingAuditor.save(
                 ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class)))
                 .thenReturn(Result.OK());
 
@@ -470,7 +470,7 @@ class SqlAuditPersistenceJournalTest {
     void firstFlagOnWriteUpdatesLegacyCurrentState() throws Exception {
         SqlAuditRepository auditor = new SqlAuditRepository(dataSource, AUDIT_TABLE);
         auditor.initialize(true);
-        auditor.writeEntry(auditEntry("legacy-transition", AuditEntry.Status.STARTED));
+        auditor.append(auditEntry("legacy-transition", AuditEntry.Status.STARTED));
 
         SqlJournalEventStore journalStore = initializedJournalStore();
         SqlAuditPersistence persistence = persistenceFor(auditor, journalStore,
@@ -490,7 +490,7 @@ class SqlAuditPersistenceJournalTest {
     void returnedAuditErrorRollsBackJournalEvent() throws Exception {
         SqlJournalEventStore journalStore = initializedJournalStore();
         SqlAuditRepository failingAuditor = mock(SqlAuditRepository.class);
-        when(failingAuditor.replaceCurrentState(
+        when(failingAuditor.save(
                 ArgumentMatchers.any(Connection.class), ArgumentMatchers.any(AuditEntry.class)))
                 .thenReturn(new Result.Error(new IllegalStateException("audit write failed")));
         SqlAuditPersistence persistence = persistenceFor(failingAuditor, journalStore,
