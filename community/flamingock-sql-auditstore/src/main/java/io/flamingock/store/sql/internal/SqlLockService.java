@@ -40,12 +40,16 @@ public class SqlLockService implements CommunityLockService {
         this.lockRepositoryName = lockRepositoryName;
     }
 
-    public void initialize(boolean autoCreate) {
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement()) {
+    public synchronized void initialize(boolean autoCreate) {
+        try (Connection conn = dataSource.getConnection()) {
             this.dialectHelper = new SqlLockDialectHelper(conn);
-            if (autoCreate) {
-                stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
+            if (!tableExists(conn.getMetaData())) {
+                if (!autoCreate) {
+                    throw new IllegalStateException("SQL lock table '" + lockRepositoryName + "' does not exist");
+                }
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
+                }
             }
         } catch (SQLException e) {
             // For Informix, ignore "Table or view already exists" error (SQLCODE -310)
@@ -292,5 +296,16 @@ public class SqlLockService implements CommunityLockService {
 
     private void upsertLockEntry(Connection conn, String key, String owner, LocalDateTime expiresAt) throws SQLException {
         dialectHelper.upsertLockEntry(conn, lockRepositoryName, key, owner, LockStatus.LOCK_HELD.name(), expiresAt);
+    }
+
+    private boolean tableExists(DatabaseMetaData metadata) throws SQLException {
+        try (ResultSet resultSet = metadata.getTables(null, null, null, new String[]{"TABLE"})) {
+            while (resultSet.next()) {
+                if (lockRepositoryName.equalsIgnoreCase(resultSet.getString("TABLE_NAME"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
