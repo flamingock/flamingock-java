@@ -20,29 +20,106 @@ import io.flamingock.internal.common.sql.SqlDialect;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 
 public class TestContext {
     final DataSource dataSource;
     final JdbcDatabaseContainer<?> container;
     final SqlDialect dialect;
+    final Path sqliteDatabase;
+    private boolean cleanedUp;
 
     TestContext(DataSource dataSource, JdbcDatabaseContainer<?> container, SqlDialect dialect) {
+        this(dataSource, container, dialect, null);
+    }
+
+    TestContext(DataSource dataSource,
+                JdbcDatabaseContainer<?> container,
+                SqlDialect dialect,
+                Path sqliteDatabase) {
         this.dataSource = dataSource;
         this.container = container;
         this.dialect = dialect;
+        this.sqliteDatabase = sqliteDatabase;
     }
 
-    public void cleanup() throws SQLException {
-        if (dataSource instanceof HikariDataSource) {
-            HikariDataSource hikariDS = (HikariDataSource) dataSource;
-            hikariDS.getHikariPoolMXBean().softEvictConnections();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            hikariDS.close();
+    public synchronized void cleanup() throws SQLException {
+        if (cleanedUp) {
+            return;
         }
+
+        SQLException cleanupFailure = null;
+        try {
+            closeDataSource();
+        } catch (SQLException exception) {
+            cleanupFailure = exception;
+        }
+
+        try {
+            stopContainer();
+        } catch (RuntimeException exception) {
+            cleanupFailure = appendFailure(cleanupFailure,
+                    new SQLException("Could not stop the SQL test container", exception));
+        }
+
+        try {
+            deleteSQLiteArtifacts();
+        } catch (IOException exception) {
+            cleanupFailure = appendFailure(cleanupFailure,
+                    new SQLException("Could not delete the SQLite test database", exception));
+        }
+
+        cleanedUp = true;
+        if (cleanupFailure != null) {
+            throw cleanupFailure;
+        }
+    }
+
+    private void closeDataSource() throws SQLException {
+        if (dataSource instanceof HikariDataSource) {
+            HikariDataSource hikariDataSource = (HikariDataSource) dataSource;
+            if (hikariDataSource.getHikariPoolMXBean() != null) {
+                hikariDataSource.getHikariPoolMXBean().softEvictConnections();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            hikariDataSource.close();
+        } else if (dataSource instanceof AutoCloseable) {
+            try {
+                ((AutoCloseable) dataSource).close();
+            } catch (Exception exception) {
+                throw new SQLException("Could not close the SQL test data source", exception);
+            }
+        }
+    }
+
+    private void stopContainer() {
+        if (container != null && container.isRunning()) {
+            container.stop();
+        }
+    }
+
+    private void deleteSQLiteArtifacts() throws IOException {
+        if (sqliteDatabase == null) {
+            return;
+        }
+
+        Files.deleteIfExists(sqliteDatabase);
+        Files.deleteIfExists(sqliteDatabase.resolveSibling(sqliteDatabase.getFileName() + "-wal"));
+        Files.deleteIfExists(sqliteDatabase.resolveSibling(sqliteDatabase.getFileName() + "-shm"));
+    }
+
+    private static SQLException appendFailure(SQLException current, SQLException next) {
+        if (current == null) {
+            return next;
+        }
+        current.addSuppressed(next);
+        return current;
     }
 }
