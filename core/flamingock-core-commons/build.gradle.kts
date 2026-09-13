@@ -4,8 +4,8 @@ val coreApiVersion: String by extra
 dependencies {
 //    api(project(":cloud:flamingock-cloud-api"))
     api("io.flamingock:flamingock-core-api:${coreApiVersion}")
-    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")//todo implementation
-    api("jakarta.annotation:jakarta.annotation-api:2.1.1")//todo can this be implementation?
+    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
