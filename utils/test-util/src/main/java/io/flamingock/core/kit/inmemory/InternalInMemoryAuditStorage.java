@@ -47,6 +47,17 @@ public class InternalInMemoryAuditStorage implements AuditStorage {
         auditEntries.add(auditEntry);
     }
 
+    /**
+     * Replaces the record for {@code auditEntry}'s change, keyed by changeId only — the in-memory counterpart
+     * to {@code MongoDBSyncAuditRepository#save}. Used instead of {@link #addAuditEntry} when
+     * {@code Features.JOURNAL_EVENTS} is enabled, where the audit log holds one row per change (its current
+     * state) rather than one row per state transition.
+     */
+    public synchronized void upsertAuditEntry(AuditEntry auditEntry) {
+        auditEntries.removeIf(entry -> entry.getChangeId().equals(auditEntry.getChangeId()));
+        auditEntries.add(auditEntry);
+    }
+
     public synchronized List<AuditEntry> getAuditEntries() {
         return new ArrayList<>(auditEntries);
     }

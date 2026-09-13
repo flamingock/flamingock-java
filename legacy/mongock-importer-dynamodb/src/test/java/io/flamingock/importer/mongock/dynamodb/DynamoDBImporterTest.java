@@ -50,7 +50,6 @@ import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import java.net.URI;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
@@ -129,9 +128,9 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 9 total entries
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -139,11 +138,9 @@ public class DynamoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new change created by code
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -178,23 +175,20 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 9 total entries
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
 
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
                 // Application stage - new change created by code
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -268,19 +262,15 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 8 total entries as shown in actual execution
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Legacy changes
-                STARTED("mongock-change-1"),
                 APPLIED("mongock-change-1"),
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -325,9 +315,9 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 9 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -335,11 +325,9 @@ public class DynamoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -412,15 +400,13 @@ public class DynamoDBImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
     }
@@ -457,15 +443,13 @@ public class DynamoDBImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
     }
@@ -546,19 +530,15 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 8 total entries as shown in actual execution
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Legacy changes
-                STARTED("mongock-change-1"),
                 APPLIED("mongock-change-1"),
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -598,9 +578,9 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 9 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -608,11 +588,9 @@ public class DynamoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 
@@ -652,9 +630,9 @@ public class DynamoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 9 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -662,11 +640,9 @@ public class DynamoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-table"),
                 APPLIED("create-users-table")
         );
 

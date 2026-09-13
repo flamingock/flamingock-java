@@ -150,31 +150,72 @@ public class AuditTestHelper {
         return auditStorage.getAuditEntries().size() == expectedCount;
     }
 
+    /**
+     * Asserts the audit log holds exactly this ordered sequence, intermediate transitions ({@code STARTED})
+     * included.
+     *
+     * @deprecated The audit log is moving to one record per change (its current state), with the transition
+     * history moving to the journal ({@code Features.JOURNAL_EVENTS}). Asserting an ordered
+     * {@code STARTED, APPLIED, …} history against the audit log describes something it is dropping. Prefer
+     * {@link #verifyAuditFinalStateSequence(AuditEntryExpectation...)} for "the change ended up in this state",
+     * or assert against the journal (via a store's {@code JournalEventStore}, or
+     * {@code InternalInMemoryTestAuditStore#getJournalEventStore()} for the in-memory kit) for "the change went
+     * through this sequence of transitions". Kept working as-is for existing callers; scheduled for removal in
+     * a future major version.
+     */
+    @Deprecated
     public void verifyAuditSequenceStrict(AuditEntryExpectation... expectedAudits) {
-        List<AuditEntry> actualEntries = getAuditEntriesSorted();
-        
-        // Check count first
+        verifySequence(getAuditEntriesSorted(), expectedAudits, "audit entries");
+    }
+
+    /**
+     * Asserts the audit log holds exactly this ordered sequence of <strong>final</strong> states —
+     * {@code STARTED} entries, system changes, and legacy pre-migration snapshots are filtered out before
+     * comparing, since none of them are a change's outcome. This is the audit-log shape that survives
+     * regardless of whether {@code Features.JOURNAL_EVENTS} is enabled: one meaningful record per change
+     * (currently one row per change once the flag is on; the last-written row per change otherwise).
+     *
+     * <p>Mirrors {@code AuditFinalStateSequenceValidator} / {@code thenExpectAuditFinalStateSequence} in
+     * {@code core/flamingock-test-support} — same filter, same semantics, for callers on this
+     * {@code AuditTestHelper}/{@code AuditTestSupport} track instead.</p>
+     */
+    public void verifyAuditFinalStateSequence(AuditEntryExpectation... expectedAudits) {
+        List<AuditEntry> actualEntries = getAuditEntriesSorted().stream()
+                .filter(AuditTestHelper::isFinalState)
+                .collect(Collectors.toList());
+        verifySequence(actualEntries, expectedAudits, "final-state audit entries");
+    }
+
+    private static boolean isFinalState(AuditEntry entry) {
+        return entry.getState() != AuditEntry.Status.STARTED
+                && !Boolean.TRUE.equals(entry.getSystemChange())
+                && !(entry.isLegacy() && entry.getChangeId().endsWith("_before"));
+    }
+
+    private void verifySequence(List<AuditEntry> actualEntries, AuditEntryExpectation[] expectedAudits, String entryLabel) {
         if (actualEntries.size() != expectedAudits.length) {
             throw new AssertionError(String.format(
-                "Expected %d audit entries but found %d. Expected: %s, Actual: %s",
+                "Expected %d %s but found %d. Expected: %s, Actual: %s",
                 expectedAudits.length,
+                entryLabel,
                 actualEntries.size(),
                 formatExpectedSequence(expectedAudits),
                 formatActualSequence(actualEntries)
             ));
         }
-        
+
         // Check each entry - use the rich AuditEntryAssertions for detailed verification
         for (int i = 0; i < expectedAudits.length; i++) {
             AuditEntry actual = actualEntries.get(i);
             AuditEntryExpectation expected = expectedAudits[i];
-            
+
             try {
                 AuditEntryAssertions.assertAuditEntry(actual, expected);
             } catch (AssertionError e) {
                 throw new AssertionError(String.format(
-                    "Audit entry mismatch at position %d: %s. " +
+                    "%s mismatch at position %d: %s. " +
                     "Full expected sequence: %s, Full actual sequence: %s",
+                    entryLabel,
                     i,
                     e.getMessage(),
                     formatExpectedSequence(expectedAudits),
@@ -183,7 +224,7 @@ public class AuditTestHelper {
             }
         }
     }
-    
+
     private String formatExpectedSequence(AuditEntryExpectation[] expectedAudits) {
         if (expectedAudits.length == 0) {
             return "[]";
