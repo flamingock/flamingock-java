@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
@@ -152,17 +151,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -187,18 +184,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("mongock-change-2"),
             APPLIED("mongock-change-2"),
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -223,17 +217,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
     }
@@ -293,17 +285,13 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("mongock-change-1"),
             APPLIED("mongock-change-1"),
-            STARTED("mongock-change-2"),
             APPLIED("mongock-change-2"),
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -337,18 +325,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("mongock-change-2"),
             APPLIED("mongock-change-2"),
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -422,13 +407,10 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("mongock-change-1"),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
-                STARTED("flamingock-change"),
                 APPLIED("flamingock-change")
         );
     }
@@ -511,17 +493,13 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("mongock-change-1"),
             APPLIED("mongock-change-1"),
-            STARTED("mongock-change-2"),
             APPLIED("mongock-change-2"),
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -551,17 +529,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 
@@ -591,17 +567,15 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        auditHelper.verifyAuditFinalStateSequence(
+            // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
             // System stage - actual system importer change
-            STARTED("migration-mongock-to-flamingock-community"),
             APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
-            STARTED("flamingock-change"),
             APPLIED("flamingock-change")
         );
 

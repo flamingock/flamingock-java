@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.auditEntry;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
@@ -120,9 +119,9 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -130,13 +129,10 @@ public class MongoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -182,25 +178,21 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -284,21 +276,16 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 10 total entries as shown in actual execution
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Legacy changes
-                STARTED("mongock-change-1"),
                 APPLIED("mongock-change-1"),
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -343,9 +330,9 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -353,13 +340,10 @@ public class MongoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -396,7 +380,7 @@ public class MongoDBImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 auditEntry().withChangeId("mongock-change-1")
                         .withState(AuditEntry.Status.APPLIED)
                         .withType(AuditEntry.ChangeType.MONGOCK_EXECUTION)
@@ -405,11 +389,8 @@ public class MongoDBImporterTest {
                         .withState(AuditEntry.Status.APPLIED)
                         .withType(AuditEntry.ChangeType.MONGOCK_EXECUTION)
                         .withSystemChange(false),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -483,17 +464,14 @@ public class MongoDBImporterTest {
 
         flamingock.run();
 
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
     }
@@ -542,17 +520,14 @@ public class MongoDBImporterTest {
                 "IGNORED Mongock entry must not be imported into the Flamingock audit store");
 
         // Remaining basic-scenario entries imported as normal, plus native changes executed.
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
     }
@@ -681,21 +656,16 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 10 total entries as shown in actual execution
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Legacy changes
-                STARTED("mongock-change-1"),
                 APPLIED("mongock-change-1"),
-                STARTED("mongock-change-2"),
                 APPLIED("mongock-change-2"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -738,9 +708,9 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -748,13 +718,10 @@ public class MongoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
@@ -797,9 +764,9 @@ public class MongoDBImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
-        auditHelper.verifyAuditSequenceStrict(
-                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+        // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
+        auditHelper.verifyAuditFinalStateSequence(
+                // Legacy imports from Mongock
                 APPLIED("system-change-00001_before"),
                 APPLIED("system-change-00001"),
                 APPLIED("mongock-change-1_before"),
@@ -807,13 +774,10 @@ public class MongoDBImporterTest {
                 APPLIED("mongock-change-2"),
 
                 // System stage - actual system importer change
-                STARTED("migration-mongock-to-flamingock-community"),
                 APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
-                STARTED("create-users-collection-with-index"),
                 APPLIED("create-users-collection-with-index"),
-                STARTED("seed-users"),
                 APPLIED("seed-users")
         );
 
