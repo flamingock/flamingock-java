@@ -83,7 +83,7 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
                 Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
 
                 if (result instanceof FailedStep) {
-                    logger.info("Rolling back MongoDB transaction due to failed step [duration={}]", formatDuration(transactionDuration));
+                    logger.info("Rolling back MongoDB transaction due to failure [duration={}]", formatDuration(transactionDuration));
                     clientSession.abortTransaction();
                     logger.debug("MongoDB transaction rollback completed successfully [duration={}]", formatDuration(transactionDuration));
                 } else {

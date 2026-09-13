@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterMongoDBReactive implements AuditHistoryReader {
@@ -43,19 +44,21 @@ public class MongockImporterMongoDBReactive implements AuditHistoryReader {
         return PublisherSync.collect(sourceCollection.find())
                 .stream()
                 .map(MongockImporterMongoDBReactive::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
 
     private static AuditEntry toAuditEntry(Document document) {
         MongockAuditEntry changeEntry = toChangeEntry(document);
-        LocalDateTime timestamp = Instant.ofEpochMilli(changeEntry.getTimestamp().getTime())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
 
         if (changeEntry.shouldBeIgnored()) {
             return null;
         }
+
+        LocalDateTime timestamp = Instant.ofEpochMilli(changeEntry.getTimestamp().getTime())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
         return new AuditEntry(
                 changeEntry.getExecutionId(),
                 null,

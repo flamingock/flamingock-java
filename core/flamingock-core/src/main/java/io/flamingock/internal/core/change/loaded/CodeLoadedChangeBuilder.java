@@ -30,8 +30,11 @@ import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedChange> {
 
@@ -229,13 +232,31 @@ public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedCh
         }
     }
 
+    // Tried in order: the thread's context classloader is what frameworks like Spring Boot DevTools
+    // point at the "live" app classes (e.g. its RestartClassLoader), so it must win when present.
+    // This class's own loader is the pre-existing fallback, kept for environments (CLI, plain Java)
+    // where no context classloader is set. The system loader is a last resort.
     private Class<?> getClassForName(String clazzName) {
-        try {
-            return Class.forName(clazzName);
+        ClassNotFoundException lastException = null;
+        for (ClassLoader candidate : candidateClassLoaders()) {
+            if (candidate == null) {
+                continue;
+            }
+            try {
+                return Class.forName(clazzName, true, candidate);
+            } catch (ClassNotFoundException e) {
+                lastException = e;
+            }
         }
-        catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        throw new RuntimeException(lastException);
+    }
+
+    private Set<ClassLoader> candidateClassLoaders() {
+        return new LinkedHashSet<>(Arrays.asList(
+                Thread.currentThread().getContextClassLoader(),
+                getClass().getClassLoader(),
+                ClassLoader.getSystemClassLoader()
+        ));
     }
 
     private Constructor<?> getConstructorFromPreview(CodePreviewChange preview) {

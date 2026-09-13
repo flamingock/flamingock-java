@@ -24,6 +24,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterCouchbase implements AuditHistoryReader {
@@ -56,7 +57,15 @@ public class MongockImporterCouchbase implements AuditHistoryReader {
 
         return result.rowsAsObject().stream()
                 .map(CouchbaseChangeEntry::fromJson)
-                .map(CouchbaseChangeEntry::toAuditEntry)
+                .map(MongockImporterCouchbase::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private static AuditEntry toAuditEntry(CouchbaseChangeEntry entry) {
+        if (entry.shouldBeIgnored()) {
+            return null;
+        }
+        return entry.toAuditEntry();
     }
 }

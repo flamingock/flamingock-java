@@ -46,6 +46,10 @@ public class CouchbaseChangeEntry {
         this.executionId = executionId;
     }
 
+    public String getChangeId() {
+        return changeId;
+    }
+
     public static CouchbaseChangeEntry fromJson(JsonObject doc) {
         CouchbaseChangeEntry entry = new CouchbaseChangeEntry();
         entry.executionId = doc.getString("executionId");
@@ -71,7 +75,15 @@ public class CouchbaseChangeEntry {
         throw new IllegalArgumentException("Cannot convert value to Long: " + value);
     }
 
+    public boolean shouldBeIgnored() {
+        return MongockChangeState.valueOf(state) == MongockChangeState.IGNORED;
+    }
+
     public AuditEntry toAuditEntry() {
+        if (shouldBeIgnored()) {
+            return null;
+        }
+
         LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
 
         MongockChangeState stateEnum = MongockChangeState.valueOf(state);

@@ -15,10 +15,17 @@
  */
 package io.flamingock.support.precondition;
 
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.support.domain.AuditEntryDefinition;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Inserts audit entry preconditions into the audit store before test execution.
@@ -29,15 +36,15 @@ import java.util.List;
  */
 public class PreconditionInserter {
 
-    private final AuditWriter auditWriter;
+    private final AuditPersistenceFactory<? extends AuditPersistence> auditWriterFactory;
 
     /**
      * Creates a new precondition inserter with the given audit writer.
      *
-     * @param auditWriter the audit writer to use for inserting entries
+     * @param auditWriterFactory the audit writer to use for inserting entries
      */
-    public PreconditionInserter(AuditWriter auditWriter) {
-        this.auditWriter = auditWriter;
+    public PreconditionInserter(AuditPersistenceFactory<? extends AuditPersistence> auditWriterFactory) {
+        this.auditWriterFactory = auditWriterFactory;
     }
 
     /**
@@ -53,8 +60,20 @@ public class PreconditionInserter {
         if (preconditions == null || preconditions.isEmpty()) {
             return;
         }
+        Map<String, AuditWriter> writersByStage = getWritersByStage(preconditions);
         for (AuditEntryDefinition definition : preconditions) {
+            AuditWriter auditWriter = writersByStage.get(definition.getStageId());
             auditWriter.writeEntry(definition.toAuditEntry());
         }
+    }
+
+    @NotNull
+    private Map<String, AuditWriter> getWritersByStage(List<AuditEntryDefinition> changeStates) {
+        return changeStates.stream()
+                .map(AuditEntryDefinition::getStageId)
+                .collect(Collectors.toSet())
+                .stream()
+                .collect(Collectors.toMap(Function.identity(), auditWriterFactory::get));
+
     }
 }

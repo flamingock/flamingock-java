@@ -15,6 +15,8 @@
  */
 package io.flamingock.support.context;
 
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.builder.BuilderAccessor;
@@ -64,7 +66,7 @@ public class TestContext {
      * @return the audit reader
      */
     public AuditReader getAuditReader() {
-        return builderAccessor.getAuditStore().getPersistence();
+        return builderAccessor.getAuditStore().getAuditReader();
     }
 
     /**
@@ -72,8 +74,8 @@ public class TestContext {
      *
      * @return the audit writer
      */
-    public AuditWriter getAuditWriter() {
-        return builderAccessor.getAuditStore().getPersistence();
+    public AuditPersistenceFactory<? extends AuditPersistence> getAuditWriter() {
+        return builderAccessor.getAuditStore().getPersistenceFactory();
     }
 
     /**

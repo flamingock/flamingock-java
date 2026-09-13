@@ -16,10 +16,44 @@
 package io.flamingock.internal.core.external.store;
 
 import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.ContextInitializable;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.util.FeatureFlag;
+
+import java.util.Collections;
+import java.util.Set;
 
 public interface AuditStore<PERSISTENCE extends AuditPersistence> extends ExternalSystem, ContextInitializable {
 
-    PERSISTENCE getPersistence();
+    @Deprecated
+    default PERSISTENCE getPersistence() {
+        throw new IllegalStateException("Audit stores must provide persistence through getPersistenceFactory(stageId)");
+    }
+
+    default AuditReader getAuditReader() {
+        return getPersistence();
+    }
+
+    //TODO temporally default, until we implement the other DB stores
+    default AuditPersistenceFactory<PERSISTENCE> getPersistenceFactory() {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            throw new IllegalStateException("Journal-enabled audit stores require getPersistenceFactory(stageId)");
+        }
+        return stageId -> getPersistence();
+    }
+
+    default Runnable getCloser() {
+        return () -> {
+        };
+    }
+
+    //TODO move this to TargetSystem
+    default Set<Class<?>> getNonGuardedTypes() {
+        return Collections.emptySet();
+    }
+
 }

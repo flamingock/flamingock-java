@@ -18,6 +18,7 @@ package io.flamingock.store.mongodb.reactive;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.externalsystem.mongodb.reactive.api.MongoDBReactiveExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -31,6 +32,10 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditPersistence;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveLockService;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
@@ -175,5 +180,10 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
         if (writeConcern == null) {
             throw new FlamingockException("The 'writeConcern' property is required.");
         }
+    }
+
+    @Override
+    public Set<Class<?>> getNonGuardedTypes() {
+        return new HashSet<>(Collections.singletonList(ClientSession.class));
     }
 }

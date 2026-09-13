@@ -17,6 +17,7 @@ package io.flamingock.internal.core.plan.community;
 
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
 public class CommunityExecutionPlanner extends ExecutionPlanner {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("LocalExecution");
 
-    private final CommunityAuditReader auditReader;
+    private final AuditReader auditReader;
     private final CommunityLockService lockService;
 
     private final CoreConfigurable configuration;
@@ -70,7 +71,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      */
     public CommunityExecutionPlanner(RunnerId instanceId,
                                      CommunityLockService lockService,
-                                     CommunityAuditReader auditReader,
+                                     AuditReader auditReader,
                                      CoreConfigurable coreConfiguration) {
         this.instanceId = instanceId;
         this.auditReader = auditReader;
@@ -442,7 +443,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
     public static class Builder {
         private RunnerId runnerId;
-        private CommunityAuditReader auditReader;
+        private AuditReader auditReader;
         private CommunityLockService lockService;
         private CoreConfigurable coreConfigurable;
 
@@ -454,7 +455,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             return this;
         }
 
-        public Builder setAuditReader(CommunityAuditReader auditReader) {
+        public Builder setAuditReader(AuditReader auditReader) {
             this.auditReader = auditReader;
             return this;
         }

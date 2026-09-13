@@ -205,6 +205,40 @@ public class CouchbaseImporterTest {
     }
 
     @Test
+    @DisplayName("GIVEN Mongock audit history contains an IGNORED entry " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should skip the IGNORED entry without crashing " +
+            "AND import the rest of the history normally")
+    void GIVEN_ignoredAuditEntry_WHEN_migratingToFlamingockCommunity_THEN_shouldSkipIgnoredAndImportRest() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
+        originCollection.upsert("ignored-change", createAuditObject("ignored-change", true, "io.example.IgnoredChangeUnit", "apply", "IGNORED"));
+
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
+                .addTargetSystem(targetSystem)
+                .build();
+
+        flamingock.run();
+
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
+            APPLIED("mongock-change-2"),
+
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
+
+            // Application stage - new changes
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
+    }
+
+    @Test
     @DisplayName("GIVEN mongock audit history empty " +
             "AND no empty origen allowed value provided " +
             "WHEN migrating to Flamingock Community" +
@@ -587,12 +621,16 @@ public class CouchbaseImporterTest {
     }
 
     private static JsonObject createAuditObject(String value, boolean systemChange, String changeLogClass, String changeSetMethod) {
+        return createAuditObject(value, systemChange, changeLogClass, changeSetMethod, "EXECUTED");
+    }
+
+    private static JsonObject createAuditObject(String value, boolean systemChange, String changeLogClass, String changeSetMethod, String state) {
         JsonObject doc = JsonObject.create()
                 .put("executionId", "exec-1")
                 .put("changeId", value)
                 .put("author", "author1")
                 .put("timestamp", Instant.now().toEpochMilli())
-                .put("state", "EXECUTED")
+                .put("state", state)
                 .put("type", "EXECUTION")
                 .put("changeLogClass", changeLogClass)
                 .put("changeSetMethod", changeSetMethod)

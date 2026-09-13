@@ -15,10 +15,10 @@
  */
 package io.flamingock.externalsystem.sql.api;
 
-import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
 
 import javax.sql.DataSource;
 
-public interface SqlExternalSystem extends ExternalSystem {
+public interface SqlExternalSystem extends TransactionalExternalSystem {
     DataSource getDataSource();
 }

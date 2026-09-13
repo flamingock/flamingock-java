@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.journal;
+package io.flamingock.internal.core.journal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.journal.JournalEvent;
@@ -31,7 +31,7 @@ import java.util.Optional;
  * <p>
  * Phase 1 exposes read/acknowledge only. Event <em>writing</em> (atomic with the state write) is a later phase.
  */
-public interface JournalEventStore {
+public interface JournalEventReader {
 
     /**
      * Returns the event with the highest {@code streamSequence} for the given stream, if any.
@@ -43,8 +43,4 @@ public interface JournalEventStore {
      */
     List<JournalEvent<AuditEntry>> getUnacknowledgedEvents(int limit);
 
-    /**
-     * Marks the events with the given ids as acknowledged and returns how many were updated.
-     */
-    long acknowledgeEvents(Collection<String> eventIds);
 }

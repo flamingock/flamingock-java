@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MongockImporterMongoDB implements AuditHistoryReader {
@@ -44,6 +45,7 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 .into(new ArrayList<>())
                 .stream()
                 .map(MongockImporterMongoDB::toAuditEntry)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

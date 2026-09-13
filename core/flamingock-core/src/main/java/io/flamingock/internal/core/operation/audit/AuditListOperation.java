@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.operation.audit;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.operation.Operation;
 
 import java.util.List;
@@ -24,18 +24,18 @@ import java.util.stream.Collectors;
 
 public class AuditListOperation implements Operation<AuditListArgs, AuditListResult> {
 
-    private final AuditPersistence persistence;
+    private final AuditReader auditReader;
 
-    public AuditListOperation(AuditPersistence persistence) {
-        this.persistence = persistence;
+    public AuditListOperation(AuditReader auditReader) {
+        this.auditReader = auditReader;
     }
 
     @Override
     public AuditListResult execute(AuditListArgs args) {
         // Step 1: Get base data based on --history flag
         List<AuditEntry> entries = args.isHistory()
-                ? persistence.getAuditHistory()
-                : persistence.getAuditSnapshot();
+                ? auditReader.getAuditHistory()
+                : auditReader.getAuditSnapshot();
 
         // Step 2: Apply --since filter if present (works on both modes)
         if (args.getSince() != null) {

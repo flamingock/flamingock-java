@@ -23,6 +23,10 @@ import java.util.ServiceLoader;
 
 public interface CloudAuditStore extends AuditStore<CloudAuditPersistence> {
 
+    @Deprecated
+    @Override
+    CloudAuditPersistence getPersistence();
+
     static Optional<CloudAuditStore> get() {
 
         CloudAuditStore store = null;

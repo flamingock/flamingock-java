@@ -1,6 +1,5 @@
-val coreApiVersion: String by extra
 dependencies {
-    api("io.flamingock:flamingock-core-api:${coreApiVersion}")
+    api(project(":core:flamingock-core-commons"))
 
     //General
     compileOnlyApi("software.amazon.awssdk:dynamodb:2.25.29")

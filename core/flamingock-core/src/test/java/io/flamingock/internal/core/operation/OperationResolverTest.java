@@ -19,7 +19,8 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -53,6 +54,9 @@ class OperationResolverTest {
 
     @Mock
     private LoadedPipeline pipeline;
+
+    @Mock
+    private AuditStore<AuditPersistence> auditStore;
 
     @Mock
     private AuditPersistence persistence;
@@ -92,6 +96,9 @@ class OperationResolverTest {
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
         when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
 
+        // The resolver now takes the AuditStore and pulls the persistence out of it
+        when(auditStore.getPersistence()).thenReturn(persistence);
+
         // Default coreConfiguration stubs
         when(coreConfiguration.getMetadata()).thenReturn(Collections.emptyMap());
     }
@@ -107,7 +114,7 @@ class OperationResolverTest {
                 runnerId,
                 flamingockArgs,
                 pipeline,
-                persistence,
+                auditStore,
                 executionPlanner,
                 targetSystemManager,
                 coreConfiguration,
@@ -139,7 +146,7 @@ class OperationResolverTest {
                 runnerId,
                 flamingockArgs,
                 pipeline,
-                persistence,
+                auditStore,
                 executionPlanner,
                 targetSystemManager,
                 coreConfiguration,

@@ -66,7 +66,7 @@ public class CommunityChangeRunnerBuilder
 
         return CommunityExecutionPlanner.builder()
                 .setRunnerId(runnerId)
-                .setAuditReader(auditStore.getPersistence())
+                .setAuditReader(auditStore.getAuditReader())
                 .setLockService(auditStore.getLockService())
                 .setCoreConfigurable(coreConfiguration)
                 .build();
