@@ -15,18 +15,43 @@
  */
 package io.flamingock.internal.core.journal;
 
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.util.FeatureFlag;
+
 public class JournalEventSequencerFactory {
 
-    private final JournalEventReader journalEventReader;
+    private final JournalEventStore journalEventStore;
 
-    public JournalEventSequencerFactory(JournalEventReader journalEventReader) {
-        this.journalEventReader = journalEventReader;
+    public JournalEventSequencerFactory(JournalEventStore journalEventStore) {
+        this.journalEventStore = journalEventStore;
     }
 
     public JournalEventSequencer forStream(String streamId) {
-        long initialSequence = journalEventReader.getLastEventByStream(streamId)
+        long initialSequence = journalEventStore.getLastEventByStream(streamId)
                 .map(e -> e.getStreamSequence() + 1)
                 .orElse(1L);
         return new JournalEventSequencer(streamId, initialSequence);
+    }
+
+    /**
+     * Centralizes the per-stage journal initialization shared by every community audit store:
+     * when the {@link Features#JOURNAL_EVENTS} feature flag is on, ensures the journal store exists
+     * (creating it when {@code autoCreate}) and returns a sequencer for the given stage; otherwise
+     * returns {@code null} and leaves the journal store untouched.
+     */
+    public JournalEventSequencer initializeForStage(String stageId, boolean autoCreate) {
+        if (!isJournalEventsEnabled()) {
+            return null;
+        }
+        journalEventStore.initialize(autoCreate);
+        return forStream(stageId);
+    }
+
+    private static boolean isJournalEventsEnabled() {
+        try {
+            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
+        } catch (RuntimeException exception) {
+            return false;
+        }
     }
 }
