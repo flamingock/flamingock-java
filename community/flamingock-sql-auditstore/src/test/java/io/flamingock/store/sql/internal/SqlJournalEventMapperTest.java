@@ -21,6 +21,7 @@ import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlJournalDialectHelper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -18,6 +18,7 @@ package io.flamingock.store.sql.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.common.sql.dialectHelpers.SqlAuditorDialectHelper;
+import io.flamingock.internal.common.sql.journal.SqlJournalConstants;
 import io.flamingock.internal.util.Result;
 
 import javax.sql.DataSource;
@@ -35,7 +36,7 @@ public class SqlAuditRepository {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource must not be null");
         }
-        JournalEventConstants.validateIdentifier(auditTableName, "auditTableName");
+        SqlJournalConstants.validateIdentifier(auditTableName, "auditTableName");
         this.dataSource = dataSource;
         this.auditTableName = auditTableName;
     }
@@ -113,7 +114,7 @@ public class SqlAuditRepository {
         if (auditEntry == null) {
             throw new IllegalArgumentException("auditEntry must not be null");
         }
-        JournalEventConstants.validateIdentifier(auditTableName, "auditTableName");
+        SqlJournalConstants.validateIdentifier(auditTableName, "auditTableName");
         if (auditEntry.getChangeId() == null || auditEntry.getChangeId().trim().isEmpty()) {
             throw new IllegalArgumentException("changeId must not be blank");
         }

@@ -19,6 +19,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.journal.SqlJournalConstants;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlJournalDialectHelper;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -54,25 +56,25 @@ final class SqlJournalEventMapper {
 
     JournalEvent<AuditEntry> fromResultSet(ResultSet resultSet) throws SQLException {
         JournalEventType eventType = JournalEventType.valueOf(
-                resultSet.getString(JournalEventConstants.EVENT_TYPE));
+                resultSet.getString(SqlJournalConstants.EVENT_TYPE));
         if (eventType != JournalEventType.CHANGE_STATE) {
             throw new UnsupportedOperationException("Unsupported SQL Journal Event type: " + eventType);
         }
 
-        Timestamp occurredAt = resultSet.getTimestamp(JournalEventConstants.OCCURRED_AT);
+        Timestamp occurredAt = resultSet.getTimestamp(SqlJournalConstants.OCCURRED_AT);
         if (occurredAt == null) {
             throw new SQLException("Journal event occurred_at must not be null");
         }
 
         return new JournalEvent<>(
-                resultSet.getString(JournalEventConstants.EVENT_ID),
+                resultSet.getString(SqlJournalConstants.EVENT_ID),
                 eventType,
-                resultSet.getInt(JournalEventConstants.EVENT_VERSION),
-                resultSet.getString(JournalEventConstants.STREAM_ID),
-                resultSet.getLong(JournalEventConstants.STREAM_SEQUENCE),
+                resultSet.getInt(SqlJournalConstants.EVENT_VERSION),
+                resultSet.getString(SqlJournalConstants.STREAM_ID),
+                resultSet.getLong(SqlJournalConstants.STREAM_SEQUENCE),
                 occurredAt.toInstant(),
                 AuditEntryMapper.fromResultSet(resultSet),
-                resultSet.getBoolean(JournalEventConstants.ACKNOWLEDGED));
+                resultSet.getBoolean(SqlJournalConstants.ACKNOWLEDGED));
     }
 
     private static void requireSupportedEvent(JournalEvent<AuditEntry> event) {

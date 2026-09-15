@@ -45,9 +45,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 
 public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
@@ -152,7 +152,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.initializeForStage(stageId, autoCreate);
             persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
                     auditRepository,

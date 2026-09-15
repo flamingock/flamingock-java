@@ -33,6 +33,12 @@ import java.util.Collection;
 public interface JournalEventStore extends JournalEventReader {
 
     /**
+     * Ensures the underlying storage (table, collection, index, …) exists, creating it when
+     * {@code autoCreate} is {@code true}, or validating it otherwise.
+     */
+    void initialize(boolean autoCreate);
+
+    /**
      * Marks the events with the given ids as acknowledged and returns how many were updated.
      */
     long acknowledgeEvents(Collection<String> eventIds);

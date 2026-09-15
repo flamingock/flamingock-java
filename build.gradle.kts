@@ -22,10 +22,10 @@ allprojects {
     val declaredVersion = "1.5.0-SNAPSHOT"
     version = VersionManager.resolveVersion(declaredVersion, project.hasProperty("release"))
 
-    extra["generalUtilVersion"] = "1.6.0"
+    extra["generalUtilVersion"] = "1.7.0-SNAPSHOT"
     extra["templateApiVersion"] = "1.3.4"
     extra["coreApiVersion"] = "1.3.3"
-    extra["sqlVersion"] = "1.3.2"
+    extra["sqlVersion"] = "1.4.0-SNAPSHOT"
     extra["mongodbTemplateVersion"] = "1.3.2"
 
     repositories {
