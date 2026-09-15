@@ -1,6 +1,6 @@
 val coreApiVersion: String by extra
 dependencies {
-    implementation("io.flamingock:flamingock-core-api:${coreApiVersion}")
+    api(project(":core:flamingock-core-commons"))
 
     //General
     compileOnly("com.couchbase.client:java-client:3.6.0")
