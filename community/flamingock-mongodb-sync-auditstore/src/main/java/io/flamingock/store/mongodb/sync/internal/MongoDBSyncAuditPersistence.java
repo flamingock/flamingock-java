@@ -30,13 +30,14 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
+import java.util.Optional;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final MongoDBSyncAuditRepository auditRepository;
     private final MongoDBSyncJournalEventStore journalEventStore;
     private final JournalEventSequencer journalEventSequencer;
-    private final TransactionWrapper txWrapper;
+    private final Optional<TransactionWrapper> txWrapper;
     private final boolean autoCreate;
 
 
@@ -44,7 +45,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
                                        MongoDBSyncAuditRepository auditRepository,
                                        MongoDBSyncJournalEventStore journalEventStore,
                                        JournalEventSequencer journalEventSequencer,
-                                       TransactionWrapper txWrapper,
+                                       Optional<TransactionWrapper> txWrapper,
                                        boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
@@ -77,12 +78,14 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         // model. With events, the audit record is the change's current state and the journal is the history;
         // without them, the audit record set is itself the history.
         if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-            Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+            if (!txWrapper.isPresent()) {
+                return writeJournalAndAuditWithoutTransaction(auditEntry);
+            }
+            Result result = txWrapper.get().wrapInTransaction(baseContext, runtimeContext -> {
                 ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
                 JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
                 journalEventStore.write(clientSession, journalEvent);
                 return auditRepository.save(clientSession, auditEntry);
-
             });
             // Spends the stream position, and only a committed transaction may reach this line. In general a
             // normal return from wrapInTransaction does NOT mean commit — a FailedStep result is returned
@@ -96,9 +99,20 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         } else {
             return auditRepository.append(auditEntry);
         }
+    }
 
-
-
+    /**
+     * Persists journal and current audit state when the concrete MongoDB deployment does not support
+     * transactions. The journal is written and its sequence confirmed first so a failure cannot leave an
+     * audit state without its corresponding historical event. Consequently, a later audit-state failure can
+     * leave a durable journal event while the current-state projection remains stale; this is the explicitly
+     * accepted best-effort behavior for non-transactional deployments.
+     */
+    private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
+        JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+        journalEventStore.write(journalEvent);
+        journalEventSequencer.confirm();
+        return auditRepository.save(auditEntry);
     }
 
 }

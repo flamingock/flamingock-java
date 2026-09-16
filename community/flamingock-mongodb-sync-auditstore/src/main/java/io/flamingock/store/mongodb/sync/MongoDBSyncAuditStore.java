@@ -25,6 +25,8 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
@@ -32,8 +34,10 @@ import io.flamingock.internal.core.external.store.lock.community.CommunityLockSe
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditRepository;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncJournalEventStore;
@@ -43,13 +47,18 @@ import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+
+import org.slf4j.Logger;
 
 import static io.flamingock.internal.common.mongodb.journal.JournalEventPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
 public class MongoDBSyncAuditStore implements CommunityAuditStore {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncAuditStore");
 
     private final MongoDBExternalSystem mongoDBTargetSystem;
 
@@ -147,18 +156,23 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         );
         lockService.initialize(autoCreate);
         this.validate();
+        warnIfJournalWritesAreNonAtomic();
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            Optional<TransactionWrapper> txWrapper =
+                    mongoDBTargetSystem.supportsTransactions()
+                            ? Optional.of(mongoDBTargetSystem.getTxWrapper())
+                            : Optional.empty();
             persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
                     auditRepository,
                     journalEventStore,
                     journalEventSequencer,
-                    mongoDBTargetSystem.getTxWrapper(),
+                    txWrapper,
                     autoCreate
             );
             persistence.initialize(runnerId);
@@ -216,6 +230,15 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
         if (writeConcern == null) {
             throw new FlamingockException("The 'writeConcern' property is required.");
+        }
+    }
+
+    private void warnIfJournalWritesAreNonAtomic() {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                && !mongoDBTargetSystem.supportsTransactions()) {
+            logger.warn("MongoDB transactions are disabled. "
+                    + "The journal event registry and audit state will be persisted using separate, non-atomic "
+                    + "writes; a failure may leave their stored state inconsistent.");
         }
     }
 

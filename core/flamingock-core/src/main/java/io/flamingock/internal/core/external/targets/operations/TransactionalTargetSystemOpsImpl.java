@@ -79,7 +79,9 @@ public class TransactionalTargetSystemOpsImpl
     }
 
     private OperationType internalGetOperationType(AbstractTargetSystem<?> auditStoreTargetSystem) {
-        if (this.targetSystem.equals(auditStoreTargetSystem)) {
+        if (!this.targetSystem.supportsTransactions()) {
+            return OperationType.NON_TX;
+        } else if (this.targetSystem.equals(auditStoreTargetSystem)) {
             return OperationType.TX_AUDIT_STORE_SHARED;
         } else if (this.targetSystem.hasMarker()) {
             return OperationType.TX_AUDIT_STORE_SYNC;

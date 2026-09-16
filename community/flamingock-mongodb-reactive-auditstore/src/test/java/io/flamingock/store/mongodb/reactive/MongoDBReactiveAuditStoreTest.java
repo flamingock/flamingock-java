@@ -56,6 +56,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 @Testcontainers
 class MongoDBReactiveAuditStoreTest {
@@ -166,6 +169,38 @@ class MongoDBReactiveAuditStoreTest {
         assertEquals(2, clients.size());
         assertTrue(clients.contains("Federico"));
         assertTrue(clients.contains("Jorge"));
+    }
+
+    @Test
+    @DisplayName("Should use the non-transactional path for default transactional changes when target transactions are disabled")
+    void defaultTransactionalChangeUsesNonTransactionalPathWhenTargetDisablesTransactions() {
+        MongoDBReactiveTargetSystem targetSystem = spy(
+                new MongoDBReactiveTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class,
+                                Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class,
+                                Collections.singletonList(MongoDatabase.class))
+                )
+                .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(MongoDBReactiveAuditStore.from(targetSystem))
+                        .addTargetSystem(targetSystem)
+                        .build()
+                        .run())
+                .THEN_VerifyAuditSequenceStrict(
+                        STARTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
+                        STARTED("insert-federico-document"),
+                        APPLIED("insert-federico-document")
+                )
+                .run();
+
+        verify(targetSystem, never()).getTxWrapper();
+        assertEquals(1L, ReactiveMongoTestHelper.first(
+                database.getCollection(CLIENTS_COLLECTION).countDocuments()));
     }
 
     @Test

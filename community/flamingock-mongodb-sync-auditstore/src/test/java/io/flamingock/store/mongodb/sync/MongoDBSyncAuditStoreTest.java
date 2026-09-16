@@ -29,6 +29,12 @@ import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -44,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Optional;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
@@ -55,6 +62,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Testcontainers
 class MongoDBSyncAuditStoreTest {
@@ -167,6 +179,37 @@ class MongoDBSyncAuditStoreTest {
     }
 
     @Test
+    @DisplayName("Should use the non-transactional path for default transactional changes when target transactions are disabled")
+    void defaultTransactionalChangeUsesNonTransactionalPathWhenTargetDisablesTransactions() {
+        MongoDBSyncTargetSystem targetSystem = spy(
+                new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class,
+                                Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class,
+                                Collections.singletonList(MongoDatabase.class))
+                )
+                .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(MongoDBSyncAuditStore.from(targetSystem))
+                        .addTargetSystem(targetSystem)
+                        .build()
+                        .run())
+                .THEN_VerifyAuditSequenceStrict(
+                        STARTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
+                        STARTED("insert-federico-document"),
+                        APPLIED("insert-federico-document")
+                )
+                .run();
+
+        verify(targetSystem, never()).getTxWrapper();
+        assertEquals(1L, database.getCollection(CLIENTS_COLLECTION).countDocuments());
+    }
+
+    @Test
     @DisplayName("When standalone runs the AuditStore with transactions enabled and execution fails should persist only the applied audit logs")
     void failedWithTransaction() {
         MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
@@ -202,6 +245,53 @@ class MongoDBSyncAuditStoreTest {
                 .into(new HashSet<>());
         assertEquals(1, clients.size());
         assertTrue(clients.contains("Federico"));
+    }
+
+    @Test
+    @DisplayName("Should not provide a transaction wrapper to audit persistence when target transactions are disabled")
+    void disabledTargetDoesNotProvideTransactionWrapperToAuditPersistence() {
+        MongoDBSyncTargetSystem targetSystem = spy(
+                new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+        ContextResolver context = mock(ContextResolver.class);
+        when(context.getDependencyValue(FlamingockEdition.class))
+                .thenReturn(Optional.of(FlamingockEdition.COMMUNITY));
+        when(context.getRequiredDependencyValue(RunnerId.class)).thenReturn(RunnerId.generate());
+        when(context.getRequiredDependencyValue(io.flamingock.internal.core.configuration.community.CommunityConfigurable.class))
+                .thenReturn(new CommunityConfiguration());
+        targetSystem.initialize(context);
+        MongoDBSyncAuditStore auditStore = MongoDBSyncAuditStore.from(targetSystem);
+        auditStore.initialize(context);
+
+        auditStore.getPersistenceFactory().get("stage");
+
+        verify(targetSystem, never()).getTxWrapper();
+    }
+
+    @Test
+    @DisplayName("Should initialize Journal Events without a transaction wrapper when target transactions are disabled")
+    void journalEnabledWithDisabledTransactionsInitializesWithoutTransactionWrapper() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        try {
+            MongoDBSyncTargetSystem targetSystem = spy(
+                    new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME)
+                            .withTransactionsSupported(false));
+            ContextResolver context = mock(ContextResolver.class);
+            when(context.getDependencyValue(FlamingockEdition.class))
+                    .thenReturn(Optional.of(FlamingockEdition.COMMUNITY));
+            when(context.getRequiredDependencyValue(RunnerId.class)).thenReturn(RunnerId.generate());
+            when(context.getRequiredDependencyValue(io.flamingock.internal.core.configuration.community.CommunityConfigurable.class))
+                    .thenReturn(new CommunityConfiguration());
+            targetSystem.initialize(context);
+
+            MongoDBSyncAuditStore auditStore = MongoDBSyncAuditStore.from(targetSystem);
+            auditStore.initialize(context);
+            auditStore.getPersistenceFactory().get("stage");
+
+            verify(targetSystem, never()).getTxWrapper();
+        } finally {
+            FeatureFlag.remove(Features.JOURNAL_EVENTS);
+        }
     }
 
 
