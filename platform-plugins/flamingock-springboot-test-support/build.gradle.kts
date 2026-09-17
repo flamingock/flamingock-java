@@ -4,13 +4,13 @@ dependencies {
     api(project(":core:flamingock-test-support"))
 
     implementation(project(":core:flamingock-core"))
-    compileOnly("org.springframework:spring-context:${springFrameworkVersion}")
-    compileOnly("org.springframework.boot:spring-boot:${springBootVersion}")
-    compileOnly("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
+    compileOnlyApi("org.springframework:spring-context:${springFrameworkVersion}")
+    compileOnlyApi("org.springframework.boot:spring-boot:${springBootVersion}")
+    compileOnlyApi("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 
     // Required for @FlamingockSpringBootTest annotation
-    implementation("org.springframework.boot:spring-boot-test:${springBootVersion}")
+    api("org.springframework.boot:spring-boot-test:${springBootVersion}")
     implementation("org.springframework:spring-test:${springFrameworkVersion}")
 
 

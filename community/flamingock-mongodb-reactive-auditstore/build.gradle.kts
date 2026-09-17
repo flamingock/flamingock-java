@@ -1,14 +1,14 @@
 import org.jetbrains.kotlin.gradle.utils.extendsFrom
 
 dependencies {
-    implementation(project(":utils:mongodb-util"))
+    api(project(":utils:mongodb-util"))
     implementation(project(":utils:mongodb-reactive-util"))
     implementation(project(":utils:flamingock-reactive-util"))
-    implementation(project(":core:flamingock-core"))
+    api(project(":core:flamingock-core"))
     
     api(project(":core:target-systems:flamingock-mongodb-reactive-externalsystem-api"))
 
-    compileOnly("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-reactive-test-kit"))

@@ -1,27 +1,15 @@
-val jacksonVersion = "2.16.0"
-val generalUtilVersion: String by extra
 dependencies {
 
-    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
     api(project(":cloud:flamingock-cloud-api"))
     api(project(":core:flamingock-core"))
-    api(project(":core:flamingock-core-commons"))
-    api(project(":core:flamingock-processor"))
+    implementation(project(":core:flamingock-processor"))
 
-    api("javax.inject:javax.inject:1")
-    api("org.objenesis:objenesis:3.2")
-    api("org.yaml:snakeyaml:2.2")
-
-    api("org.apache.httpcomponents:httpclient:4.5.14")
-    
-    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    
-
-    api("com.github.tomakehurst:wiremock-jre8:2.35.2")
+    implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
+    api("com.fasterxml.jackson.core:jackson-databind:2.16.0")
     
     // JUnit for assertion utilities
-    api("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    api("org.mockito:mockito-inline:4.11.0")
+    implementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    implementation("org.mockito:mockito-inline:4.11.0")
 
 }
 

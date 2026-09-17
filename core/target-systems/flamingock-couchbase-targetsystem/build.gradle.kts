@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":legacy:mongock-importer-couchbase"))
 
     //General
-    compileOnly("com.couchbase.client:java-client:3.6.0")
+    compileOnlyApi("com.couchbase.client:java-client:3.6.0")
 
     //Test
     testImplementation("org.testcontainers:testcontainers-couchbase:2.0.2")

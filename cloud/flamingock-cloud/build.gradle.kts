@@ -1,9 +1,7 @@
-val coreApiVersion: String by extra
 dependencies {
 // Core
     api(project(":cloud:flamingock-cloud-api"))
-    implementation(project(":core:flamingock-core"))
-    api("io.flamingock:flamingock-core-api:${coreApiVersion}")
+    api(project(":core:flamingock-core"))
 // target systems
     api(project(":core:target-systems:flamingock-nontransactional-targetsystem"))
     api(project(":core:target-systems:flamingock-couchbase-targetsystem"))
@@ -22,8 +20,10 @@ dependencies {
     api(project(":community:flamingock-mongodb-sync-auditstore"))
     api(project(":community:flamingock-sql-auditstore"))
 
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
- // Test
+     // Test
+    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":core:target-systems:flamingock-nontransactional-targetsystem"))

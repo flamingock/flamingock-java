@@ -1,14 +1,14 @@
 import org.jetbrains.kotlin.gradle.utils.extendsFrom
 
 dependencies {
-    implementation(project(":utils:mongodb-util"))
+    api(project(":utils:mongodb-util"))
     implementation(project(":utils:mongodb-sync-util"))
-    implementation(project(":core:flamingock-core"))
+    api(project(":core:flamingock-core"))
 
     api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 //    api(project(":community:flamingock-community"))
 
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:4.0.0")
 
 
     testImplementation(project(":utils:test-util"))

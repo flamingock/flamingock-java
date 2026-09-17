@@ -3,9 +3,9 @@ val springBootVersion = "2.0.0.RELEASE"
 val springFrameworkVersion = "5.0.4.RELEASE"
 dependencies {
     api(project(":core:flamingock-core"))
-    compileOnly("org.springframework:spring-context:${springFrameworkVersion}")
-    compileOnly("org.springframework.boot:spring-boot:${springBootVersion}")
-    compileOnly("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
+    compileOnlyApi("org.springframework:spring-context:${springFrameworkVersion}")
+    compileOnlyApi("org.springframework.boot:spring-boot:${springBootVersion}")
+    compileOnlyApi("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 
 
