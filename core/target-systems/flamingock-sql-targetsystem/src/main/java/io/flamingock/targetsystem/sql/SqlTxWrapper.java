@@ -38,9 +38,6 @@ public class SqlTxWrapper implements TransactionWrapper {
     public SqlTxWrapper(TransactionManager<Connection> txManager) {
         this.txManager = txManager;
     }
-
-
-
     private String getIsolationLevelName(int isolationLevel) {
         switch (isolationLevel) {
             case Connection.TRANSACTION_READ_UNCOMMITTED: return "READ_UNCOMMITTED";
@@ -74,8 +71,9 @@ public class SqlTxWrapper implements TransactionWrapper {
     @Override
     public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
+        String sessionId = executionContext.getSessionId();
 
-        try (Connection connection = txManager.startSession(executionContext.getSessionId())) {
+        try (Connection connection = txManager.startSession(sessionId)) {
             boolean originalAutoCommit = connection.getAutoCommit();
             String isolationLevel = getIsolationLevelName(connection.getTransactionIsolation());
             String connectionInfo = getConnectionInfo(connection);
@@ -151,6 +149,8 @@ public class SqlTxWrapper implements TransactionWrapper {
                     "Connection establishment failed",
                     e
             );
+        } finally {
+            txManager.closeSession(sessionId);
         }
     }
 }

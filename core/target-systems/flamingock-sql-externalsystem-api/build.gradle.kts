@@ -1,8 +1,7 @@
 val coreApiVersion: String by extra
 val sqlVersion: String by extra
 dependencies {
-    implementation("io.flamingock:flamingock-core-api:${coreApiVersion}")
-    implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
+    api(project(":core:flamingock-core-commons"))
 
     //General
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
