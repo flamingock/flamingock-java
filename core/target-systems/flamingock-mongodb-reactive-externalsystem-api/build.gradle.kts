@@ -1,7 +1,5 @@
-val coreApiVersion: String by extra
-
 dependencies {
-    api("io.flamingock:flamingock-core-api:${coreApiVersion}")
+    api(project(":core:flamingock-core-commons"))
 
     compileOnlyApi("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 }

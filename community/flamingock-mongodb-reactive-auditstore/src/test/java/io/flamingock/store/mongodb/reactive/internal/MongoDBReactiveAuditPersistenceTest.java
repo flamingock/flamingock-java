@@ -24,7 +24,11 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.reactive.util.PublisherSync;
 import org.junit.jupiter.api.AfterEach;
@@ -49,6 +53,7 @@ class MongoDBReactiveAuditPersistenceTest {
 
     private static final String DB_NAME = "test";
     private static final String AUDIT_COLLECTION = "testFlamingockAudit";
+	private static final String JOURNAL_COLLECTION = "testFlamingockJournal";
 
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
@@ -59,21 +64,28 @@ class MongoDBReactiveAuditPersistenceTest {
 
     @BeforeEach
     void beforeEach() {
+		FeatureFlag.remove(Features.JOURNAL_EVENTS);
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase(DB_NAME);
+		MongoDBReactiveAuditRepository auditRepository = new MongoDBReactiveAuditRepository(
+				database, AUDIT_COLLECTION,
+				ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
+		MongoDBReactiveJournalEventStore journalEventStore = new MongoDBReactiveJournalEventStore(
+				database, JOURNAL_COLLECTION,
+				ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
         persistence = new MongoDBReactiveAuditPersistence(
                 mock(CommunityConfigurable.class),
-                database,
-                AUDIT_COLLECTION,
-                ReadConcern.MAJORITY,
-                ReadPreference.primary(),
-                WriteConcern.MAJORITY.withJournal(true),
+				auditRepository,
+				journalEventStore,
+				mock(JournalEventSequencer.class),
+				mock(TransactionWrapper.class),
                 true);
         persistence.initialize(RunnerId.fromString("runner-1"));
     }
 
     @AfterEach
     void afterEach() {
+		FeatureFlag.remove(Features.JOURNAL_EVENTS);
         PublisherSync.complete(database.drop());
         mongoClient.close();
     }
