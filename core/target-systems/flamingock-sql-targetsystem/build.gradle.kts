@@ -6,7 +6,7 @@ val sqlVersion: String by extra
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
-    implementation(project(":core:target-systems:flamingock-sql-externalsystem-api"))
+    api(project(":core:target-systems:flamingock-sql-externalsystem-api"))
     implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
 
     //Test

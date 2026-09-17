@@ -1,8 +1,8 @@
 dependencies {
-    implementation(project(":core:flamingock-core-commons"))
+    api(project(":core:flamingock-core-commons"))
     implementation(project(":utils:dynamodb-util"))
 
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
+    compileOnlyApi("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testAnnotationProcessor(project(":legacy:mongock-support"))

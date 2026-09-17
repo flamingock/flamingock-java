@@ -15,8 +15,8 @@ dependencies {
     api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 
     //General
-    compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")
-    compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")
+    compileOnlyApi("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
 
     //Test
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
