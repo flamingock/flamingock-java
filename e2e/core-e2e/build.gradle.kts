@@ -9,6 +9,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("org.mockito:mockito-core:4.11.0")
     testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
+    testImplementation("javax.inject:javax.inject:1")
 }
 
 description = "End-to-end integration tests for core functionality"

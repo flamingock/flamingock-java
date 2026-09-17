@@ -1,7 +1,7 @@
 dependencies {
     implementation(project(":utils:mongodb-util"))
 
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:4.0.0")
 }
 
 description = "MongoDB synchronous driver utilities"

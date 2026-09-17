@@ -1,10 +1,8 @@
-val coreApiVersion: String by extra
 dependencies {
-
     api(project(":core:flamingock-core-commons"))
 
     // MongoDB driver for storage implementations
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-sync:4.0.0")
 }
 
 description = "MongoDB external system api"
