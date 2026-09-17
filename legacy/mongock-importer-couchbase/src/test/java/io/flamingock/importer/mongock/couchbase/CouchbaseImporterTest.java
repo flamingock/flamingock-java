@@ -156,9 +156,6 @@ public class CouchbaseImporterTest {
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
-
             // Application stage - new changes
             APPLIED("flamingock-change")
         );
@@ -187,9 +184,6 @@ public class CouchbaseImporterTest {
         auditHelper.verifyAuditFinalStateSequence(
             // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
-
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
             APPLIED("mongock-change-2"),
@@ -221,9 +215,6 @@ public class CouchbaseImporterTest {
             // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
-
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
             APPLIED("flamingock-change")
@@ -286,9 +277,6 @@ public class CouchbaseImporterTest {
         flamingock.run();
 
         auditHelper.verifyAuditFinalStateSequence(
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
-
             // Application stage - new changes
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
@@ -328,9 +316,6 @@ public class CouchbaseImporterTest {
         auditHelper.verifyAuditFinalStateSequence(
             // Legacy imports from Mongock
             APPLIED("mongock-change-1"),
-
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
 
             // Application stage - new changes
             APPLIED("mongock-change-2"),
@@ -409,7 +394,6 @@ public class CouchbaseImporterTest {
 
         auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("mongock-change-1"),
-                APPLIED("migration-mongock-to-flamingock-community"),
                 APPLIED("mongock-change-2"),
                 APPLIED("flamingock-change")
         );
@@ -494,9 +478,6 @@ public class CouchbaseImporterTest {
         flamingock.run();
 
         auditHelper.verifyAuditFinalStateSequence(
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
-
             // Application stage - new changes
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
@@ -534,9 +515,6 @@ public class CouchbaseImporterTest {
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
-
             // Application stage - new changes
             APPLIED("flamingock-change")
         );
@@ -572,9 +550,6 @@ public class CouchbaseImporterTest {
             APPLIED("mongock-change-1"),
             APPLIED("mongock-change-2"),
 
-            // System stage - actual system importer change
-            APPLIED("migration-mongock-to-flamingock-community"),
-
             // Application stage - new changes
             APPLIED("flamingock-change")
         );
@@ -591,7 +566,7 @@ public class CouchbaseImporterTest {
     }
 
     private static JsonObject createAuditObject(String value) {
-        return createAuditObject(value, true, "io.flamingock.changelog.Class1", "method1");
+        return createAuditObject(value, false, "io.flamingock.changelog.Class1", "method1");
     }
 
     private static JsonObject createAuditObject(String value, boolean systemChange, String changeLogClass, String changeSetMethod) {

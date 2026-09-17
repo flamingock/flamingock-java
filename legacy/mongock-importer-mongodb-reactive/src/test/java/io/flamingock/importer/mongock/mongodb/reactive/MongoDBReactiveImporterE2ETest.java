@@ -123,14 +123,8 @@ public class MongoDBReactiveImporterE2ETest {
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
                 // Legacy imports from Mongock
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
                 APPLIED("create-users-collection-with-index"),
@@ -180,13 +174,7 @@ public class MongoDBReactiveImporterE2ETest {
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
                 // Legacy imports from Mongock
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
-
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
 
                 APPLIED("mongock-change-2"),
 
@@ -274,9 +262,6 @@ public class MongoDBReactiveImporterE2ETest {
 
         // Verify audit sequence: 10 total entries as shown in actual execution
         auditHelper.verifyAuditFinalStateSequence(
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
-
                 // Legacy changes
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
@@ -328,14 +313,8 @@ public class MongoDBReactiveImporterE2ETest {
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
                 // Legacy imports from Mongock
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
                 APPLIED("create-users-collection-with-index"),
@@ -382,7 +361,6 @@ public class MongoDBReactiveImporterE2ETest {
                         .withState(AuditEntry.Status.APPLIED)
                         .withType(AuditEntry.ChangeType.MONGOCK_EXECUTION)
                         .withSystemChange(false),
-                APPLIED("migration-mongock-to-flamingock-community"),
                 APPLIED("create-users-collection-with-index"),
                 APPLIED("seed-users")
         );
@@ -458,12 +436,8 @@ public class MongoDBReactiveImporterE2ETest {
         flamingock.run();
 
         auditHelper.verifyAuditFinalStateSequence(
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-                APPLIED("migration-mongock-to-flamingock-community"),
                 APPLIED("create-users-collection-with-index"),
                 APPLIED("seed-users")
         );
@@ -594,9 +568,6 @@ public class MongoDBReactiveImporterE2ETest {
 
         // Verify audit sequence: 10 total entries as shown in actual execution
         auditHelper.verifyAuditFinalStateSequence(
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
-
                 // Legacy changes
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
@@ -646,14 +617,8 @@ public class MongoDBReactiveImporterE2ETest {
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
                 // Legacy imports from Mongock
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
                 APPLIED("create-users-collection-with-index"),
@@ -700,14 +665,8 @@ public class MongoDBReactiveImporterE2ETest {
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
                 // Legacy imports from Mongock
-                APPLIED("system-change-00001_before"),
-                APPLIED("system-change-00001"),
-                APPLIED("mongock-change-1_before"),
                 APPLIED("mongock-change-1"),
                 APPLIED("mongock-change-2"),
-
-                // System stage - actual system importer change
-                APPLIED("migration-mongock-to-flamingock-community"),
 
                 // Application stage - new changes created by templates
                 APPLIED("create-users-collection-with-index"),
