@@ -103,3 +103,5 @@ test_*.db-shm
 # Generic SQLite artifacts
 *.db-wal
 *.db-shm
+# Local Pi runtime state
+.atl/

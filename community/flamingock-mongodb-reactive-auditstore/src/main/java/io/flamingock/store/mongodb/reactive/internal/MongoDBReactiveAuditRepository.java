@@ -21,15 +21,14 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.internal.common.mongodb.MongoDBReactiveCollectionHelper;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
+import io.flamingock.internal.common.mongodb.MongoDBReactiveCollectionHelper;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.reactive.util.PublisherSync;
@@ -44,58 +43,93 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 
-public class MongoDBReactiveAuditor implements AuditWriter, AuditReader {
+/**
+ * Native MongoDB Reactive Streams implementation of the audit repository.
+ *
+ * <p>The repository exposes two write shapes because the journal feature has two deliberately different
+ * persistence models. The legacy append path keeps one document per {@code (executionId, changeId, state)};
+ * the journal path keeps one current-state document per {@code changeId} and joins the caller's transaction.
+ */
+public class MongoDBReactiveAuditRepository {
 
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBReactiveAuditor");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBReactiveAuditRepository");
 
     private final MongoCollection<Document> collection;
-    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
+    private final CollectionInitializator<MongoDBDocumentHelper> initializer;
+    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper =
+            new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
+    private boolean initialized;
 
-    MongoDBReactiveAuditor(MongoDatabase database,
-                         String collectionName,
-                         ReadConcern readConcern,
-                         ReadPreference readPreference,
-                         WriteConcern writeConcern) {
+    public MongoDBReactiveAuditRepository(MongoDatabase database,
+                                          String collectionName,
+                                          ReadConcern readConcern,
+                                          ReadPreference readPreference,
+                                          WriteConcern writeConcern) {
         this.collection = database.getCollection(collectionName)
                 .withReadConcern(readConcern)
                 .withReadPreference(readPreference)
                 .withWriteConcern(writeConcern);
-    }
-
-    protected void initialize(boolean autoCreate) {
-        CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
+        this.initializer = new CollectionInitializator<>(
                 new MongoDBReactiveCollectionHelper(collection),
                 () -> new MongoDBDocumentHelper(new Document()),
-                new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
-        );
+                new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE});
+    }
+
+    public synchronized void initialize(boolean autoCreate) {
+        if (initialized) {
+            return;
+        }
         if (autoCreate) {
             initializer.initialize();
         } else {
             initializer.justValidateCollection();
         }
-
+        initialized = true;
     }
 
-    @Override
-    public Result writeEntry(AuditEntry auditEntry) {
+    /**
+     * Saves the current state of a change in a caller-owned MongoDB transaction.
+     *
+     * @param clientSession session owning the transaction
+     * @param auditEntry    current change state
+     * @return successful write result; driver failures are propagated
+     */
+    Result save(ClientSession clientSession, AuditEntry auditEntry) {
+        Bson filter = Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId());
+        Document entryDocument = mapper.toDocument(auditEntry).getDocument();
+
+        UpdateResult result = PublisherSync.first(
+                collection.replaceOne(clientSession, filter, entryDocument, new ReplaceOptions().upsert(true)));
+        logger.debug("Save changeState[{}] with result"
+                        + "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]",
+                auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(),
+                result.wasAcknowledged());
+        return Result.OK();
+    }
+
+    /**
+     * Keeps the historical one-document-per-state behavior used while journal events are disabled.
+     *
+     * @param auditEntry entry to append or replace
+     * @return successful write result; driver failures are propagated
+     */
+    Result append(AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),
                 Filters.eq(KEY_STATE, auditEntry.getState().name())
         );
-
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();
 
         UpdateResult result = PublisherSync.first(
                 collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true)));
-        logger.debug("SaveOrUpdate[{}] with result" +
-                "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]", auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(), result.wasAcknowledged());
-
+        logger.debug("SaveOrUpdate[{}] with result"
+                        + "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]",
+                auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(),
+                result.wasAcknowledged());
         return Result.OK();
     }
 
-
-    @Override
     public List<AuditEntry> getAuditHistory() {
         return PublisherSync.collect(collection.find())
                 .stream()
