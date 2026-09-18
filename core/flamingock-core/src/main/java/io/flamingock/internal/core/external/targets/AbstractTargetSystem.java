@@ -93,7 +93,11 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      */
     public final <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, false);
-        return changeApplier.apply(executionRuntime);
+        try {
+            return changeApplier.apply(executionRuntime);
+        } finally {
+            cleanupExecutionRuntime(executionRuntime);
+        }
     }
 
     /**
@@ -110,9 +114,21 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      */
     public final <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, false);
-        return changeRollbacker.apply(executionRuntime);
+        try {
+            return changeRollbacker.apply(executionRuntime);
+        } finally {
+            cleanupExecutionRuntime(executionRuntime);
+        }
     }
 
+
+    /**
+     * Hook for cleaning up session-scoped dependencies after non-transactional execution.
+     *
+     * @param executionRuntime the runtime whose session-scoped dependencies should be cleaned up
+     */
+    protected void cleanupExecutionRuntime(RuntimeContext executionRuntime) {
+    }
 
     /**
      * Hook for injecting session-scoped dependencies into the execution runtime.

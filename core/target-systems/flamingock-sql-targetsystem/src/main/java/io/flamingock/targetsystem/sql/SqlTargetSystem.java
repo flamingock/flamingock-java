@@ -92,6 +92,17 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
 
     }
 
+    @Override
+    protected void cleanupExecutionRuntime(RuntimeContext executionRuntime) {
+        executionRuntime.getContext().getDependencyValue(Connection.class).ifPresent(connection -> {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new FlamingockException(e);
+            }
+        });
+    }
+
     private SqlTxWrapper createTxWrapper(TransactionManager<Connection> txManager) {
         return new SqlTxWrapper(txManager);
     }
