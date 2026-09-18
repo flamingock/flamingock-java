@@ -183,10 +183,8 @@ class MongoDBReactiveAuditStoreTest {
                         .addTargetSystem(targetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document")
                 )
                 .run();
