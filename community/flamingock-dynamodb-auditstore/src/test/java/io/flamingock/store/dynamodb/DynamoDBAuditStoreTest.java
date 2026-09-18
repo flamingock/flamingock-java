@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.auditEntry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -142,12 +141,9 @@ class DynamoDBAuditStoreTest {
                             .build()
                             .run();
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        auditEntry().withChangeId("table-create").withState(AuditEntry.Status.STARTED),
+                .THEN_VerifyAuditFinalStateSequence(
                         auditEntry().withChangeId("table-create").withState(AuditEntry.Status.APPLIED),
-                        auditEntry().withChangeId("insert-user").withState(AuditEntry.Status.STARTED),
                         auditEntry().withChangeId("insert-user").withState(AuditEntry.Status.APPLIED),
-                        auditEntry().withChangeId("insert-another-user").withState(AuditEntry.Status.STARTED),
                         auditEntry().withChangeId("insert-another-user").withState(AuditEntry.Status.APPLIED)
                 )
                 .run();
@@ -184,14 +180,9 @@ class DynamoDBAuditStoreTest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("table-create"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("table-create"),
-
-                        STARTED("insert-user"),
                         APPLIED("insert-user"),
-
-                        STARTED("execution-with-exception"),
                         FAILED("execution-with-exception"),
                         ROLLED_BACK("execution-with-exception")
                 )

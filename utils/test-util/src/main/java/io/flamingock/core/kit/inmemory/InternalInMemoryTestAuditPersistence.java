@@ -19,19 +19,42 @@ import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.TestAuditReader;
 import io.flamingock.core.kit.audit.TestAuditWriter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 
 import java.util.List;
 
 public class InternalInMemoryTestAuditPersistence implements CommunityAuditPersistence {
-    
+
+    private final AuditStorage auditStorage;
     private final TestAuditWriter auditWriter;
     private final TestAuditReader auditReader;
-    
+    private final InternalInMemoryJournalEventStore journalEventStore;
+    private final JournalEventSequencer journalEventSequencer;
+
     public InternalInMemoryTestAuditPersistence(AuditStorage auditStorage) {
+        this(auditStorage, null, null);
+    }
+
+    /**
+     * @param journalEventStore    the journal to append to when {@code Features.JOURNAL_EVENTS} is enabled, or
+     *                             {@code null} to always use the plain append path (equivalent to the
+     *                             single-arg constructor)
+     * @param journalEventSequencer the position source for {@code journalEventStore}'s stream; required
+     *                              whenever {@code journalEventStore} is non-null
+     */
+    public InternalInMemoryTestAuditPersistence(AuditStorage auditStorage,
+                                                 InternalInMemoryJournalEventStore journalEventStore,
+                                                 JournalEventSequencer journalEventSequencer) {
+        this.auditStorage = auditStorage;
         this.auditWriter = new TestAuditWriter(auditStorage);
         this.auditReader = new TestAuditReader(auditStorage);
+        this.journalEventStore = journalEventStore;
+        this.journalEventSequencer = journalEventSequencer;
     }
 
     @Override
@@ -41,6 +64,22 @@ public class InternalInMemoryTestAuditPersistence implements CommunityAuditPersi
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
+        // Mirrors MongoDBSyncAuditPersistence#writeEntry: with events, the audit record is the change's
+        // current state and the journal is the history; without them, the audit record set is itself the
+        // history (one row per state transition, via the plain append path below).
+        if (journalEventStore != null && journalEventSequencer != null && FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
+            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+            journalEventStore.write(journalEvent);
+            if (auditStorage instanceof InternalInMemoryAuditStorage) {
+                ((InternalInMemoryAuditStorage) auditStorage).upsertAuditEntry(auditEntry);
+            } else {
+                // Defensive fallback for a custom AuditStorage without upsert support — still correct, just
+                // without the current-state collapsing.
+                auditStorage.addAuditEntry(auditEntry);
+            }
+            journalEventSequencer.confirm();
+            return Result.OK();
+        }
         return auditWriter.writeEntry(auditEntry);
     }
 }

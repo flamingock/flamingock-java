@@ -40,7 +40,6 @@ import java.util.List;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -70,8 +69,7 @@ class CoreStrategiesE2ETest {
         }
 
         // Then - Verify complete audit flow using audit-specific helper
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test1-non-tx-change"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test1-non-tx-change")
         );
 
@@ -105,8 +103,7 @@ class CoreStrategiesE2ETest {
 
         // Then - Verify complete audit flow for transactional change
 
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test2-tx-change"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test2-tx-change")
         );
     }
@@ -135,10 +132,8 @@ class CoreStrategiesE2ETest {
                     .run();
         }
 
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test3-multi-non-tx-change"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test3-multi-non-tx-change"),
-                STARTED("test3-multi-tx-change"),
                 APPLIED("test3-multi-tx-change")
         );
     }
@@ -169,9 +164,9 @@ class CoreStrategiesE2ETest {
             });
         }
 
-        // Then - Verify failure audit sequence using new concise API
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test4-failing-tx-change"),
+        // Then - Verify failure final state (the STARTED->FAILED->ROLLED_BACK progression this used to assert
+        // is covered against the journal instead, in RecoveryE2ETest)
+        auditHelper.verifyAuditFinalStateSequence(
                 FAILED("test4-failing-tx-change"),
                 ROLLED_BACK("test4-failing-tx-change")
         );
@@ -201,8 +196,7 @@ class CoreStrategiesE2ETest {
                     .run();
 
             // Verify first execution
-            auditHelper.verifyAuditSequenceStrict(
-                    STARTED("test5-second-run-change"),
+            auditHelper.verifyAuditFinalStateSequence(
                     APPLIED("test5-second-run-change")
             );
 
@@ -222,9 +216,8 @@ class CoreStrategiesE2ETest {
                     .run();
         }
 
-        // Then - Should still have only original 2 audit entries (no additional executions)
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test5-second-run-change"),
+        // Then - Should still have only original 1 final-state audit entry (no additional executions)
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test5-second-run-change")
         );
     }
@@ -269,8 +262,7 @@ class CoreStrategiesE2ETest {
         assertTrue(counter.isExecuted(), "Counter.executed should be true after execution");
         assertTrue(counter.isRollbacked(), "Counter.rollbacked should be true after rollback");
 
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test1-non-tx-change"),
+        auditHelper.verifyAuditFinalStateSequence(
                 FAILED("test1-non-tx-change"),
                 ROLLED_BACK("test1-non-tx-change")
         );
