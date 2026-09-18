@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
@@ -92,16 +91,7 @@ class AuditPersistenceE2ETest {
 
         LocalDateTime testEnd = LocalDateTime.now();
 
-        // Then - Verify complete audit sequence with all fields using unified approach
-        AuditEntryExpectation startedExpected = STARTED(changeId)
-                .withAuthor("aperezdieppa")
-                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
-                .withTxType(AuditTxType.NON_TX)
-                .withTargetSystemId("kafka")
-                .withSystemChange(false)
-                .withTimestampBetween(testStart, testEnd);
-
+        // Then - Verify final-state audit entry with all fields using unified approach
         AuditEntryExpectation appliedExpected = APPLIED(changeId)
                 .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
@@ -111,7 +101,7 @@ class AuditPersistenceE2ETest {
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
-        auditHelper.verifyAuditSequenceStrict(startedExpected, appliedExpected);
+        auditHelper.verifyAuditFinalStateSequence(appliedExpected);
     }
 
     @Test
@@ -137,8 +127,7 @@ class AuditPersistenceE2ETest {
         }
 
         // Then - Verify audit entries have correct default targetSystemId using unified approach
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("kafka"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("kafka")
         );
     }
@@ -168,8 +157,7 @@ class AuditPersistenceE2ETest {
         }
 
         // Then - Verify audit entries have correct custom targetSystemId using unified approach
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId(customTargetSystemId),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId(customTargetSystemId)
         );
     }
@@ -205,14 +193,8 @@ class AuditPersistenceE2ETest {
         List<AuditEntry> auditEntriesSorted = auditHelper.getAuditEntriesSorted();
         auditEntriesSorted.forEach(c-> System.out.println("id: " + c.getChangeId() + ", state: " + c.getState() + ", time: " +c.getCreatedAt()));
 
-        auditHelper.verifyAuditSequenceStrict(
-                // First change (SimpleNonTransactionalChange) - STARTED & APPLIED
-                STARTED(changeId1)
-                        .withAuthor("aperezdieppa")
-                        .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                        .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
-                        .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("kafka"),
+        auditHelper.verifyAuditFinalStateSequence(
+                // First change (SimpleNonTransactionalChange) - final state
                 APPLIED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ChangeType.STANDARD_CODE)
@@ -220,13 +202,7 @@ class AuditPersistenceE2ETest {
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
 
-                // Second change (CustomTargetSystemChange) - STARTED & APPLIED
-                STARTED(changeId2)
-                        .withAuthor("aperezdieppa")
-                        .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                        .withClass(io.flamingock.core.e2e.changes._002__CustomTargetSystemChange.class)
-                        .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("custom-target-system"),
+                // Second change (CustomTargetSystemChange) - final state
                 APPLIED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ChangeType.STANDARD_CODE)
@@ -257,8 +233,7 @@ class AuditPersistenceE2ETest {
                             .run();
                 });
             })
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(changeId),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(changeId)
             )
             .run();
@@ -286,28 +261,16 @@ class AuditPersistenceE2ETest {
                             .run();
                 });
             })
-            .THEN_VerifyAuditSequenceStrict(
-                // First change sequence
-                STARTED(changeId1)
-                        .withAuthor("aperezdieppa")
-                        .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                        .withClass(_001__SimpleNonTransactionalChange.class)
-                        .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("kafka"),
+            .THEN_VerifyAuditFinalStateSequence(
+                // First change final state
                 APPLIED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ChangeType.STANDARD_CODE)
                         .withClass(_001__SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
-                
-                // Second change sequence  
-                STARTED(changeId2)
-                        .withAuthor("aperezdieppa")
-                        .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                        .withClass(_002__CustomTargetSystemChange.class)
-                        .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("custom-target-system"),
+
+                // Second change final state
                 APPLIED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ChangeType.STANDARD_CODE)

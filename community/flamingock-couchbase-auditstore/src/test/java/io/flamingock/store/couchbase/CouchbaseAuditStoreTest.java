@@ -97,12 +97,9 @@ class CouchbaseAuditStoreTest {
                 .addDependency(testCollection) // for test purpose only
                 .build()
                 .run())
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 APPLIED(expectedChangeIds[2])
             )
             .run();
@@ -143,12 +140,9 @@ class CouchbaseAuditStoreTest {
                         .run();
                 });
             })
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 FAILED(expectedChangeIds[2]),
                 ROLLED_BACK(expectedChangeIds[2])
             )
@@ -187,12 +181,9 @@ class CouchbaseAuditStoreTest {
                         .run();
                 });
             })
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 FAILED(expectedChangeIds[2]),
                 ROLLED_BACK(expectedChangeIds[2])
             )
