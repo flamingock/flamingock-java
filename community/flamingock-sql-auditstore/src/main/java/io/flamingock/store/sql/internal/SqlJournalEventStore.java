@@ -410,16 +410,43 @@ public class SqlJournalEventStore implements JournalEventStore {
                 return actual.jdbcType == dialectHelper.getBooleanJdbcType()
                         || isBooleanDriverAlias(actual);
             case TEXT:
-                if (actual.jdbcType == java.sql.Types.CLOB || actual.jdbcType == java.sql.Types.NCLOB) {
-                    return false;
-                }
-                return (actual.jdbcType == java.sql.Types.VARCHAR
-                        || actual.jdbcType == java.sql.Types.LONGVARCHAR)
-                        && (actual.columnSize >= expected.size
-                        || "TEXT".equalsIgnoreCase(actual.typeName));
+                return matchesTextColumn(expected.size, actual);
             default:
                 return false;
         }
+    }
+
+    private boolean matchesTextColumn(int minimumCapacity, ColumnMetadata actual) {
+        if (actual.jdbcType == java.sql.Types.CLOB) {
+            return dialectHelper.getSqlDialect() == SqlDialect.ORACLE
+                    || dialectHelper.getSqlDialect() == SqlDialect.DB2;
+        }
+        if (actual.jdbcType == java.sql.Types.NCLOB) {
+            return false;
+        }
+        if (actual.jdbcType == java.sql.Types.LONGNVARCHAR
+                || actual.jdbcType == java.sql.Types.NVARCHAR) {
+            return (dialectHelper.getSqlDialect() == SqlDialect.SQLSERVER
+                    || dialectHelper.getSqlDialect() == SqlDialect.SYBASE)
+                    && actual.columnSize >= minimumCapacity;
+        }
+        if (isFirebirdTextBlob(actual)) {
+            return true;
+        }
+        return (actual.jdbcType == java.sql.Types.VARCHAR
+                || actual.jdbcType == java.sql.Types.LONGVARCHAR)
+                && (actual.columnSize >= minimumCapacity
+                || "TEXT".equalsIgnoreCase(actual.typeName));
+    }
+
+    private boolean isFirebirdTextBlob(ColumnMetadata actual) {
+        if (dialectHelper.getSqlDialect() != SqlDialect.FIREBIRD
+                || (actual.jdbcType != java.sql.Types.BLOB
+                && actual.jdbcType != java.sql.Types.LONGVARCHAR)) {
+            return false;
+        }
+        String typeName = actual.typeName == null ? "" : actual.typeName.toUpperCase(Locale.ROOT);
+        return typeName.contains("BLOB") && typeName.contains("TEXT");
     }
 
     private boolean isNumeric(int jdbcType) {
