@@ -84,7 +84,8 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
                 .withWriteConcern(writeConcern);
     }
 
-    protected void initialize(boolean autoCreate) {
+    @Override
+    public void initialize(boolean autoCreate) {
         CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(collection),
                 () -> new MongoDBDocumentHelper(new Document()),

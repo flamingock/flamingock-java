@@ -19,7 +19,6 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
@@ -27,10 +26,8 @@ import io.flamingock.internal.core.external.store.lock.community.CommunityLockSe
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
-import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventFieldConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditRepository;
@@ -50,7 +47,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     private final DynamoDbClient client;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
-    private String journalRepositoryName = JournalEventFieldConstants.DEFAULT_JOURNAL_REPOSITORY_NAME;
+    private String journalRepositoryName = CommunityPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
     private long readCapacityUnits = 5L;
     private long writeCapacityUnits = 5L;
     private boolean autoCreate = true;
@@ -139,10 +136,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
             auditRepository.initialize(autoCreate);
-            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
-                journalEventStore.initialize(autoCreate);
-            }
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.initializeForStage(stageId, autoCreate);
             persistence = new DynamoDBAuditPersistence(
                 communityConfiguration,
                 auditRepository,

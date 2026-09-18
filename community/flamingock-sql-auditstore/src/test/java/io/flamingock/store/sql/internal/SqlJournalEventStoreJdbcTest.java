@@ -26,6 +26,7 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlJournalDialectHelper;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.targetsystem.sql.SqlTxWrapper;
 import org.h2.jdbcx.JdbcDataSource;

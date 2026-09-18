@@ -21,6 +21,8 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.common.sql.SqlDialectFactory;
+import io.flamingock.internal.common.sql.journal.SqlJournalConstants;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlJournalDialectHelper;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.journal.JournalEventStore;
 
@@ -70,7 +72,7 @@ public class SqlJournalEventStore implements JournalEventStore {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource must not be null");
         }
-        JournalEventConstants.validateIdentifier(tableName, "tableName");
+        SqlJournalConstants.validateIdentifier(tableName, "tableName");
         if (txWrapper == null) {
             throw new IllegalArgumentException("txWrapper must not be null");
         }
@@ -84,6 +86,7 @@ public class SqlJournalEventStore implements JournalEventStore {
      *
      * @param autoCreate whether the table and indexes may be created when missing
      */
+    @Override
     public synchronized void initialize(boolean autoCreate) {
         try (Connection connection = dataSource.getConnection()) {
             dialectHelper = new SqlJournalDialectHelper(SqlDialectFactory.getSqlDialect(connection));
@@ -326,9 +329,9 @@ public class SqlJournalEventStore implements JournalEventStore {
         Map<String, IndexMetadata> indexes = readIndexes(metadata);
         List<String> names = dialectHelper.getIndexNames(tableName);
         List<List<String>> expectedColumns = new ArrayList<>();
-        expectedColumns.add(asList(JournalEventConstants.ACKNOWLEDGED,
-                JournalEventConstants.STREAM_ID, JournalEventConstants.STREAM_SEQUENCE));
-        expectedColumns.add(asList(JournalEventConstants.EVENT_ID));
+        expectedColumns.add(asList(SqlJournalConstants.ACKNOWLEDGED,
+                SqlJournalConstants.STREAM_ID, SqlJournalConstants.STREAM_SEQUENCE));
+        expectedColumns.add(asList(SqlJournalConstants.EVENT_ID));
 
         for (int i = 0; i < names.size(); i++) {
             IndexMetadata index = indexes.get(names.get(i).toLowerCase(Locale.ROOT));
@@ -355,8 +358,8 @@ public class SqlJournalEventStore implements JournalEventStore {
             }
         }
         if (primaryKeyColumns.size() != 2
-                || !JournalEventConstants.STREAM_ID.equalsIgnoreCase(primaryKeyColumns.get((short) 1))
-                || !JournalEventConstants.STREAM_SEQUENCE.equalsIgnoreCase(primaryKeyColumns.get((short) 2))) {
+                || !SqlJournalConstants.STREAM_ID.equalsIgnoreCase(primaryKeyColumns.get((short) 1))
+                || !SqlJournalConstants.STREAM_SEQUENCE.equalsIgnoreCase(primaryKeyColumns.get((short) 2))) {
             throw new IllegalStateException("SQL journal table '" + tableName
                     + "' must have primary key (stream_id, stream_sequence)");
         }

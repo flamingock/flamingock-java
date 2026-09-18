@@ -19,15 +19,14 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
+import io.flamingock.internal.common.sql.journal.SqlJournalConstants;
 import io.flamingock.internal.util.Constants;
-import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.sql.internal.SqlAuditPersistence;
@@ -40,9 +39,6 @@ import javax.sql.DataSource;
 
 public class SqlAuditStore implements CommunityAuditStore {
 
-    private static final String SQL_IDENTIFIER_PATTERN = "[A-Za-z][A-Za-z0-9_]*";
-    private static final String DEFAULT_JOURNAL_REPOSITORY_NAME = "flamingockJournalEvents";
-
     private final SqlExternalSystem targetSystem;
     private final DataSource dataSource;
     private CommunityConfigurable communityConfiguration;
@@ -53,7 +49,7 @@ public class SqlAuditStore implements CommunityAuditStore {
     private SqlAuditRepository auditRepository;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
-    private String journalRepositoryName = DEFAULT_JOURNAL_REPOSITORY_NAME;
+    private String journalRepositoryName = CommunityPersistenceConstants.DEFAULT_JOURNAL_STORE_NAME;
     private boolean autoCreate = true;
 
     private SqlAuditStore(SqlExternalSystem targetSystem) {
@@ -120,12 +116,8 @@ public class SqlAuditStore implements CommunityAuditStore {
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            boolean journalEventsEnabled = isJournalEventsEnabled();
-            JournalEventSequencer journalEventSequencer = null;
-            if (journalEventsEnabled) {
-                journalEventStore.initialize(autoCreate);
-                journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
-            }
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.initializeForStage(stageId, autoCreate);
+            boolean journalEventsEnabled = journalEventSequencer != null;
 
             SqlAuditPersistence persistence = new SqlAuditPersistence(
                     communityConfiguration,
@@ -157,31 +149,25 @@ public class SqlAuditStore implements CommunityAuditStore {
         validateRepositoryName(auditRepositoryName, "auditRepositoryName");
         validateRepositoryName(lockRepositoryName, "lockRepositoryName");
         validateRepositoryName(journalRepositoryName, "journalRepositoryName");
-        if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
-            throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
-        }
-        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
-            throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
-        }
-        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
-            throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
-        }
+        validateDistinct(auditRepositoryName, "auditRepositoryName", lockRepositoryName, "lockRepositoryName");
+        validateDistinct(journalRepositoryName, "journalRepositoryName", auditRepositoryName, "auditRepositoryName");
+        validateDistinct(journalRepositoryName, "journalRepositoryName", lockRepositoryName, "lockRepositoryName");
     }
 
     private void validateRepositoryName(String repositoryName, String propertyName) {
-        if (repositoryName == null || repositoryName.trim().isEmpty()) {
-            throw new FlamingockException(propertyName + " must not be blank");
-        }
-        if (!repositoryName.matches(SQL_IDENTIFIER_PATTERN)) {
-            throw new FlamingockException(propertyName + " must be a simple SQL identifier");
+        try {
+            SqlJournalConstants.validateIdentifier(repositoryName, propertyName);
+        } catch (IllegalArgumentException exception) {
+            throw new FlamingockException(exception.getMessage());
         }
     }
 
-    private static boolean isJournalEventsEnabled() {
+    private void validateDistinct(String firstName, String firstField, String secondName, String secondField) {
         try {
-            return FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false);
-        } catch (RuntimeException exception) {
-            return false;
+            SqlJournalConstants.validateDistinct(firstName, firstField, secondName, secondField);
+        } catch (IllegalArgumentException exception) {
+            throw new FlamingockException("The '" + firstField + "' and '" + secondField
+                    + "' properties must not be the same.");
         }
     }
 }

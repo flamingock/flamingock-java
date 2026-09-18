@@ -18,14 +18,13 @@ package io.flamingock.store.sql.internal;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.sql.journal.SqlAuditColumnNames;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,17 +32,11 @@ import java.util.List;
  */
 final class AuditEntryMapper {
 
-    private static final List<String> COLUMN_NAMES = Collections.unmodifiableList(Arrays.asList(
-            "execution_id", "stage_id", "change_id", "author", "created_at", "state", "invoked_class",
-            "invoked_method", "source_file", "metadata", "execution_millis", "execution_hostname",
-            "error_trace", "type", "tx_strategy", "target_system_id", "change_order", "recovery_strategy",
-            "transaction_flag", "system_change"));
-
     private AuditEntryMapper() {
     }
 
     static List<String> columnNames() {
-        return COLUMN_NAMES;
+        return SqlAuditColumnNames.columnNames();
     }
 
     static void bind(PreparedStatement statement, AuditEntry auditEntry, int firstColumn) throws SQLException {
@@ -107,7 +100,7 @@ final class AuditEntryMapper {
     }
 
     private static String columnName(int index) {
-        return COLUMN_NAMES.get(index);
+        return SqlAuditColumnNames.columnNames().get(index);
     }
 
     private static void setNullableBoolean(PreparedStatement statement,
