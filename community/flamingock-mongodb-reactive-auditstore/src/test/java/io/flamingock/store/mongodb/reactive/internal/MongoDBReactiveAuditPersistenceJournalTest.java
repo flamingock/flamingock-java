@@ -51,6 +51,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -210,7 +211,7 @@ class MongoDBReactiveAuditPersistenceJournalTest {
     private MongoDBReactiveAuditPersistence persistenceFor(MongoDBReactiveAuditRepository repository,
                                                            JournalEventSequencer sequencer) {
         MongoDBReactiveAuditPersistence persistence = new MongoDBReactiveAuditPersistence(
-                new CommunityConfiguration(), repository, journalEventStore, sequencer, txWrapper, true);
+                new CommunityConfiguration(), repository, journalEventStore, sequencer, Optional.of(txWrapper), true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

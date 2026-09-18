@@ -141,9 +141,7 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
 
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
         if (supportsTransactions()) {
-            TransactionManager<ClientSession> txManager =
-                    new TransactionManager<>(() -> PublisherSync.first(mongoClient.startSession()));
-            txWrapper = new MongoDBReactiveTxWrapper(txManager);
+            TransactionManager<ClientSession> txManager = getReactiveTxWrapper().getTxManager();
             auditMarker = edition == COMMUNITY
                     ? new NoOpTargetSystemAuditMarker(this.getId())
                     : MongoDBReactiveAuditMarker.builder(database, txManager).build();
@@ -180,12 +178,26 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
         return getReactiveTxWrapper();
     }
 
-    private MongoDBReactiveTxWrapper getReactiveTxWrapper() {
+    /**
+     * Builds the transaction wrapper on first use rather than in {@link #initialize(ContextResolver)}.
+     * <p>
+     * It only needs the {@code mongoClient}, which is a constructor argument — the same reason
+     * {@link #getMongoDatabase()} works before initialization. This matters because
+     * {@code MongoDBReactiveAuditStore.from(targetSystem)} reuses only the MongoDB instance and does not
+     * require the target system to be registered with the builder, so the store can be asked for a
+     * transaction wrapper on a target system that is never initialized.
+     */
+    private synchronized MongoDBReactiveTxWrapper getReactiveTxWrapper() {
         if (!supportsTransactions()) {
             throw new FlamingockException("Transaction wrapper requested for a MongoDB target that does not support transactions.");
         }
         if (txWrapper == null) {
-            throw new FlamingockException("TargetSystem is not initialized. Transaction infrastructure is unavailable.");
+            if (mongoClient == null) {
+                throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance is required.");
+            }
+            TransactionManager<ClientSession> txManager =
+                    new TransactionManager<>(() -> PublisherSync.first(mongoClient.startSession()));
+            txWrapper = new MongoDBReactiveTxWrapper(txManager);
         }
         return txWrapper;
     }

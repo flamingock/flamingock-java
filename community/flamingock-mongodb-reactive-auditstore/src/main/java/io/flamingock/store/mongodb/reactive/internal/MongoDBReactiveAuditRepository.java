@@ -108,6 +108,30 @@ public class MongoDBReactiveAuditRepository {
     }
 
     /**
+     * Keeps a single record per change, overwritten on every state transition — the change's current state —
+     * without joining a MongoDB transaction.
+     * <p>
+     * Used when journal events are enabled but the target system does not support transactions. The journal
+     * event is persisted separately before this audit-state upsert, so a failure in this write can leave the
+     * journal history ahead of the current audit state.
+     *
+     * @param auditEntry the current audit state to persist
+     * @return {@link Result#OK()} — failures surface as exceptions, not as a result
+     */
+    Result save(AuditEntry auditEntry) {
+        Bson filter = Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId());
+        Document entryDocument = mapper.toDocument(auditEntry).getDocument();
+
+        UpdateResult result = PublisherSync.first(
+                collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true)));
+        logger.debug("Save changeState[{}] with result"
+                        + "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]",
+                auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(),
+                result.wasAcknowledged());
+        return Result.OK();
+    }
+
+    /**
      * Keeps the historical one-document-per-state behavior used while journal events are disabled.
      *
      * @param auditEntry entry to append or replace
