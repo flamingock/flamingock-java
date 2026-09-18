@@ -47,6 +47,7 @@ public class InternalInMemoryTestKit implements TestKit {
     
     private final InternalInMemoryAuditStorage auditStorage;
     private final InternalInMemoryLockStorage lockStorage;
+    private final InternalInMemoryJournalEventStore journalEventStore;
     private final AuditTestHelper auditHelper;
     private final LockTestHelper lockHelper;
 
@@ -59,20 +60,29 @@ public class InternalInMemoryTestKit implements TestKit {
     public static InternalInMemoryTestKit create(InternalInMemoryAuditStorage auditStorage, InternalInMemoryLockStorage lockStorage) {
         return new InternalInMemoryTestKit(auditStorage, lockStorage);
     }
-    
+
     private InternalInMemoryTestKit(InternalInMemoryAuditStorage auditStorage, InternalInMemoryLockStorage lockStorage) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
-        
+        this.journalEventStore = new InternalInMemoryJournalEventStore();
+
         // Create helpers at construction time - ready to use immediately
         this.auditHelper = new AuditTestHelper(auditStorage);
         this.lockHelper = new LockTestHelper(lockStorage);
     }
-    
+
     @Override
     public TestFlamingockBuilder createBuilder() {
-        InternalInMemoryTestAuditStore auditStore = new InternalInMemoryTestAuditStore(auditStorage, lockStorage);
+        InternalInMemoryTestAuditStore auditStore = new InternalInMemoryTestAuditStore(auditStorage, lockStorage, journalEventStore);
         return createBuilderWithAuditStore(auditStore);
+    }
+
+    /**
+     * Exposes the shared journal, backing {@code Features.JOURNAL_EVENTS}-gated assertions across every
+     * builder this kit creates.
+     */
+    public InternalInMemoryJournalEventStore getJournalEventStore() {
+        return journalEventStore;
     }
     
     @Override
@@ -87,8 +97,7 @@ public class InternalInMemoryTestKit implements TestKit {
 
     @Override
     public void cleanUp() {
-        auditStorage.clear();
-        lockStorage.clear();
+        clear();
     }
 
     public InternalInMemoryAuditStorage getAuditStorage() {
@@ -102,5 +111,6 @@ public class InternalInMemoryTestKit implements TestKit {
     public void clear() {
         auditStorage.clear();
         lockStorage.clear();
+        journalEventStore.clear();
     }
 }

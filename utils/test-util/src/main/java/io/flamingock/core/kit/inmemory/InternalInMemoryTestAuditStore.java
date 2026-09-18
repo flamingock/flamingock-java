@@ -15,44 +15,88 @@
  */
 package io.flamingock.core.kit.inmemory;
 
+import io.flamingock.core.kit.audit.TestAuditReader;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class InternalInMemoryTestAuditStore implements CommunityAuditStore {
-    
+
     private final InternalInMemoryAuditStorage auditStorage;
     private final InternalInMemoryLockStorage lockStorage;
+    private final InternalInMemoryJournalEventStore journalEventStore;
+    private final JournalEventSequencerFactory journalEventSequencerFactory;
     private InternalInMemoryTestAuditPersistence persistence;
     private RunnerId runnerId;
 
     public InternalInMemoryTestAuditStore(InternalInMemoryAuditStorage auditStorage, InternalInMemoryLockStorage lockStorage) {
+        this(auditStorage, lockStorage, new InternalInMemoryJournalEventStore());
+    }
+
+    public InternalInMemoryTestAuditStore(InternalInMemoryAuditStorage auditStorage,
+                                           InternalInMemoryLockStorage lockStorage,
+                                           InternalInMemoryJournalEventStore journalEventStore) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
+        this.journalEventStore = journalEventStore;
+        this.journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
     }
 
     @Override
     public String getId() {
         return Constants.DEFAULT_IN_MEMORY_AUDIT_STORE;
     }
-    
+
     @Override
     public void initialize(ContextResolver contextResolver) {
         // Extract required components from context
         runnerId = contextResolver.getRequiredDependencyValue(RunnerId.class);
-        // Create the test audit persistence with domain-separated storage
-        this.persistence = new InternalInMemoryTestAuditPersistence(auditStorage);
     }
 
-    
+
     @Override
     public InternalInMemoryTestAuditPersistence getPersistence() {
         if (persistence == null) {
             throw new IllegalStateException("AuditStore not initialized - call initialize first");
         }
         return persistence;
+    }
+
+    /**
+     * Builds persistence per stage, like the real audit stores — the stage becomes the journal stream, so the
+     * sequencer must be bound to it rather than shared across stages.
+     */
+    @Override
+    public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+        return stageId -> {
+            persistence = new InternalInMemoryTestAuditPersistence(
+                    auditStorage, journalEventStore, journalEventSequencerFactory.forStream(stageId));
+            return persistence;
+        };
+    }
+
+    /**
+     * Reads directly from storage, independent of the write-side persistence/sequencer wiring — mirrors
+     * {@code MongoDBSyncAuditStore#getAuditReader}. The builder needs a reader before any stage (and so any
+     * stageId) is known, which is earlier than {@link #getPersistenceFactory()} is ever invoked.
+     */
+    @Override
+    public AuditReader getAuditReader() {
+        return new TestAuditReader(auditStorage);
+    }
+
+    /**
+     * Exposes the journal for test assertions (e.g. verifying the STARTED&rarr;APPLIED/FAILED/ROLLED_BACK
+     * history that the audit log no longer keeps once {@code Features.JOURNAL_EVENTS} is enabled).
+     */
+    public InternalInMemoryJournalEventStore getJournalEventStore() {
+        return journalEventStore;
     }
 
     @Override

@@ -44,7 +44,6 @@ import java.util.Collections;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -101,10 +100,8 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document")
                 )
                 .run();
@@ -129,10 +126,8 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document")
                 )
                 .run();
@@ -157,10 +152,8 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document")
                 )
                 .run();
@@ -187,10 +180,10 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                             .build()
                             .run();
                 }))
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                // Final state only here: the STARTED->FAILED->ROLLED_BACK progression this used to assert is
+                // covered against the journal instead, in RecoveryE2ETest — this store has no journal support.
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-jorge-document"),
                         FAILED("insert-jorge-document"),
                         ROLLED_BACK("insert-jorge-document")
                 )
@@ -215,8 +208,7 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection")
                 )
                 .run();
@@ -236,8 +228,7 @@ class MongoDBReactiveCoreStrategiesE2ETest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection")
                 )
                 .run();

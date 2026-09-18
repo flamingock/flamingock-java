@@ -49,7 +49,6 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -118,12 +117,9 @@ class MongoDBReactiveAuditStoreTest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         APPLIED("insert-jorge-document")
                 )
                 .run();
@@ -150,12 +146,9 @@ class MongoDBReactiveAuditStoreTest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         APPLIED("insert-jorge-document")
                 )
                 .run();
@@ -221,12 +214,9 @@ class MongoDBReactiveAuditStoreTest {
                             .build()
                             .run();
                 }))
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         FAILED("insert-jorge-document"),
                         ROLLED_BACK("insert-jorge-document")
                 )

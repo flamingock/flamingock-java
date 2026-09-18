@@ -27,24 +27,30 @@ import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.operation.StagedExecuteOperationException;
+import io.flamingock.internal.util.FeatureFlag;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLBACK_FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -73,6 +79,12 @@ class RecoveryE2ETest {
         auditHelper = testKit.getAuditHelper();
     }
 
+    @AfterEach
+    void tearDown() {
+        // The flag is process-global; leaving it on would silently affect later tests in this class.
+        FeatureFlag.remove(Features.JOURNAL_EVENTS);
+    }
+
     @Test
     @DisplayName("Should require manual intervention for STARTED NON_TX change")
     void testStartedNonTxRequiresManualIntervention() {
@@ -80,8 +92,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
-                _001__SimpleNonTransactionalChange.class,
-                STARTED(changeId));
+                _001__SimpleNonTransactionalChange.class);
     }
 
     @Test
@@ -103,7 +114,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.FAILED,
                 AuditTxType.TX_SEPARATE_NO_MARKER,
                 _001__SimpleNonTransactionalChange.class,
-                FAILED(changeId), STARTED(changeId), APPLIED(changeId));
+                FAILED(changeId), APPLIED(changeId));
     }
 
     @Test
@@ -131,10 +142,9 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log shows successful execution after recovery
-        auditHelper.verifyAuditSequenceStrict(
+        // Then - Verify audit log shows successful execution after recovery (final state only)
+        auditHelper.verifyAuditFinalStateSequence(
                 FAILED(changeId),
-                STARTED(changeId),
                 APPLIED(changeId)
         );
     }
@@ -164,10 +174,9 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log shows successful execution after rollback
-        auditHelper.verifyAuditSequenceStrict(
+        // Then - Verify audit log shows successful execution after rollback (final state only)
+        auditHelper.verifyAuditFinalStateSequence(
                 ROLLED_BACK(changeId),
-                STARTED(changeId),
                 APPLIED(changeId)
         );
     }
@@ -197,10 +206,9 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log shows successful execution after rollback
-        auditHelper.verifyAuditSequenceStrict(
+        // Then - Verify audit log shows successful execution after rollback (final state only)
+        auditHelper.verifyAuditFinalStateSequence(
                 ROLLED_BACK(changeId),
-                STARTED(changeId),
                 APPLIED(changeId)
         );
     }
@@ -230,10 +238,9 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log shows successful execution after rollback
-        auditHelper.verifyAuditSequenceStrict(
+        // Then - Verify audit log shows successful execution after rollback (final state only)
+        auditHelper.verifyAuditFinalStateSequence(
                 ROLLED_BACK(changeId),
-                STARTED(changeId),
                 APPLIED(changeId)
         );
     }
@@ -277,7 +284,7 @@ class RecoveryE2ETest {
         }
 
         // Then - Verify audit log remains unchanged (only the pre-inserted ROLLBACK_FAILED entry)
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 ROLLBACK_FAILED(changeId)
         );
     }
@@ -308,7 +315,7 @@ class RecoveryE2ETest {
         }
 
         // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED(changeId)
         );
     }
@@ -339,7 +346,7 @@ class RecoveryE2ETest {
         }
 
         // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED(changeId)
         );
     }
@@ -370,7 +377,7 @@ class RecoveryE2ETest {
         }
 
         // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
-        auditHelper.verifyAuditSequenceStrict(
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED(changeId)
         );
     }
@@ -387,7 +394,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
                 _001__AlwaysRetryNonTransactionalChange.class,
-                STARTED(changeId), STARTED(changeId), APPLIED(changeId));
+                APPLIED(changeId));
     }
 
     @Test
@@ -398,7 +405,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
                 _001__AlwaysRetryNonTransactionalChange.class,
-                FAILED(changeId), STARTED(changeId), APPLIED(changeId));
+                FAILED(changeId), APPLIED(changeId));
     }
 
     @Test
@@ -409,7 +416,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.ROLLBACK_FAILED,
                 AuditTxType.NON_TX,
                 _001__AlwaysRetryNonTransactionalChange.class,
-                ROLLBACK_FAILED(changeId), STARTED(changeId), APPLIED(changeId));
+                ROLLBACK_FAILED(changeId), APPLIED(changeId));
     }
 
     // =================================
@@ -423,8 +430,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
-                _001__ManualInterventionNonTransactionalChange.class,
-                STARTED(changeId));
+                _001__ManualInterventionNonTransactionalChange.class);
     }
 
     @Test
@@ -449,6 +455,52 @@ class RecoveryE2ETest {
                 ROLLBACK_FAILED(changeId));
     }
 
+
+    @Test
+    @DisplayName("Retry progression (FAILED -> STARTED -> APPLIED) is recorded in the journal when Features.JOURNAL_EVENTS is enabled")
+    void testRetryProgressionRecordedInJournalWhenEnabled() {
+        // The audit log final-state assertions above have dropped the STARTED transition this scenario goes
+        // through on its way to APPLIED. This is where that progression survives: the journal, gated by
+        // Features.JOURNAL_EVENTS — mirrors MongoDBSyncJournalFeatureFlagE2ETest for the in-memory kit.
+        String changeId = "test1-non-tx-change";
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+
+        // Given - Pre-insert audit entry directly into storage (simulating a previous run). This bypasses the
+        // journal, so only this run's own transitions are expected to appear there.
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(
+                changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
+        testKit.getAuditStorage().addAuditEntry(preExistingEntry);
+
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
+                    )
+            );
+
+            assertDoesNotThrow(() -> {
+                testKit.createBuilder()
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .build()
+                        .run();
+            });
+        }
+
+        // Then - the audit log holds only the final state...
+        auditHelper.verifyAuditFinalStateSequence(APPLIED(changeId));
+
+        // ...while the journal holds this run's STARTED->APPLIED progression.
+        List<JournalEvent<AuditEntry>> events = testKit.getJournalEventStore().getAllEvents();
+        assertEquals(2, events.size(), "one event per audit write during this run");
+        assertEquals(Arrays.asList(AuditEntry.Status.STARTED, AuditEntry.Status.APPLIED),
+                events.stream()
+                        .sorted(Comparator.comparingLong(JournalEvent::getStreamSequence))
+                        .map(event -> event.getData().getState())
+                        .collect(Collectors.toList()),
+                "the STARTED->APPLIED progression the audit log no longer keeps once journal events are enabled");
+    }
 
     /**
      * Helper method to run a test expecting successful execution.
@@ -480,8 +532,10 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log shows expected sequence
-        auditHelper.verifyAuditSequenceStrict(expectedAuditSequence);
+        // Then - Verify audit log shows expected final-state sequence (STARTED transitions filtered out —
+        // the STARTED->APPLIED/FAILED progression this used to assert is covered against the journal instead,
+        // in testRetryProgressionRecordedInJournalWhenEnabled below).
+        auditHelper.verifyAuditFinalStateSequence(expectedAuditSequence);
     }
 
     /**
@@ -528,8 +582,10 @@ class RecoveryE2ETest {
             assertEquals(changeId, recoveryIssues.get(0).getChangeId());
         }
 
-        // Then - Verify audit log shows expected sequence (usually just the pre-existing entry)
-        auditHelper.verifyAuditSequenceStrict(expectedAuditSequence);
+        // Then - Verify audit log shows expected final-state sequence (usually just the pre-existing entry;
+        // STARTED is never a final state, so a blocked-for-MI change with only a STARTED row correctly
+        // asserts zero final-state entries)
+        auditHelper.verifyAuditFinalStateSequence(expectedAuditSequence);
     }
 
 

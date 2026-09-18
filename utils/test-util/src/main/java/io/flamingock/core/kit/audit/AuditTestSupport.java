@@ -22,6 +22,8 @@ import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.util.function.Consumer;
+
 /**
  * Fluent builder for audit testing that abstracts MockedStatic boilerplate.
  * 
@@ -43,6 +45,7 @@ public class AuditTestSupport {
     private CodeChangeTestDefinition[] changes;
     private Runnable testCode;
     private AuditEntryExpectation[] expectedAudits;
+    private AuditEntryExpectation[] expectedFinalStateAudits;
 
     public static AuditTestSupport withTestKit(TestKit testKit) {
         return new AuditTestSupport(testKit);
@@ -84,12 +87,28 @@ public class AuditTestSupport {
      * 
      * @param expectedAudits varargs array of expected audit entry expectations
      * @return this builder for method chaining
+     * @deprecated see {@link AuditTestHelper#verifyAuditSequenceStrict(AuditEntryExpectation...)}. Kept working
+     * as-is for existing callers; prefer {@link #THEN_VerifyAuditFinalStateSequence(AuditEntryExpectation...)}.
      */
+    @Deprecated
     public AuditTestSupport THEN_VerifyAuditSequenceStrict(AuditEntryExpectation... expectedAudits) {
         this.expectedAudits = expectedAudits;
         return this;
     }
-    
+
+    /**
+     * Configures the expected final-state audit sequence for verification.
+     *
+     * <p>This delegates to {@link AuditTestHelper#verifyAuditFinalStateSequence(AuditEntryExpectation...)}.</p>
+     *
+     * @param expectedAudits varargs array of expected final-state audit entry expectations
+     * @return this builder for method chaining
+     */
+    public AuditTestSupport THEN_VerifyAuditFinalStateSequence(AuditEntryExpectation... expectedAudits) {
+        this.expectedFinalStateAudits = expectedAudits;
+        return this;
+    }
+
     /**
      * Executes the configured test scenario with proper MockedStatic lifecycle management.
      * 
@@ -123,9 +142,14 @@ public class AuditTestSupport {
             testCode.run();
             
             // Verify audit sequence if configured
-            if (expectedAudits != null && expectedAudits.length > 0) {
-                auditHelper.verifyAuditSequenceStrict(expectedAudits);
-            }
+            verifyIfConfigured(expectedAudits, auditHelper::verifyAuditSequenceStrict);
+            verifyIfConfigured(expectedFinalStateAudits, auditHelper::verifyAuditFinalStateSequence);
+        }
+    }
+
+    private static void verifyIfConfigured(AuditEntryExpectation[] expectedAudits, Consumer<AuditEntryExpectation[]> verify) {
+        if (expectedAudits != null && expectedAudits.length > 0) {
+            verify.accept(expectedAudits);
         }
     }
 }
