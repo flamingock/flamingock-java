@@ -29,8 +29,8 @@ allprojects {
     extra["mongodbTemplateVersion"] = "1.3.2"
 
     repositories {
-        mavenLocal()
         mavenCentral()
+        mavenLocal()
     }
 }
 
