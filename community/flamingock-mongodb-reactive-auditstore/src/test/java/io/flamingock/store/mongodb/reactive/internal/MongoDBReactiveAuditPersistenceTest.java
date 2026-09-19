@@ -42,7 +42,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,7 +78,8 @@ class MongoDBReactiveAuditPersistenceTest {
 				auditRepository,
 				journalEventStore,
 				mock(JournalEventSequencer.class),
-				Optional.of(mock(TransactionWrapper.class)),
+				true,
+				mock(TransactionWrapper.class),
                 true);
         persistence.initialize(RunnerId.fromString("runner-1"));
     }

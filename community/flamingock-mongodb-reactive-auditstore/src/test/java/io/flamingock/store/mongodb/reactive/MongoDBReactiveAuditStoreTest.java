@@ -28,7 +28,14 @@ import io.flamingock.store.mongodb.reactive.changes._003__insert_jorge_happy_tra
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.mongodb.reactive.kit.MongoDBReactiveTestKit;
 import io.flamingock.targetsystem.mongodb.reactive.MongoDBReactiveTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -43,6 +50,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,8 +64,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Testcontainers
 class MongoDBReactiveAuditStoreTest {
@@ -97,6 +107,7 @@ class MongoDBReactiveAuditStoreTest {
 
     @AfterEach
     void tearDown() {
+        FeatureFlag.remove(Features.JOURNAL_EVENTS);
         ReactiveMongoTestHelper.complete(database.drop()); // Clean between tests
         mongoClient.close();
     }
@@ -192,6 +203,28 @@ class MongoDBReactiveAuditStoreTest {
         verify(targetSystem, never()).getTxWrapper();
         assertEquals(1L, ReactiveMongoTestHelper.first(
                 database.getCollection(CLIENTS_COLLECTION).countDocuments()));
+    }
+
+    @Test
+    @DisplayName("Should initialize Journal Events without a transaction wrapper when target transactions are disabled")
+    void journalEnabledWithDisabledTransactionsInitializesWithoutTransactionWrapper() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBReactiveTargetSystem targetSystem = spy(
+                new MongoDBReactiveTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+        ContextResolver context = mock(ContextResolver.class);
+        when(context.getDependencyValue(FlamingockEdition.class))
+                .thenReturn(Optional.of(FlamingockEdition.COMMUNITY));
+        when(context.getRequiredDependencyValue(RunnerId.class)).thenReturn(RunnerId.generate());
+        when(context.getRequiredDependencyValue(CommunityConfigurable.class))
+                .thenReturn(new CommunityConfiguration());
+        targetSystem.initialize(context);
+
+        MongoDBReactiveAuditStore auditStore = MongoDBReactiveAuditStore.from(targetSystem);
+        auditStore.initialize(context);
+        auditStore.getPersistenceFactory().get("stage");
+
+        verify(targetSystem, never()).getTxWrapper();
     }
 
     @Test

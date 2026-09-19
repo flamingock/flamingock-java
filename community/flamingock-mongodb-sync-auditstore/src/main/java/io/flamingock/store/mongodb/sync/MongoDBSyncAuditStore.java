@@ -47,7 +47,6 @@ import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -163,15 +162,14 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
-            Optional<TransactionWrapper> txWrapper =
-                    mongoDBTargetSystem.supportsTransactions()
-                            ? Optional.of(mongoDBTargetSystem.getTxWrapper())
-                            : Optional.empty();
+            boolean supportsTransactions = mongoDBTargetSystem.supportsTransactions();
+            TransactionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
             persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
                     auditRepository,
                     journalEventStore,
                     journalEventSequencer,
+                    supportsTransactions,
                     txWrapper,
                     autoCreate
             );

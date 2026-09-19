@@ -49,8 +49,8 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -106,6 +106,38 @@ class MongoDBSyncAuditPersistenceJournalTest {
         FeatureFlag.remove(Features.JOURNAL_EVENTS);
         database.drop();
         mongoClient.close();
+    }
+
+    @Test
+    @DisplayName("constructor accepts a transaction wrapper when transactions are supported")
+    void constructorAcceptsWrapperWhenTransactionsAreSupported() {
+        assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, txWrapper, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a missing transaction wrapper when transactions are supported")
+    void constructorRejectsMissingWrapperWhenTransactionsAreSupported() {
+        assertThrows(NullPointerException.class, () -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor accepts no transaction wrapper when transactions are not supported")
+    void constructorAcceptsMissingWrapperWhenTransactionsAreNotSupported() {
+        assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a transaction wrapper when transactions are not supported")
+    void constructorRejectsWrapperWhenTransactionsAreNotSupported() {
+        assertThrows(IllegalArgumentException.class, () -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, txWrapper, true));
     }
 
     @Test
@@ -291,7 +323,7 @@ class MongoDBSyncAuditPersistenceJournalTest {
                                                        JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
                 new CommunityConfiguration(), repository, journalEventStore, sequencer,
-                Optional.of(txWrapper), true);
+                true, txWrapper, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
@@ -301,7 +333,7 @@ class MongoDBSyncAuditPersistenceJournalTest {
             MongoDBSyncJournalEventStore journalStore,
             JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), repository, journalStore, sequencer, Optional.empty(), true);
+                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
