@@ -20,6 +20,19 @@ import io.flamingock.api.external.ExternalSystem;
 public interface TransactionalExternalSystem extends ExternalSystem {
 
     /**
+     * Indicates whether this concrete external-system instance can execute transactions.
+     *
+     * <p>Transaction-capable implementations default to {@code true} for backward compatibility,
+     * but may override this value when the connected deployment does not support transactions.
+     * A {@code false} result makes Flamingock use its normal non-transactional execution path.</p>
+     *
+     * @return {@code true} when transactions are available for this instance
+     */
+    default boolean supportsTransactions() {
+        return true;
+    }
+
+    /**
      * Returns the transaction wrapper for this target system.
      * <p>
      * The wrapper is responsible for starting, committing, and rolling back transactions,

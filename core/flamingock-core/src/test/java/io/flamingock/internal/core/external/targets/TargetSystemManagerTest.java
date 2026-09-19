@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.external.targets;
 
 import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,24 @@ class TargetSystemManagerTest {
         assertEquals(2, result.size());
     }
 
+    @Test
+    @DisplayName("Should expose non-transactional operations when the concrete target does not support transactions")
+    void shouldExposeNonTransactionalOperationsWhenTransactionsAreUnsupported() {
+        TargetSystemManager manager = new TargetSystemManager();
+        manager.add(new StubTransactionalTargetSystem("tx-disabled", false));
+
+        assertEquals(OperationType.NON_TX, manager.getTargetSystem("tx-disabled").getOperationType());
+    }
+
+    @Test
+    @DisplayName("Should preserve transactional operations by default")
+    void shouldPreserveTransactionalOperationsByDefault() {
+        TargetSystemManager manager = new TargetSystemManager();
+        manager.add(new StubTransactionalTargetSystem("tx-default"));
+
+        assertEquals(OperationType.TX_NON_SYNC, manager.getTargetSystem("tx-default").getOperationType());
+    }
+
     private static class StubNonTransactionalTargetSystem extends AbstractTargetSystem<StubNonTransactionalTargetSystem> {
         StubNonTransactionalTargetSystem(String id) { super(id); }
         @Override protected StubNonTransactionalTargetSystem getSelf() { return this; }
@@ -74,8 +93,14 @@ class TargetSystemManagerTest {
     }
 
     private static class StubTransactionalTargetSystem extends TransactionalTargetSystem<StubTransactionalTargetSystem> {
-        StubTransactionalTargetSystem(String id) { super(id); }
+        private final boolean transactionsSupported;
+        StubTransactionalTargetSystem(String id) { this(id, true); }
+        StubTransactionalTargetSystem(String id, boolean transactionsSupported) {
+            super(id);
+            this.transactionsSupported = transactionsSupported;
+        }
         @Override protected StubTransactionalTargetSystem getSelf() { return this; }
+        @Override public boolean supportsTransactions() { return transactionsSupported; }
         @Override public TransactionWrapper getTxWrapper() { return null; }
         @Override protected void enhanceExecutionRuntime(RuntimeContext rt, boolean tx) {}
         @Override public void initialize(io.flamingock.internal.common.core.context.ContextResolver ctx) {}

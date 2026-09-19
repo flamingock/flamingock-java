@@ -78,6 +78,7 @@ class MongoDBReactiveAuditPersistenceTest {
 				auditRepository,
 				journalEventStore,
 				mock(JournalEventSequencer.class),
+				true,
 				mock(TransactionWrapper.class),
                 true);
         persistence.initialize(RunnerId.fromString("runner-1"));

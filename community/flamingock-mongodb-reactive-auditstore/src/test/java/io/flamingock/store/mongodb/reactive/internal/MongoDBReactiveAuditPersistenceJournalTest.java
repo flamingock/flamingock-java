@@ -53,10 +53,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -104,6 +106,38 @@ class MongoDBReactiveAuditPersistenceJournalTest {
         FeatureFlag.remove(Features.JOURNAL_EVENTS);
         PublisherSync.complete(database.drop());
         mongoClient.close();
+    }
+
+    @Test
+    @DisplayName("constructor accepts a transaction wrapper when transactions are supported")
+    void constructorAcceptsWrapperWhenTransactionsAreSupported() {
+        assertDoesNotThrow(() -> new MongoDBReactiveAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, txWrapper, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a missing transaction wrapper when transactions are supported")
+    void constructorRejectsMissingWrapperWhenTransactionsAreSupported() {
+        assertThrows(NullPointerException.class, () -> new MongoDBReactiveAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor accepts no transaction wrapper when transactions are not supported")
+    void constructorAcceptsMissingWrapperWhenTransactionsAreNotSupported() {
+        assertDoesNotThrow(() -> new MongoDBReactiveAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a transaction wrapper when transactions are not supported")
+    void constructorRejectsWrapperWhenTransactionsAreNotSupported() {
+        assertThrows(IllegalArgumentException.class, () -> new MongoDBReactiveAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, txWrapper, true));
     }
 
     @Test
@@ -203,6 +237,61 @@ class MongoDBReactiveAuditPersistenceJournalTest {
         assertEquals("successful-change", events.get(0).getData().getChangeId());
     }
 
+    @Test
+    @DisplayName("journal enabled without transactions writes journal and audit in best-effort order")
+    void nonTransactionalJournalWritesEventThenAuditState() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBReactiveAuditPersistence persistence = persistenceWithoutTransactions(
+                auditRepository, journalEventStore,
+                new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
+
+        persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.APPLIED));
+
+        assertEquals(1, storedEvents().size());
+        assertEquals(1, auditRepository.getAuditHistory().size());
+    }
+
+    @Test
+    @DisplayName("journal enabled without transactions prevents audit write when journal append fails")
+    void nonTransactionalJournalFailurePreventsAuditWrite() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        MongoDBReactiveJournalEventStore failingJournal = mock(MongoDBReactiveJournalEventStore.class);
+        doThrow(new IllegalStateException("journal write failed"))
+                .when(failingJournal).append(any(JournalEvent.class));
+        MongoDBReactiveAuditPersistence persistence =
+                persistenceWithoutTransactions(auditRepository, failingJournal, sequencer);
+
+        assertThrows(IllegalStateException.class,
+                () -> persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.APPLIED)));
+
+        assertTrue(auditRepository.getAuditHistory().isEmpty());
+    }
+
+    @Test
+    @DisplayName("journal enabled without transactions preserves and confirms event when audit write fails")
+    void nonTransactionalAuditFailurePreservesAndConfirmsJournalEvent() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        MongoDBReactiveAuditRepository failingRepository = mock(MongoDBReactiveAuditRepository.class);
+        doThrow(new IllegalStateException("audit write failed"))
+                .when(failingRepository).save(any(AuditEntry.class));
+        MongoDBReactiveAuditPersistence failing =
+                persistenceWithoutTransactions(failingRepository, journalEventStore, sequencer);
+
+        assertThrows(IllegalStateException.class,
+                () -> failing.writeEntry(auditEntry("change-1", AuditEntry.Status.APPLIED)));
+        persistenceWithoutTransactions(auditRepository, journalEventStore, sequencer)
+                .writeEntry(auditEntry("change-2", AuditEntry.Status.APPLIED));
+
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(2, events.size());
+        assertEquals(1L, events.get(0).getStreamSequence());
+        assertEquals(2L, events.get(1).getStreamSequence());
+        assertEquals(1, auditRepository.getAuditHistory().size());
+        assertEquals("change-2", auditRepository.getAuditHistory().get(0).getChangeId());
+    }
+
     private MongoDBReactiveAuditPersistence persistenceFor(MongoDBReactiveAuditRepository repository) {
         return persistenceFor(repository, new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
     }
@@ -210,7 +299,17 @@ class MongoDBReactiveAuditPersistenceJournalTest {
     private MongoDBReactiveAuditPersistence persistenceFor(MongoDBReactiveAuditRepository repository,
                                                            JournalEventSequencer sequencer) {
         MongoDBReactiveAuditPersistence persistence = new MongoDBReactiveAuditPersistence(
-                new CommunityConfiguration(), repository, journalEventStore, sequencer, txWrapper, true);
+                new CommunityConfiguration(), repository, journalEventStore, sequencer, true, txWrapper, true);
+        persistence.initialize(RunnerId.generate());
+        return persistence;
+    }
+
+    private MongoDBReactiveAuditPersistence persistenceWithoutTransactions(
+            MongoDBReactiveAuditRepository repository,
+            MongoDBReactiveJournalEventStore journalStore,
+            JournalEventSequencer sequencer) {
+        MongoDBReactiveAuditPersistence persistence = new MongoDBReactiveAuditPersistence(
+                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
