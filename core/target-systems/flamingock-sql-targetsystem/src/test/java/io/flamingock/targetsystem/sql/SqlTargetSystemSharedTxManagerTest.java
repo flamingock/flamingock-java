@@ -70,6 +70,7 @@ class SqlTargetSystemSharedTxManagerTest {
         SqlTargetSystem targetSystem = new SqlTargetSystem("test-sql", dataSource);
         targetSystem.applyChange(runtime -> null, mockRuntimeWith(connection));
 
+        verify(dataSource).getConnection();
         verify(connection).close();
     }
 
@@ -83,6 +84,7 @@ class SqlTargetSystemSharedTxManagerTest {
         SqlTargetSystem targetSystem = new SqlTargetSystem("test-sql", dataSource);
         targetSystem.rollbackChange(runtime -> null, mockRuntimeWith(connection));
 
+        verify(dataSource).getConnection();
         verify(connection).close();
     }
 
@@ -101,6 +103,7 @@ class SqlTargetSystemSharedTxManagerTest {
                 }, mockRuntimeWith(connection)));
 
         assertSame(callbackFailure, thrown);
+        verify(dataSource).getConnection();
         verify(connection).close();
     }
 
