@@ -22,12 +22,14 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.common.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.function.Function;
 
 import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
@@ -79,17 +81,23 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         return txWrapper;
     }
 
+    /**
+     * Acquires one connection for a non-transactional callback, injects it into the runtime,
+     * and closes that same connection after the callback completes or fails.
+     *
+     * @param changeFunc       the callback to execute
+     * @param executionRuntime the runtime to receive the connection dependency
+     * @param <T>              the callback return type
+     * @return the callback result
+     */
     @Override
-    protected void enhanceExecutionRuntime(RuntimeContext executionRuntime, boolean isTransactional) {
-        //if transactional, the connection is injected in the wrapInTransaction
-        if (!isTransactional) {
-            try {
-                executionRuntime.addDependency(dataSource.getConnection());
-            } catch (SQLException e) {
-                throw new FlamingockException(e);
-            }
+    protected <T> T nonTxWrapper(Function<ExecutionRuntime, T> changeFunc, ExecutionRuntime executionRuntime) {
+        try (Connection connection = dataSource.getConnection()) {
+            executionRuntime.addDependency(connection);
+            return changeFunc.apply(executionRuntime);
+        } catch (SQLException e) {
+            throw new FlamingockException(e);
         }
-
     }
 
     private SqlTxWrapper createTxWrapper(TransactionManager<Connection> txManager) {

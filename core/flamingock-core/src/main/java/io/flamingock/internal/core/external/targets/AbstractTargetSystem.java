@@ -83,8 +83,8 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * Applies a change operation with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional change execution.
-     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
-     * subclasses to inject session-scoped dependencies before executing the change.
+     * It delegates lifecycle ownership to {@link #nonTxWrapper(Function, ExecutionRuntime)},
+     * which enhances the runtime before invoking the change.
      *
      * @param <T>             the return type of the change operation
      * @param changeApplier   the function that executes the actual change
@@ -92,16 +92,15 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * @return the result of the change operation
      */
     public final <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        enhanceExecutionRuntime(executionRuntime, false);
-        return changeApplier.apply(executionRuntime);
+        return nonTxWrapper(changeApplier, executionRuntime);
     }
 
     /**
      * Rolls back (reverts) a previously applied change with session-scoped dependency injection.
      * <p>
      * This method is the entry point for non-transactional rollback execution.
-     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
-     * subclasses to inject session-scoped dependencies before executing the rollback.
+     * It delegates lifecycle ownership to {@link #nonTxWrapper(Function, ExecutionRuntime)},
+     * which enhances the runtime before invoking the rollback.
      *
      * @param <T>               the return type of the rollback operation
      * @param changeRollbacker  the function that executes the actual rollback
@@ -109,8 +108,25 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * @return the result of the rollback operation
      */
     public final <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime) {
+        return nonTxWrapper(changeRollbacker, executionRuntime);
+    }
+
+
+    /**
+     * Executes a non-transactional callback and owns its runtime lifecycle.
+     * <p>
+     * The default implementation enhances the runtime once before executing the callback.
+     * Subclasses that manage resources for non-transactional execution must enhance the runtime
+     * and release those resources within their override.
+     *
+     * @param changeFunc       the callback to execute
+     * @param executionRuntime the runtime to enhance and pass to the callback
+     * @param <T>              the callback return type
+     * @return the callback result
+     */
+    protected <T> T nonTxWrapper(Function<ExecutionRuntime, T> changeFunc, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, false);
-        return changeRollbacker.apply(executionRuntime);
+        return changeFunc.apply(executionRuntime);
     }
 
 
