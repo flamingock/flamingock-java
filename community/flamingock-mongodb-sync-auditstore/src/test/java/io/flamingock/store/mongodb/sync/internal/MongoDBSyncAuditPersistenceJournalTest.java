@@ -50,6 +50,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -105,6 +106,38 @@ class MongoDBSyncAuditPersistenceJournalTest {
         FeatureFlag.remove(Features.JOURNAL_EVENTS);
         database.drop();
         mongoClient.close();
+    }
+
+    @Test
+    @DisplayName("constructor accepts a transaction wrapper when transactions are supported")
+    void constructorAcceptsWrapperWhenTransactionsAreSupported() {
+        assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, txWrapper, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a missing transaction wrapper when transactions are supported")
+    void constructorRejectsMissingWrapperWhenTransactionsAreSupported() {
+        assertThrows(NullPointerException.class, () -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor accepts no transaction wrapper when transactions are not supported")
+    void constructorAcceptsMissingWrapperWhenTransactionsAreNotSupported() {
+        assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, null, true));
+    }
+
+    @Test
+    @DisplayName("constructor rejects a transaction wrapper when transactions are not supported")
+    void constructorRejectsWrapperWhenTransactionsAreNotSupported() {
+        assertThrows(IllegalArgumentException.class, () -> new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, txWrapper, true));
     }
 
     @Test
@@ -220,6 +253,59 @@ class MongoDBSyncAuditPersistenceJournalTest {
                 "the stream must stay contiguous, so consumers can tell in-flight from lost");
     }
 
+    @Test
+    @DisplayName("journal enabled without transactions: journal and audit are written in best-effort order")
+    void nonTransactionalJournalWritesEventThenAuditState() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBSyncAuditPersistence persistence = persistenceWithoutTransactions(
+                auditRepository, journalEventStore,
+                new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
+
+        persistence.writeEntry(auditEntry("change-1"));
+
+        assertEquals(1, storedEvents().size());
+        assertEquals(1, auditRepository.getAuditHistory().size());
+    }
+
+    @Test
+    @DisplayName("journal enabled without transactions: a journal failure prevents the audit write")
+    void nonTransactionalJournalFailurePreventsAuditWrite() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        MongoDBSyncJournalEventStore failingJournal = mock(MongoDBSyncJournalEventStore.class);
+        doThrow(new IllegalStateException("journal write failed"))
+                .when(failingJournal).write(any(JournalEvent.class));
+        MongoDBSyncAuditPersistence persistence =
+                persistenceWithoutTransactions(auditRepository, failingJournal, sequencer);
+
+        assertThrows(IllegalStateException.class, () -> persistence.writeEntry(auditEntry("change-1")));
+
+        assertTrue(auditRepository.getAuditHistory().isEmpty());
+    }
+
+    @Test
+    @DisplayName("journal enabled without transactions: an audit failure preserves and confirms the journal event")
+    void nonTransactionalAuditFailurePreservesAndConfirmsJournalEvent() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        MongoDBSyncAuditRepository failingRepository = mock(MongoDBSyncAuditRepository.class);
+        doThrow(new IllegalStateException("audit write failed"))
+                .when(failingRepository).save(any(AuditEntry.class));
+        MongoDBSyncAuditPersistence failing =
+                persistenceWithoutTransactions(failingRepository, journalEventStore, sequencer);
+
+        assertThrows(IllegalStateException.class, () -> failing.writeEntry(auditEntry("change-1")));
+        persistenceWithoutTransactions(auditRepository, journalEventStore, sequencer)
+                .writeEntry(auditEntry("change-2"));
+
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(2, events.size());
+        assertEquals(1L, events.get(0).getStreamSequence());
+        assertEquals(2L, events.get(1).getStreamSequence());
+        assertEquals(1, auditRepository.getAuditHistory().size());
+        assertEquals("change-2", auditRepository.getAuditHistory().get(0).getChangeId());
+    }
+
     // ----------------------------- helpers -----------------------------
 
     /**
@@ -236,7 +322,18 @@ class MongoDBSyncAuditPersistenceJournalTest {
     private MongoDBSyncAuditPersistence persistenceFor(MongoDBSyncAuditRepository repository,
                                                        JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), repository, journalEventStore, sequencer, txWrapper, true);
+                new CommunityConfiguration(), repository, journalEventStore, sequencer,
+                true, txWrapper, true);
+        persistence.initialize(RunnerId.generate());
+        return persistence;
+    }
+
+    private MongoDBSyncAuditPersistence persistenceWithoutTransactions(
+            MongoDBSyncAuditRepository repository,
+            MongoDBSyncJournalEventStore journalStore,
+            JournalEventSequencer sequencer) {
+        MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

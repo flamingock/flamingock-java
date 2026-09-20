@@ -30,28 +30,54 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final MongoDBSyncAuditRepository auditRepository;
     private final MongoDBSyncJournalEventStore journalEventStore;
     private final JournalEventSequencer journalEventSequencer;
+    private final boolean supportsTransactions;
     private final TransactionWrapper txWrapper;
     private final boolean autoCreate;
 
-
+    /**
+     * @param localConfiguration local Community configuration
+     * @param auditRepository audit state repository
+     * @param journalEventStore journal event store
+     * @param journalEventSequencer sequencer for this persistence stream
+     * @param supportsTransactions whether journal and audit writes must share a MongoDB transaction
+     * @param txWrapper transaction wrapper; must be non-null if and only if transactions are supported
+     * @param autoCreate whether required MongoDB collections and indexes may be created
+     */
     public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
                                        MongoDBSyncAuditRepository auditRepository,
                                        MongoDBSyncJournalEventStore journalEventStore,
                                        JournalEventSequencer journalEventSequencer,
+                                       boolean supportsTransactions,
                                        TransactionWrapper txWrapper,
                                        boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
         this.journalEventStore = journalEventStore;
         this.journalEventSequencer = journalEventSequencer;
-        this.txWrapper = txWrapper;
+        this.supportsTransactions = supportsTransactions;
+        this.txWrapper = validateTransactionWrapper(supportsTransactions, txWrapper);
         this.autoCreate = autoCreate;
+    }
+
+    private static TransactionWrapper validateTransactionWrapper(boolean supportsTransactions,
+                                                                 TransactionWrapper txWrapper) {
+        if (supportsTransactions) {
+            return Objects.requireNonNull(
+                    txWrapper,
+                    "txWrapper is required when transactions are supported"
+            );
+        }
+        if (txWrapper != null) {
+            throw new IllegalArgumentException("txWrapper must be null when transactions are not supported");
+        }
+        return null;
     }
 
     @Override
@@ -72,33 +98,50 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
         // Read once rather than per branch: the journal append and the audit write shape are two halves of one
         // model. With events, the audit record is the change's current state and the journal is the history;
         // without them, the audit record set is itself the history.
         if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-            Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
-                ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-                journalEventStore.write(clientSession, journalEvent);
-                return auditRepository.save(clientSession, auditEntry);
-
-            });
-            // Spends the stream position, and only a committed transaction may reach this line. In general a
-            // normal return from wrapInTransaction does NOT mean commit — a FailedStep result is returned
-            // after a rollback, without an exception. It is sound here because this operation returns a
-            // Result, which can never be a FailedStep, so the commit branch is the only graceful path; a
-            // failing commit is caught and rethrown as DatabaseTransactionException. Keep that true: an
-            // operation that could return a failed step would silently burn a position and gap the stream,
-            // and a contiguous sequence is what lets a consumer tell "in flight" from "lost".
-            journalEventSequencer.confirm();
-            return result;
+            if (!supportsTransactions) {
+                return writeJournalAndAuditWithoutTransaction(auditEntry);
+            }
+            return writeJournalAndAuditInTransaction(auditEntry);
         } else {
             return auditRepository.append(auditEntry);
         }
+    }
 
+    private Result writeJournalAndAuditInTransaction(AuditEntry auditEntry) {
+        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+        Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+            ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+            journalEventStore.write(clientSession, journalEvent);
+            return auditRepository.save(clientSession, auditEntry);
+        });
+        // Spends the stream position, and only a committed transaction may reach this line. In general a
+        // normal return from wrapInTransaction does NOT mean commit — a FailedStep result is returned
+        // after a rollback, without an exception. It is sound here because this operation returns a
+        // Result, which can never be a FailedStep, so the commit branch is the only graceful path; a
+        // failing commit is caught and rethrown as DatabaseTransactionException. Keep that true: an
+        // operation that could return a failed step would silently burn a position and gap the stream,
+        // and a contiguous sequence is what lets a consumer tell "in flight" from "lost".
+        journalEventSequencer.confirm();
+        return result;
+    }
 
-
+    /**
+     * Persists journal and current audit state when the concrete MongoDB deployment does not support
+     * transactions. The journal is written and its sequence confirmed first so a failure cannot leave an
+     * audit state without its corresponding historical event. Consequently, a later audit-state failure can
+     * leave a durable journal event while the current-state projection remains stale; this is the explicitly
+     * accepted best-effort behavior for non-transactional deployments.
+     */
+    private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
+        JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
+        journalEventStore.write(journalEvent);
+        journalEventSequencer.confirm();
+        return auditRepository.save(auditEntry);
     }
 
 }

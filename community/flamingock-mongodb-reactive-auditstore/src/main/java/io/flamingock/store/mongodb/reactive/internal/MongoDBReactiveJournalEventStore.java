@@ -140,6 +140,26 @@ public class MongoDBReactiveJournalEventStore implements JournalEventStore {
         return Result.OK();
     }
 
+    /**
+     * Appends an immutable event without joining a MongoDB transaction.
+     *
+     * <p>Used when journal events are enabled but the target system does not support transactions. The event
+     * is persisted before the corresponding audit-state write and cannot be rolled back with it, so a later
+     * audit failure can leave the journal history ahead of the current audit state.
+     *
+     * @param event event to append
+     * @return successful write result; driver failures are propagated
+     */
+    Result append(JournalEvent<AuditEntry> event) {
+        if (!initialized) {
+            throw new IllegalStateException("MongoDB reactive journal is not initialized");
+        }
+        PublisherSync.first(collection.insertOne(mapper.toDocument(event)));
+        logger.debug("Journal event appended [eventId={} type={} stream={} sequence={}]",
+                event.getEventId(), event.getEventType(), event.getStreamId(), event.getStreamSequence());
+        return Result.OK();
+    }
+
     @Override
     public Optional<JournalEvent<AuditEntry>> getLastEventByStream(String streamId) {
         Document document = PublisherSync.first(collection.find(Filters.eq(KEY_STREAM_ID, streamId))

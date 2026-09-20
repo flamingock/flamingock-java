@@ -49,6 +49,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
+    private boolean transactionsSupported = true;
 
     private ContextResolver baseContext;
     private MongoDBSyncTxWrapper txWrapper;
@@ -72,6 +73,26 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     public MongoDBSyncTargetSystem withWriteConcern(WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
         return this;
+    }
+
+    /**
+     * Declares whether the concrete MongoDB deployment supports transactions.
+     *
+     * <p>Set this to {@code false} for standalone MongoDB. Flamingock will then use its normal
+     * non-transactional execution path and will not create MongoDB transaction infrastructure.
+     * The default is {@code true}; {@code false} explicitly disables transaction use.</p>
+     *
+     * @param transactionsSupported whether MongoDB transactions may be used
+     * @return this target system
+     */
+    public MongoDBSyncTargetSystem withTransactionsSupported(boolean transactionsSupported) {
+        this.transactionsSupported = transactionsSupported;
+        return this;
+    }
+
+    @Override
+    public boolean supportsTransactions() {
+        return transactionsSupported;
     }
 
     public MongoClient getClient() {
@@ -116,6 +137,9 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
      * transaction wrapper on a target system that is never initialized.
      */
     private synchronized MongoDBSyncTxWrapper getSyncTxWrapper() {
+        if (!supportsTransactions()) {
+            throw new FlamingockException("Transaction wrapper requested for a MongoDB target that does not support transactions.");
+        }
         if (txWrapper == null) {
             if (mongoClient == null) {
                 throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance is required.");
@@ -136,12 +160,15 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
                 .withWriteConcern(writeConcern);
         targetSystemContext.addDependency(database);
 
-        TransactionManager<ClientSession> txManager = getSyncTxWrapper().getTxManager();
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
-
-        auditMarker = edition == COMMUNITY
-                ? new NoOpTargetSystemAuditMarker(this.getId())
-                :MongoDBSyncAuditMarker.builder(database, txManager).build();
+        if (supportsTransactions()) {
+            TransactionManager<ClientSession> txManager = getSyncTxWrapper().getTxManager();
+            auditMarker = edition == COMMUNITY
+                    ? new NoOpTargetSystemAuditMarker(this.getId())
+                    : MongoDBSyncAuditMarker.builder(database, txManager).build();
+        } else {
+            auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        }
     }
 
     private void validate() {

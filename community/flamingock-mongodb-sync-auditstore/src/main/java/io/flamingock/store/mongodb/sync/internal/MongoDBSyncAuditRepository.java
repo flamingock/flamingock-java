@@ -99,6 +99,33 @@ public class MongoDBSyncAuditRepository {
     }
 
     /**
+     * Keeps a single record per change, overwritten on every state transition — the change's current state —
+     * without joining a MongoDB transaction.
+     * <p>
+     * This overload is used when journal events are enabled but the target system does not support
+     * transactions. The journal event is persisted separately before this audit-state upsert, so a failure in
+     * this write can leave the journal history ahead of the current audit state.
+     * <p>
+     * Keyed on {@code changeId} alone under the same pipeline and single-writer guarantees described by
+     * {@link #save(ClientSession, AuditEntry)}.
+     *
+     * @param auditEntry the current audit state to persist
+     * @return {@link Result#OK()} — failures surface as exceptions, not as a result
+     */
+    Result save(AuditEntry auditEntry) {
+        Bson filter = Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId());
+
+        Document entryDocument = mapper.toDocument(auditEntry).getDocument();
+
+        UpdateResult result = collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true));
+
+        logger.debug("Save changeState[{}] with result" +
+                "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]", auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(), result.wasAcknowledged());
+
+        return Result.OK();
+    }
+
+    /**
      * Keeps one record per {@code (executionId, changeId, state)} — the append-oriented audit ledger, where a
      * change accumulates a row per state transition and the collection is itself the history.
      * <p>
