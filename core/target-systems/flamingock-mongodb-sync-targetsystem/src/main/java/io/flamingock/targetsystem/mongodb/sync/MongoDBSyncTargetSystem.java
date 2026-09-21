@@ -31,7 +31,7 @@ import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -199,7 +199,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
         return getSyncTxWrapper();
     }
 

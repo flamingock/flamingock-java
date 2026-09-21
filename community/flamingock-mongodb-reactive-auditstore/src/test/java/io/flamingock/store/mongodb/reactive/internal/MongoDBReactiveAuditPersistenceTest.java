@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.reactive.util.PublisherSync;
@@ -79,7 +79,7 @@ class MongoDBReactiveAuditPersistenceTest {
 				journalEventStore,
 				mock(JournalEventSequencer.class),
 				true,
-				mock(TransactionWrapper.class),
+				mock(ExecutionWrapper.class),
                 true);
         persistence.initialize(RunnerId.fromString("runner-1"));
     }

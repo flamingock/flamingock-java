@@ -19,11 +19,11 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.RuntimeContext;
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+import io.flamingock.internal.common.core.external.TransactionalExternalSystem;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -36,7 +36,10 @@ import java.util.function.Function;
  * <p>
  * Subclasses must provide:
  * <ul>
- *   <li>A {@link TransactionWrapper} for managing transactions</li>
+ *   <li>An {@link ExecutionWrapper}, returned from {@link #getTxWrapper()}, that runs the change inside
+ *       the target system's transaction. It is the transactional counterpart of
+ *       {@link #getNonTxWrapper()}, which this class inherits and which still serves changes declared
+ *       non-transactional — a transactional target system uses both paths.</li>
  *   <li>An audit marker for tracking execution state (optional in Community Edition)</li>
  * </ul>
  *
@@ -65,7 +68,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      * <ol>
      *   <li>Calling {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} with
      *       {@code isTransactional=true} for session-scoped dependency injection</li>
-     *   <li>Delegating to the {@link TransactionWrapper} for transaction management
+     *   <li>Delegating to the {@link ExecutionWrapper} for transaction management
      *       and potential injection of transaction-scoped dependencies</li>
      * </ol>
      *
@@ -76,7 +79,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      */
     public final <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, true);
-        return getTxWrapper().wrapInTransaction(executionRuntime, changeApplier);
+        return getTxWrapper().wrapExecution(executionRuntime, changeApplier);
     }
 
     /**

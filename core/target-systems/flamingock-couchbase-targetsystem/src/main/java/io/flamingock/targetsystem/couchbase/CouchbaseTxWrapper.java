@@ -22,12 +22,12 @@ import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-public class CouchbaseTxWrapper implements TransactionWrapper {
+public class CouchbaseTxWrapper implements ExecutionWrapper {
 
     private final Cluster cluster;
     private final TransactionManager<TransactionAttemptContext> txManager;
@@ -42,7 +42,7 @@ public class CouchbaseTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         String sessionId = executionContext.getSessionId();
 
         AtomicReference<RESULT> resultRef = new AtomicReference<>();

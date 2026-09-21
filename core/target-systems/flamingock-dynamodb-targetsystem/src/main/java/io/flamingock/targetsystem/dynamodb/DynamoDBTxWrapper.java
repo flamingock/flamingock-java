@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DynamoDBTxWrapper implements TransactionWrapper {
+public class DynamoDBTxWrapper implements ExecutionWrapper {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoTx");
 
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
@@ -72,7 +72,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
         String sessionId = executionContext.getSessionId();
         TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = txManager.startSession(sessionId);

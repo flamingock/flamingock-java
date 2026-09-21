@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.transaction;
+package io.flamingock.internal.common.core.external;
 
 import io.flamingock.api.external.ExternalSystem;
 
@@ -33,12 +33,18 @@ public interface TransactionalExternalSystem extends ExternalSystem {
     }
 
     /**
-     * Returns the transaction wrapper for this target system.
+     * Returns the transactional {@link ExecutionWrapper} for this external system.
      * <p>
      * The wrapper is responsible for starting, committing, and rolling back transactions,
      * as well as injecting transaction-scoped dependencies into the execution runtime.
+     * <p>
+     * It is one of two wrappers a target system exposes — the other,
+     * {@code AbstractTargetSystem#getNonTxWrapper()}, serves changes that run outside a transaction.
+     * Both are {@code ExecutionWrapper}s, so the method name, not the type, is what states the intent.
+     * This one is only used when {@link #supportsTransactions()} is {@code true} <em>and</em> the change
+     * itself is declared transactional.
      *
-     * @return the transaction wrapper instance
+     * @return the transactional wrapper instance
      */
-    TransactionWrapper getTxWrapper();
+    ExecutionWrapper getTxWrapper();
 }

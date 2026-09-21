@@ -19,12 +19,11 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
-import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
@@ -37,7 +36,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     private final DynamoDBAuditRepository auditRepository;
     private final DynamoDBJournalEventStore journalEventStore;
     private JournalEventSequencer journalEventSequencer;
-    private final TransactionWrapper txWrapper;
+    private final ExecutionWrapper txWrapper;
     private final boolean autoCreate;
 
     /**
@@ -54,7 +53,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
                                     DynamoDBAuditRepository auditRepository,
                                     DynamoDBJournalEventStore journalEventStore,
                                     JournalEventSequencer journalEventSequencer,
-                                    TransactionWrapper txWrapper,
+                                    ExecutionWrapper txWrapper,
                                     boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
@@ -81,7 +80,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     public Result writeEntry(AuditEntry auditEntry) {
         if (isJournalEventsEnabled()) {
             RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-            Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+            Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
                 TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
                         .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
                 JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);

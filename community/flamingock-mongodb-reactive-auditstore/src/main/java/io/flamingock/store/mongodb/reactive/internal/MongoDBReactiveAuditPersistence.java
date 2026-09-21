@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
@@ -38,7 +38,7 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
     private final MongoDBReactiveJournalEventStore journalEventStore;
     private final JournalEventSequencer journalEventSequencer;
     private final boolean supportsTransactions;
-    private final TransactionWrapper txWrapper;
+    private final ExecutionWrapper txWrapper;
     private final boolean autoCreate;
 
     /**
@@ -55,7 +55,7 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
                                            MongoDBReactiveJournalEventStore journalEventStore,
                                            JournalEventSequencer journalEventSequencer,
                                            boolean supportsTransactions,
-                                           TransactionWrapper txWrapper,
+                                           ExecutionWrapper txWrapper,
                                            boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
@@ -66,8 +66,8 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
         this.autoCreate = autoCreate;
     }
 
-    private static TransactionWrapper validateTransactionWrapper(boolean supportsTransactions,
-                                                                 TransactionWrapper txWrapper) {
+    private static ExecutionWrapper validateTransactionWrapper(boolean supportsTransactions,
+                                                               ExecutionWrapper txWrapper) {
         if (supportsTransactions) {
             return Objects.requireNonNull(
                     txWrapper,
@@ -112,7 +112,7 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
 
     private Result writeJournalAndAuditInTransaction(AuditEntry auditEntry) {
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-        Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+        Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
             JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
             journalEventStore.append(clientSession, journalEvent);

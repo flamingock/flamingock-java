@@ -20,7 +20,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.change.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.function.Function;
 
-public class MongoDBReactiveTxWrapper implements TransactionWrapper {
+public class MongoDBReactiveTxWrapper implements ExecutionWrapper {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoReactiveTx");
     private final TransactionManager<ClientSession> sessionManager;
@@ -45,7 +45,7 @@ public class MongoDBReactiveTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
         String sessionId = executionContext.getSessionId();
         ClientSession clientSession = sessionManager.startSession(sessionId);

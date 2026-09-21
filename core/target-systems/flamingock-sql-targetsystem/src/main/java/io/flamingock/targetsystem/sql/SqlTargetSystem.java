@@ -24,7 +24,7 @@ import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -37,11 +37,24 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
 
     private final DataSource dataSource;
 
+    private final ExecutionWrapper nonTxWrapper;
+
     private SqlTxWrapper txWrapper;
 
     public SqlTargetSystem(String id, DataSource dataSource) {
         super(id);
         this.dataSource = dataSource;
+        this.nonTxWrapper = new ExecutionWrapper() {
+            @Override
+            public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT runtimeContext, Function<CONTEXT, RESULT> operation) {
+                try (Connection connection = dataSource.getConnection()) {
+                    runtimeContext.addDependency(connection);
+                    return operation.apply(runtimeContext);
+                } catch (SQLException e) {
+                    throw new FlamingockException(e);
+                }
+            }
+        };
     }
 
     @Override
@@ -77,27 +90,27 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
         return txWrapper;
     }
 
     /**
-     * Acquires one connection for a non-transactional callback, injects it into the runtime,
-     * and closes that same connection after the callback completes or fails.
-     *
-     * @param changeFunc       the callback to execute
-     * @param executionRuntime the runtime to receive the connection dependency
-     * @param <T>              the callback return type
-     * @return the callback result
+     * Non-transactional execution needs a JDBC {@link Connection} of its own: the change still has SQL to
+     * run, it just runs outside a transaction. This wrapper borrows one connection from the
+     * {@link DataSource} for the duration of the call, publishes it into the runtime so the change can
+     * resolve it, and closes it afterwards — including when the operation throws.
+     * <p>
+     * Auto-commit is left untouched, at whatever the {@code DataSource} hands back — so under the usual
+     * auto-commit default each statement commits on its own. That is the point of this path: a change
+     * declared non-transactional gets no rollback, and a failure partway through leaves the statements
+     * that already ran in place.
+     * <p>
+     * The transactional path does not go through here — see {@link #getTxWrapper()}, whose connection is
+     * owned by the {@code TransactionManager} and spans the whole transaction.
      */
     @Override
-    protected <T> T nonTxWrapper(Function<ExecutionRuntime, T> changeFunc, ExecutionRuntime executionRuntime) {
-        try (Connection connection = dataSource.getConnection()) {
-            executionRuntime.addDependency(connection);
-            return changeFunc.apply(executionRuntime);
-        } catch (SQLException e) {
-            throw new FlamingockException(e);
-        }
+    protected ExecutionWrapper getNonTxWrapper() {
+        return nonTxWrapper;
     }
 
     private SqlTxWrapper createTxWrapper(TransactionManager<Connection> txManager) {

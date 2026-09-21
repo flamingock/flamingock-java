@@ -41,7 +41,7 @@ import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditReposit
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveJournalEventStore;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveLockService;
 
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -162,7 +162,7 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
             }
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             boolean supportsTransactions = mongoDBTargetSystem.supportsTransactions();
-            TransactionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
+            ExecutionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
             MongoDBReactiveAuditPersistence stagePersistence = new MongoDBReactiveAuditPersistence(
                     communityConfiguration,
                     auditRepository,

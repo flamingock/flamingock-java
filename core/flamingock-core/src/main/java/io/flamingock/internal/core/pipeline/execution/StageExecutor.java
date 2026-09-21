@@ -23,7 +23,6 @@ import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.context.PriorityContext;
-import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.result.StageResultBuilder;
@@ -32,7 +31,7 @@ import io.flamingock.internal.core.change.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategyFactory;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -52,13 +51,13 @@ public class StageExecutor {
     private final ContextResolver baseDependencyContext;
     private final Set<Class<?>> nonGuardedTypes;
     private final TargetSystemManager targetSystemManager;
-    protected final TransactionWrapper auditStoreTxWrapper;
+    protected final ExecutionWrapper auditStoreTxWrapper;
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
                          AuditPersistenceFactory<? extends AuditPersistence> auditPersistenceFactory,
                          TargetSystemManager targetSystemManager,
-                         TransactionWrapper auditStoreTxWrapper) {
+                         ExecutionWrapper auditStoreTxWrapper) {
         this.baseDependencyContext = dependencyContext;
         this.nonGuardedTypes = nonGuardedTypes;
         this.auditPersistenceFactory = auditPersistenceFactory;
