@@ -19,13 +19,14 @@ import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.Collection;
 
 /**
  * Minimal {@link RuntimeContext}: a session id plus a layered, writable dependency context.
  * <p>
- * It exists for the cases where a {@link io.flamingock.internal.common.core.transaction.TransactionWrapper}
+ * It exists for the cases where an {@link ExecutionWrapper}
  * is needed outside change execution — the wrapper contract requires a {@code RuntimeContext} to publish
  * its transaction-scoped dependencies into, but the caller has no change to run and therefore no use for
  * the reflection machinery of {@code ExecutionRuntime}.
@@ -36,7 +37,7 @@ import java.util.Collection;
  *
  * <pre>{@code
  * BasicRuntimeContext runtimeContext = new BasicRuntimeContext(sessionId);
- * txWrapper.wrapInTransaction(runtimeContext, ctx -> {
+ * txWrapper.wrapExecution(runtimeContext, ctx -> {
  *     ClientSession session = ctx.getContext().getRequiredDependencyValue(ClientSession.class);
  *     auditRepository.write(session, auditEntry);
  *     journalRepository.append(session, journalEvent);

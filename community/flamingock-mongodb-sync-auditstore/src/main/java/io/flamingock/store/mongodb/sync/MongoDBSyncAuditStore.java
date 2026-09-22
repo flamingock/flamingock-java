@@ -20,13 +20,12 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
@@ -46,7 +45,6 @@ import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -163,7 +161,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         return stageId -> {
             JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             boolean supportsTransactions = mongoDBTargetSystem.supportsTransactions();
-            TransactionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
+            ExecutionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
             persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
                     auditRepository,

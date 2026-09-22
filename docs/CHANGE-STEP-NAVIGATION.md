@@ -32,7 +32,7 @@ graph TB
     %% Transactional Path
     CHECK_TRANSACTIONAL -->|Yes| CLOUD_CHECK{Cloud Edition?}
     CLOUD_CHECK -->|Yes| SET_ONGOING[Set OngoingStatus.EXECUTION]
-    CLOUD_CHECK -->|No| TRANSACTION_WRAPPER[TransactionWrapper]
+    CLOUD_CHECK -->|No| TRANSACTION_WRAPPER[ExecutionWrapper - getTxWrapper]
     SET_ONGOING --> TRANSACTION_WRAPPER
     
     TRANSACTION_WRAPPER --> EXECUTE_IN_TRANSACTION[executeChange in Transaction]
@@ -131,7 +131,7 @@ graph TB
 3. **ExecutionStep** → **AfterExecutionAuditStep** variants (via `applyAuditResult()`)
 
 ### Transaction Handling
-- **Transactional changes** go through `TransactionWrapper`
+- **Transactional changes** go through `ExecutionWrapper`
 - **Cloud edition** tracks ongoing status during execution
 - **Auto-rollback** occurs for transactional failures
 - **Manual rollback** handles non-transactional failures

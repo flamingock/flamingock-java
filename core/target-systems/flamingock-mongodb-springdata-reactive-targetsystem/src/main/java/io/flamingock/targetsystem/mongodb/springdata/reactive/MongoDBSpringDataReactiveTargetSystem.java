@@ -25,7 +25,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
@@ -159,7 +159,7 @@ public class MongoDBSpringDataReactiveTargetSystem
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
         if (!supportsTransactions()) {
             throw new FlamingockException("Transaction wrapper requested for a MongoDB target that does not support transactions.");
         }

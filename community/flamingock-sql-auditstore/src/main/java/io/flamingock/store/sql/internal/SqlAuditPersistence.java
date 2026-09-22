@@ -18,7 +18,7 @@ package io.flamingock.store.sql.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
@@ -34,7 +34,7 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
     private final SqlAuditRepository auditRepository;
     private final SqlJournalEventStore journalEventStore;
     private final JournalEventSequencer journalEventSequencer;
-    private final TransactionWrapper txWrapper;
+    private final ExecutionWrapper txWrapper;
     private final boolean journalEventsEnabled;
 
     /**
@@ -51,7 +51,7 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
                                SqlAuditRepository auditRepository,
                                SqlJournalEventStore journalEventStore,
                                JournalEventSequencer journalEventSequencer,
-                               TransactionWrapper txWrapper,
+                               ExecutionWrapper txWrapper,
                                boolean journalEventsEnabled) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
@@ -86,7 +86,7 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
         }
 
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-        Result result = txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+        Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
             Connection connection = runtimeContext.getContext().getRequiredDependencyValue(Connection.class);
             JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
             journalEventStore.append(connection, journalEvent);

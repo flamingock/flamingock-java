@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
@@ -45,7 +45,7 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
         return txWrapper;
     }
 
@@ -60,10 +60,10 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
     }
 
 
-    public static class TestCloudTxWrapper implements TransactionWrapper {
+    public static class TestCloudTxWrapper implements ExecutionWrapper {
 
         @Override
-        public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+        public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
             return operation.apply(executionContext);
 
         }

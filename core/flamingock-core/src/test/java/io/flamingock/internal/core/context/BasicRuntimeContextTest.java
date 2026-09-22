@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.context;
 
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Tests for {@link BasicRuntimeContext} — the minimal {@link RuntimeContext} used when a
- * {@link TransactionWrapper} is needed outside change execution.
+ * {@link ExecutionWrapper} is needed outside change execution.
  */
 class BasicRuntimeContextTest {
 
@@ -117,10 +117,10 @@ class BasicRuntimeContextTest {
     void shouldCarrySessionInjectedByTransactionWrapper() {
         Session opened = new Session("opened-by-wrapper");
         // Stands in for a real wrapper: starts a "transaction", publishes its session, runs the operation
-        TransactionWrapper txWrapper = new TransactionWrapper() {
+        ExecutionWrapper txWrapper = new ExecutionWrapper() {
             @Override
-            public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT runtimeContext,
-                                                                                     Function<CONTEXT, RESULT> operation) {
+            public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT runtimeContext,
+                                                                                 Function<CONTEXT, RESULT> operation) {
                 runtimeContext.addDependency(new Dependency(Session.class, opened, false));
                 return operation.apply(runtimeContext);
             }
@@ -130,7 +130,7 @@ class BasicRuntimeContextTest {
         assertFalse(runtimeContext.getContext().getDependency(Session.class).isPresent(),
                 "The session must not be resolvable before the wrapper opens the transaction");
 
-        Session seenByOperation = txWrapper.wrapInTransaction(runtimeContext,
+        Session seenByOperation = txWrapper.wrapExecution(runtimeContext,
                 ctx -> ctx.getContext().getRequiredDependencyValue(Session.class));
 
         assertEquals(opened, seenByOperation);

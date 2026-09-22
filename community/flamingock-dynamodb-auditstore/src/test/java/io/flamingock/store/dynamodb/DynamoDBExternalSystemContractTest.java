@@ -16,7 +16,7 @@
 package io.flamingock.store.dynamodb;
 
 import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+import io.flamingock.internal.common.core.external.TransactionalExternalSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
