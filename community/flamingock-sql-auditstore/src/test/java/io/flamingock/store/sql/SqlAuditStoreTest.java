@@ -25,6 +25,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.JournalEvent;
+import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
@@ -33,6 +35,7 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._001__create_index;
+import io.flamingock.store.sql.internal.SqlJournalEventStore;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._002__insert_document;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._003__execution_with_exception;
 import io.flamingock.store.sql.changes.postgresql.happyPath._003__insert_another_document;
@@ -462,7 +465,18 @@ class SqlAuditStoreTest {
         persistence.writeEntry(auditEntry("matrix-change", AuditEntry.Status.APPLIED));
 
         assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
-        assertEquals(2, countRows("flamingockJournalEvents"));
+
+        SqlJournalEventStore journalEventStore = new SqlJournalEventStore(
+                context.dataSource, "flamingockJournalEvents", targetSystem.getTxWrapper());
+        journalEventStore.initialize(false);
+        JournalEvent<AuditEntry> journalEvent = journalEventStore.getLastEventByStream("matrix-stage")
+                .orElseThrow(() -> new AssertionError("Expected persisted journal event"));
+        assertEquals("matrix-stage", journalEvent.getStreamId());
+        assertEquals(2L, journalEvent.getStreamSequence());
+        assertEquals(JournalEventType.CHANGE_STATE, journalEvent.getEventType());
+        assertEquals("matrix-change", journalEvent.getData().getChangeId());
+        assertEquals(AuditEntry.Status.APPLIED, journalEvent.getData().getState());
+        assertEquals(AuditTxType.NON_TX, journalEvent.getData().getTxType());
     }
 
     @ParameterizedTest
