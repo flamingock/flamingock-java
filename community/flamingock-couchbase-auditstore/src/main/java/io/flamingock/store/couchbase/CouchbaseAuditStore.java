@@ -156,11 +156,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     }
 
     @Override
-    public CommunityAuditPersistence getPersistence() {
-        throw new UnsupportedOperationException("getPersistence shouldn't be called at Couchbase audit store; use getPersistenceFactory(stageId)");
-    }
-
-    @Override
     public AuditReader getAuditReader() {
         auditor.initialize(autoCreate, scopeName, auditRepositoryName);
         return () -> auditor.getAuditHistory();
