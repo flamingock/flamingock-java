@@ -45,6 +45,7 @@ class SqlJournalDialectHelperTest {
         List<String> indexSql = helper.getCreateIndexSqlStrings(TABLE_NAME);
 
         assertTrue(ddl.contains("EVENT_ID"));
+        assertTrue(ddl.contains("IDEMPOTENCY_KEY"));
         assertTrue(ddl.contains("EVENT_TYPE"));
         assertTrue(ddl.contains("EVENT_VERSION"));
         assertTrue(ddl.contains("STREAM_ID"));
@@ -65,7 +66,7 @@ class SqlJournalDialectHelperTest {
                 .allMatch(name -> name.length() <= helper.getMaximumIndexNameLength()));
 
         List<String> definitionNames = columnNames(helper.getColumnDefinitions());
-        assertTrue(Arrays.asList("event_id", "stream_id", "stream_sequence", "occurred_at", "acknowledged")
+        assertTrue(Arrays.asList("event_id", "idempotency_key", "stream_id", "stream_sequence", "occurred_at", "acknowledged")
                 .stream().allMatch(definitionNames::contains));
         assertEquals(definitionNames, insertColumnNames(helper.getInsertSqlString(TABLE_NAME)));
     }
@@ -103,6 +104,7 @@ class SqlJournalDialectHelperTest {
         String ddl = helper.getCreateTableSqlString(TABLE_NAME).toUpperCase(Locale.ROOT);
 
         assertTrue(ddl.contains("EVENT_ID " + varcharType(dialect, 255) + " NOT NULL"));
+        assertTrue(ddl.contains("IDEMPOTENCY_KEY " + varcharType(dialect, 64) + " NOT NULL"));
         assertTrue(ddl.contains("EVENT_TYPE " + varcharType(dialect, 32) + " NOT NULL"));
         assertTrue(ddl.contains("EVENT_VERSION INTEGER NOT NULL"));
         assertTrue(ddl.contains("STREAM_ID " + varcharType(dialect, 255) + " NOT NULL"));
@@ -130,13 +132,13 @@ class SqlJournalDialectHelperTest {
         SqlJournalDialectHelper helper = new SqlJournalDialectHelper(SqlDialect.H2);
 
         assertEquals(Arrays.asList(
-                "event_id", "event_type", "event_version", "stream_id", "stream_sequence", "occurred_at",
-                "acknowledged", "payload"),
+                "event_id", "idempotency_key", "event_type", "event_version", "stream_id", "stream_sequence",
+                "occurred_at", "acknowledged", "payload"),
                 columnNames(helper.getColumnDefinitions()));
-        assertEquals(8, helper.getColumnDefinitions().size());
-        assertEquals(SqlJournalDialectHelper.ColumnType.TEXT, helper.getColumnDefinitions().get(7).type);
-        assertEquals(2048, helper.getColumnDefinitions().get(7).size);
-        assertFalse(helper.getColumnDefinitions().get(7).nullable);
+        assertEquals(9, helper.getColumnDefinitions().size());
+        assertEquals(SqlJournalDialectHelper.ColumnType.TEXT, helper.getColumnDefinitions().get(8).type);
+        assertEquals(2048, helper.getColumnDefinitions().get(8).size);
+        assertFalse(helper.getColumnDefinitions().get(8).nullable);
     }
 
     private static List<String> columnNames(List<SqlJournalDialectHelper.ColumnDefinition> definitions) {

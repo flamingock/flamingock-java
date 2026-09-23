@@ -42,13 +42,14 @@ final class SqlJournalEventMapper {
     void bind(PreparedStatement statement, JournalEvent<AuditEntry> event) throws SQLException {
         requireSupportedEvent(event);
         statement.setString(1, event.getEventId());
-        statement.setString(2, event.getEventType().name());
-        statement.setInt(3, event.getEventVersion());
-        statement.setString(4, event.getStreamId());
-        statement.setLong(5, event.getStreamSequence());
-        statement.setTimestamp(6, Timestamp.from(event.getOccurredAt()));
-        statement.setBoolean(7, event.isAcknowledged());
-        statement.setString(8, SqlJournalPayloadCodec.serialize(event.getData()));
+        statement.setString(2, event.getIdempotencyKey());
+        statement.setString(3, event.getEventType().name());
+        statement.setInt(4, event.getEventVersion());
+        statement.setString(5, event.getStreamId());
+        statement.setLong(6, event.getStreamSequence());
+        statement.setTimestamp(7, Timestamp.from(event.getOccurredAt()));
+        statement.setBoolean(8, event.isAcknowledged());
+        statement.setString(9, SqlJournalPayloadCodec.serialize(event.getData()));
     }
 
     JournalEvent<AuditEntry> fromResultSet(ResultSet resultSet) throws SQLException {
@@ -67,6 +68,7 @@ final class SqlJournalEventMapper {
 
         return new JournalEvent<>(
                 resultSet.getString(JournalEventConstants.EVENT_ID),
+                resultSet.getString(JournalEventConstants.IDEMPOTENCY_KEY),
                 eventType,
                 resultSet.getInt(JournalEventConstants.EVENT_VERSION),
                 resultSet.getString(JournalEventConstants.STREAM_ID),

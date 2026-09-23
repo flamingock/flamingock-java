@@ -465,6 +465,7 @@ class SqlAuditStoreTest {
         persistence.writeEntry(auditEntry("matrix-change", AuditEntry.Status.APPLIED));
 
         assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
+        String expectedIdempotencyKey = persistedJournalIdempotencyKey("matrix-stage", 2L);
 
         SqlJournalEventStore journalEventStore = new SqlJournalEventStore(
                 context.dataSource, "flamingockJournalEvents", targetSystem.getTxWrapper());
@@ -474,6 +475,7 @@ class SqlAuditStoreTest {
         assertEquals("matrix-stage", journalEvent.getStreamId());
         assertEquals(2L, journalEvent.getStreamSequence());
         assertEquals(JournalEventType.CHANGE_STATE, journalEvent.getEventType());
+        assertEquals(expectedIdempotencyKey, journalEvent.getIdempotencyKey());
         assertEquals("matrix-change", journalEvent.getData().getChangeId());
         assertEquals(AuditEntry.Status.APPLIED, journalEvent.getData().getState());
         assertEquals(AuditTxType.NON_TX, journalEvent.getData().getTxType());
@@ -633,6 +635,19 @@ class SqlAuditStoreTest {
         assertNotNull(auditStore.getPersistenceFactory().get("factory-boundary"));
         assertFalse(tableExists("flamingockAuditLog"));
         assertTrue(tableExists("flamingockJournalEvents"));
+    }
+
+    private String persistedJournalIdempotencyKey(String streamId, long streamSequence) throws SQLException {
+        try (Connection connection = context.dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT idempotency_key FROM flamingockJournalEvents WHERE stream_id = ? AND stream_sequence = ?")) {
+            statement.setString(1, streamId);
+            statement.setLong(2, streamSequence);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                assertTrue(resultSet.next(), "Expected persisted journal event");
+                return resultSet.getString("idempotency_key");
+            }
+        }
     }
 
     private int countRows(String tableName) throws SQLException {

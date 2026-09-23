@@ -20,6 +20,9 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -69,11 +72,48 @@ public class JournalEventSequencer {
         pendingConfirmation = true;
         return new JournalEvent<>(
                 UUID.randomUUID().toString(),   // eventId
+                deriveIdempotencyKey(type, payload),
                 type,
                 streamId,
                 nextSequence,                   // spent only on confirm(), so a failed write leaves no gap
                 Instant.now(),                  // occurredAt
                 payload);
+    }
+
+    private String deriveIdempotencyKey(JournalEventType eventType, AuditEntry payload) {
+        if (eventType != JournalEventType.CHANGE_STATE) {
+            throw new UnsupportedOperationException("No idempotency-key derivation is defined for " + eventType);
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            updateCanonicalField(digest, streamId);
+            updateCanonicalField(digest, payload.getExecutionId());
+            updateCanonicalField(digest, payload.getChangeId());
+            updateCanonicalField(digest, payload.getState() == null ? null : payload.getState().name());
+            return toHex(digest.digest());
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is unavailable", exception);
+        }
+    }
+
+    private static void updateCanonicalField(MessageDigest digest, String value) {
+        if (value == null) {
+            digest.update((byte) 0);
+            return;
+        }
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        digest.update((byte) 1);
+        digest.update(Integer.toString(bytes.length).getBytes(StandardCharsets.US_ASCII));
+        digest.update((byte) ':');
+        digest.update(bytes);
+    }
+
+    private static String toHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder(bytes.length * 2);
+        for (byte value : bytes) {
+            result.append(String.format("%02x", value & 0xff));
+        }
+        return result.toString();
     }
 
 }

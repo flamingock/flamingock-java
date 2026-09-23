@@ -23,7 +23,7 @@ package io.flamingock.internal.util.dynamodb.entities.journal;
  * ({@link #PENDING_EVENTS_INDEX}) carries only items with a {@code pendingPartitionKey} and
  * {@code pendingOrderKey},
  * and the non-unique eventId GSI ({@link #EVENT_ID_INDEX}) serves acknowledgement
- * lookups only. Event identity is enforced transactionally by a reserved item in this table.
+ * lookups only. Stream-position uniqueness is provided by the table's composite base key.
  */
 public final class JournalEventFieldConstants {
 
@@ -34,6 +34,7 @@ public final class JournalEventFieldConstants {
     public static final String KEY_PENDING_PARTITION_KEY = "pendingPartitionKey";
     public static final String KEY_PENDING_ORDER_KEY = "pendingOrderKey";
     public static final String KEY_EVENT_ID = "eventId";
+    public static final String KEY_IDEMPOTENCY_KEY = "idempotencyKey";
 
     public static final String PENDING_PARTITION_VALUE = "pending";
 

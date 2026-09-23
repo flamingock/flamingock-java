@@ -344,7 +344,7 @@ class MongoDBSyncAuditPersistenceJournalTest {
      */
     private void occupyStreamPosition(long streamSequence) {
         JournalEvent<AuditEntry> squatter = new JournalEvent<>(
-                "pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
+                "pre-existing-event", "key-pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
                 STREAM_ID, streamSequence, Instant.now(), auditEntry("pre-existing-change"), false);
         database.getCollection(JOURNAL_COLLECTION).insertOne(mapper.toDocument(squatter));
     }

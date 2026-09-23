@@ -495,6 +495,7 @@ class SqlJournalEventStoreJdbcTest {
                                                   boolean acknowledged) {
         return new JournalEvent<>(
                 eventId,
+                "key-" + eventId,
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 streamId,

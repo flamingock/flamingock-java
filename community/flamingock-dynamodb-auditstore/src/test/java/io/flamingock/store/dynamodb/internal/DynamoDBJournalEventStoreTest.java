@@ -291,6 +291,7 @@ class DynamoDBJournalEventStoreTest {
         assertTrue(last.isPresent());
         assertEquals(3L, last.get().getStreamSequence());
         assertEquals("event-3", last.get().getEventId());
+        assertEquals("key-event-3", last.get().getIdempotencyKey());
         assertEquals(JournalEventType.CHANGE_STATE, last.get().getEventType());
         assertEquals("change-3", last.get().getData().getChangeId());
 
@@ -350,6 +351,7 @@ class DynamoDBJournalEventStoreTest {
         JournalEvent<AuditEntry> source = journalEvent("stage-1", 1L, "event-1");
         JournalEvent<AuditEntry> acknowledged = new JournalEvent<>(
                 source.getEventId(),
+                source.getIdempotencyKey(),
                 source.getEventType(),
                 source.getEventVersion(),
                 source.getStreamId(),
@@ -535,7 +537,7 @@ class DynamoDBJournalEventStoreTest {
                 "1",
                 RecoveryStrategy.MANUAL_INTERVENTION,
                 true);
-        return new JournalEvent<>(eventId, JournalEventType.CHANGE_STATE, streamId, sequence, Instant.now(), auditEntry);
+        return new JournalEvent<>(eventId, "key-" + eventId, JournalEventType.CHANGE_STATE, streamId, sequence, Instant.now(), auditEntry);
     }
 
     private List<JournalEvent<AuditEntry>> awaitUnacknowledgedCount(int expected) throws InterruptedException {

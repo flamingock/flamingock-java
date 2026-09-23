@@ -21,6 +21,7 @@ package io.flamingock.store.sql.internal;
 final class JournalEventConstants {
 
     static final String EVENT_ID = "event_id";
+    static final String IDEMPOTENCY_KEY = "idempotency_key";
     static final String EVENT_TYPE = "event_type";
     static final String EVENT_VERSION = "event_version";
     static final String STREAM_ID = "stream_id";

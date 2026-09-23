@@ -662,6 +662,7 @@ class SqlAuditPersistenceJournalTest {
                                                   String changeId) {
         return new JournalEvent<>(
                 eventId,
+                "key-" + eventId,
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 streamId,

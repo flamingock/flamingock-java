@@ -67,6 +67,7 @@ public final class SqlJournalDialectHelper {
     List<ColumnDefinition> getColumnDefinitions() {
         return Collections.unmodifiableList(Arrays.asList(
                 new ColumnDefinition(JournalEventConstants.EVENT_ID, ColumnType.VARCHAR, 255, false),
+                new ColumnDefinition(JournalEventConstants.IDEMPOTENCY_KEY, ColumnType.VARCHAR, 64, false),
                 new ColumnDefinition(JournalEventConstants.EVENT_TYPE, ColumnType.VARCHAR, 32, false),
                 new ColumnDefinition(JournalEventConstants.EVENT_VERSION, ColumnType.INTEGER, 0, false),
                 new ColumnDefinition(JournalEventConstants.STREAM_ID, ColumnType.VARCHAR, 255, false),
