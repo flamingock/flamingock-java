@@ -17,6 +17,7 @@ package io.flamingock.internal.core.external.targets;
 
 import io.flamingock.api.external.TargetSystem;
 import io.flamingock.internal.common.core.context.*;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.Property;
@@ -51,9 +52,15 @@ import java.util.function.Function;
  * including dependencies and properties that will be available to changes
  * during execution.
  * <p>
- * Subclasses should override {@link #enhanceExecutionRuntime(RuntimeContext, boolean)}
- * to inject session-scoped dependencies (e.g., database connections, client sessions)
- * that are obtained fresh for each change execution.
+ * Subclasses have two distinct extension points, and the split matters:
+ * <ul>
+ *   <li>{@link #enhanceExecutionRuntime(RuntimeContext, boolean)} — injects session-scoped dependencies
+ *       (database connections, client sessions) obtained fresh for each change execution. Called by the
+ *       framework on both the transactional and the non-transactional path, before any wrapper runs.</li>
+ *   <li>{@link #getNonTxWrapper()} — owns the resource lifecycle of non-transactional execution, when
+ *       something must be acquired for the call and released afterwards. Its transactional counterpart
+ *       is {@code TransactionalExternalSystem#getTxWrapper()}.</li>
+ * </ul>
  *
  * @param <HOLDER> the concrete target system type for fluent API support
  */
@@ -62,6 +69,18 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
         TargetSystem,
         ContextProvider,
         ContextConfigurable<HOLDER> {
+
+    /**
+     * Pass-through wrapper: applies the operation and nothing else. Stateless, so one instance serves
+     * every target system that has no resource to acquire for non-transactional execution.
+     */
+    private static final ExecutionWrapper PASS_THROUGH_WRAPPER = new ExecutionWrapper() {
+        @Override
+        public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT runtimeContext, Function<CONTEXT, RESULT> operation) {
+            return operation.apply(runtimeContext);
+        }
+    };
+
     private final String id;
 
     protected final Context targetSystemContext = new SimpleContext();
@@ -82,9 +101,9 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
     /**
      * Applies a change operation with session-scoped dependency injection.
      * <p>
-     * This method is the entry point for non-transactional change execution.
-     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
-     * subclasses to inject session-scoped dependencies before executing the change.
+     * This method is the entry point for non-transactional change execution. It enhances the runtime
+     * with the target system's session-scoped dependencies, then delegates execution to
+     * {@link #getNonTxWrapper()}, which owns whatever resources that execution needs.
      *
      * @param <T>             the return type of the change operation
      * @param changeApplier   the function that executes the actual change
@@ -93,15 +112,15 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      */
     public final <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, false);
-        return changeApplier.apply(executionRuntime);
+        return getNonTxWrapper().wrapExecution(executionRuntime, changeApplier);
     }
 
     /**
      * Rolls back (reverts) a previously applied change with session-scoped dependency injection.
      * <p>
-     * This method is the entry point for non-transactional rollback execution.
-     * It calls {@link #enhanceExecutionRuntime(RuntimeContext, boolean)} to allow
-     * subclasses to inject session-scoped dependencies before executing the rollback.
+     * This method is the entry point for non-transactional rollback execution. It enhances the runtime
+     * with the target system's session-scoped dependencies, then delegates execution to
+     * {@link #getNonTxWrapper()}, which owns whatever resources that execution needs.
      *
      * @param <T>               the return type of the rollback operation
      * @param changeRollbacker  the function that executes the actual rollback
@@ -110,7 +129,32 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      */
     public final <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime) {
         enhanceExecutionRuntime(executionRuntime, false);
-        return changeRollbacker.apply(executionRuntime);
+        return getNonTxWrapper().wrapExecution(executionRuntime, changeRollbacker);
+    }
+
+    /**
+     * Returns the wrapper used for non-transactional execution — the counterpart to
+     * {@code TransactionalExternalSystem#getTxWrapper()}, which is used when the change runs in a
+     * transaction. Both are {@link ExecutionWrapper}s; the two method names are what distinguish the
+     * intent, since the type alone no longer says whether a transaction is involved.
+     * <p>
+     * The default implementation is a pass-through: it simply applies the operation, because a target
+     * system with nothing to acquire has no boundary to own.
+     * <p>
+     * Override this when non-transactional execution needs a resource for the duration of the call — a
+     * pooled connection, a client session — and that resource must be released afterwards. Acquire it,
+     * publish it into the supplied context, apply the operation, and release it on every outcome
+     * (try-with-resources, or a {@code finally} block).
+     * <p>
+     * <strong>Do not enhance the runtime in an override.</strong> {@link #applyChange} and
+     * {@link #rollbackChange} already call {@link #enhanceExecutionRuntime(RuntimeContext, boolean)}
+     * with {@code isTransactional=false} before invoking the wrapper; enhancing again would inject the
+     * session-scoped dependencies twice. An override contributes only the handles its own boundary owns.
+     *
+     * @return the wrapper owning resource lifecycle for non-transactional apply and rollback
+     */
+    protected ExecutionWrapper getNonTxWrapper() {
+        return PASS_THROUGH_WRAPPER;
     }
 
 

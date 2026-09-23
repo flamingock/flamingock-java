@@ -15,7 +15,7 @@
  */
 package io.flamingock.externalsystem.sql.api;
 
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+import io.flamingock.internal.common.core.external.TransactionalExternalSystem;
 
 import javax.sql.DataSource;
 

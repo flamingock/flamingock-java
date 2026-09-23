@@ -1,8 +1,9 @@
 dependencies {
     implementation(project(":utils:mongodb-util"))
+    implementation(project(":utils:flamingock-reactive-util"))
     implementation(project(":core:flamingock-core-commons"))
 
-    compileOnly("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
+    compileOnlyApi("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 }
 
 description = "MongoDB reactive streams driver utilities"

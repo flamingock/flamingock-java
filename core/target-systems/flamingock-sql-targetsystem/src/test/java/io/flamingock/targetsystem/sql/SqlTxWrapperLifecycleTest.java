@@ -60,7 +60,7 @@ class SqlTxWrapperLifecycleTest {
     void commitsSuccessfulCallback() throws Exception {
         BasicRuntimeContext context = new BasicRuntimeContext("success");
 
-        String result = txWrapper.wrapInTransaction(context, runtimeContext -> {
+        String result = txWrapper.wrapExecution(context, runtimeContext -> {
             insert(runtimeContext, 1, "committed");
             return "success";
         });
@@ -75,7 +75,7 @@ class SqlTxWrapperLifecycleTest {
         FailedStep failedStep = mock(FailedStep.class);
         BasicRuntimeContext context = new BasicRuntimeContext("failed-value");
 
-        FailedStep result = txWrapper.wrapInTransaction(context, runtimeContext -> {
+        FailedStep result = txWrapper.wrapExecution(context, runtimeContext -> {
             insert(runtimeContext, 2, "rolled-back-value");
             return failedStep;
         });
@@ -90,7 +90,7 @@ class SqlTxWrapperLifecycleTest {
         BasicRuntimeContext context = new BasicRuntimeContext("exception");
 
         DatabaseTransactionException exception = assertThrows(DatabaseTransactionException.class,
-                () -> txWrapper.wrapInTransaction(context, runtimeContext -> {
+                () -> txWrapper.wrapExecution(context, runtimeContext -> {
                     insert(runtimeContext, 3, "rolled-back-exception");
                     throw new IllegalStateException("callback failed");
                 }));
@@ -105,11 +105,11 @@ class SqlTxWrapperLifecycleTest {
         BasicRuntimeContext firstContext = new BasicRuntimeContext("reused-session");
         BasicRuntimeContext secondContext = new BasicRuntimeContext("reused-session");
 
-        txWrapper.wrapInTransaction(firstContext, runtimeContext -> {
+        txWrapper.wrapExecution(firstContext, runtimeContext -> {
             insert(runtimeContext, 4, "first-transaction");
             return "first";
         });
-        txWrapper.wrapInTransaction(secondContext, runtimeContext -> {
+        txWrapper.wrapExecution(secondContext, runtimeContext -> {
             insert(runtimeContext, 5, "second-transaction");
             return "second";
         });
@@ -124,11 +124,11 @@ class SqlTxWrapperLifecycleTest {
         BasicRuntimeContext successfulContext = new BasicRuntimeContext("failed-then-reused");
         FailedStep failedStep = mock(FailedStep.class);
 
-        txWrapper.wrapInTransaction(failedContext, runtimeContext -> {
+        txWrapper.wrapExecution(failedContext, runtimeContext -> {
             insert(runtimeContext, 6, "discarded");
             return failedStep;
         });
-        txWrapper.wrapInTransaction(successfulContext, runtimeContext -> {
+        txWrapper.wrapExecution(successfulContext, runtimeContext -> {
             insert(runtimeContext, 7, "committed-after-failure");
             return "success";
         });

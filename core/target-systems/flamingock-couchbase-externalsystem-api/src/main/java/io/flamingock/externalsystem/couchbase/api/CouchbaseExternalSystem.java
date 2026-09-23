@@ -17,7 +17,7 @@ package io.flamingock.externalsystem.couchbase.api;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+import io.flamingock.internal.common.core.external.TransactionalExternalSystem;
 
 public interface CouchbaseExternalSystem extends TransactionalExternalSystem {
     Cluster getCluster();

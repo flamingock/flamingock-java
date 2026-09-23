@@ -7,12 +7,12 @@ val versions = mapOf(
 
 dependencies {
     api(project(":core:flamingock-core"))
-    api(project(":utils:flamingock-reactive-util"))
+    implementation(project(":utils:flamingock-reactive-util"))
     api(project(":core:target-systems:flamingock-mongodb-reactive-externalsystem-api"))
     implementation(project(":legacy:mongock-importer-mongodb-reactive"))
 
-    compileOnly("org.mongodb:mongodb-driver-reactivestreams:${versions["mongodb"]}")
-    compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
+    compileOnlyApi("org.mongodb:mongodb-driver-reactivestreams:${versions["mongodb"]}")
+    compileOnlyApi("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
     compileOnly("io.projectreactor:reactor-core:3.4.34")
 
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")

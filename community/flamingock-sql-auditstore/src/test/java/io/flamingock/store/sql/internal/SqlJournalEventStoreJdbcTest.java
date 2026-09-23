@@ -24,7 +24,7 @@ import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.targetsystem.sql.SqlTxWrapper;
@@ -233,12 +233,12 @@ class SqlJournalEventStoreJdbcTest {
         append(event("stage-2", 1L, "second-event", false));
 
         int[] transactionCount = {0};
-        TransactionWrapper failingAfterSecondTransaction = new TransactionWrapper() {
+        ExecutionWrapper failingAfterSecondTransaction = new ExecutionWrapper() {
             @Override
-            public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(
+            public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(
                     CONTEXT runtimeContext, Function<CONTEXT, RESULT> operation) {
                 int transactionNumber = ++transactionCount[0];
-                return txWrapper.wrapInTransaction(runtimeContext, context -> {
+                return txWrapper.wrapExecution(runtimeContext, context -> {
                     RESULT result = operation.apply(context);
                     if (transactionNumber == 2) {
                         throw new IllegalStateException("forced second acknowledgement failure");

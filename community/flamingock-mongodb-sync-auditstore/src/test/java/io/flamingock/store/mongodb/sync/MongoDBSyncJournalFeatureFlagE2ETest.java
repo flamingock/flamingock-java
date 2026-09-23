@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,10 +98,11 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
     @Test
     @DisplayName("journal disabled: the audit log is the history, and the journal collection is never created")
     void journalDisabledLeavesNoJournalCollection() {
-        runPipeline(
-                STARTED("create-client-collection"),
+        // Final state only: this test's point is the journal's absence, not the audit log's shape. The
+        // disabled path still writes one row per state transition (STARTED, then APPLIED) — see
+        // MongoDBSyncAuditPersistenceE2ETest for that coverage.
+        runFinalStatePipeline(
                 APPLIED("create-client-collection"),
-                STARTED("insert-federico-document"),
                 APPLIED("insert-federico-document"));
 
         assertFalse(mongoDBTestHelper.collectionExists(JOURNAL_COLLECTION),
@@ -115,7 +115,7 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
 
         // One record per change, in its final state — the STARTED transitions no longer survive here.
-        runPipeline(
+        runFinalStatePipeline(
                 APPLIED("create-client-collection"),
                 APPLIED("insert-federico-document"));
 
@@ -142,7 +142,7 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
 
     // ----------------------------- helpers -----------------------------
 
-    private void runPipeline(AuditEntryExpectation... expectedAudits) {
+    private void runFinalStatePipeline(AuditEntryExpectation... expectedAudits) {
         MongoDBSyncTargetSystem targetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -155,7 +155,7 @@ class MongoDBSyncJournalFeatureFlagE2ETest {
                         .addTargetSystem(targetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(expectedAudits)
+                .THEN_VerifyAuditFinalStateSequence(expectedAudits)
                 .run();
     }
 

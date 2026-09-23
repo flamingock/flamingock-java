@@ -218,7 +218,7 @@ Flamingock's transaction handling is sophisticated and context-aware.
 #### Transaction Decision Logic
 
 A change executes within a transaction when **all** conditions are met:
-1. **TransactionWrapper available** - AuditStore supports transactions
+1. **Transactional `ExecutionWrapper` available** - the target system exposes `getTxWrapper()` and reports `supportsTransactions()`
 2. **Change configured as transactional** - `@Change(transactional = true)` (default)
 3. **Database supports transactions** - Not all databases/operations are transactional
 

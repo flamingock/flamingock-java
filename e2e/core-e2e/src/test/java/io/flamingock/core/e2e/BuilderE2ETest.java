@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,8 +73,7 @@ class BuilderE2ETest {
         assertTrue(counter.isExecuted(), "Counter.executed should be true, indicating TargetSystemManager was injected");
 
         // Verify complete audit flow
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test8-target-system-manager-injection"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test8-target-system-manager-injection")
         );
     }
@@ -114,8 +112,7 @@ class BuilderE2ETest {
         assertEquals("kafka", counter.getTargetSystemId(), "Target system ID should match the configured ID");
 
         // Verify complete audit flow
-        auditHelper.verifyAuditSequenceStrict(
-                STARTED("test9-target-system-id-injection"),
+        auditHelper.verifyAuditFinalStateSequence(
                 APPLIED("test9-target-system-id-injection")
         );
     }

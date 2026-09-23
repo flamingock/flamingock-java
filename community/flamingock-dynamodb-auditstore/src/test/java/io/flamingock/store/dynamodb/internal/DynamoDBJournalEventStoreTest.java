@@ -503,7 +503,7 @@ class DynamoDBJournalEventStoreTest {
         DynamoDBTxWrapper txWrapper = new DynamoDBTxWrapper(
                 client,
                 new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder));
-        txWrapper.wrapInTransaction(new BasicRuntimeContext("session-" + UUID.randomUUID()), ctx -> {
+        txWrapper.wrapExecution(new BasicRuntimeContext("session-" + UUID.randomUUID()), ctx -> {
             TransactWriteItemsEnhancedRequest.Builder builder = ctx.getContext()
                     .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
             for (JournalEvent<AuditEntry> event : events) {

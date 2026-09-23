@@ -17,6 +17,7 @@ package io.flamingock.targetsystem.sql;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SqlTargetSystemSharedTxManagerTest {
@@ -56,6 +58,61 @@ class SqlTargetSystemSharedTxManagerTest {
         assertNotNull(txManagerFromMarker);
         assertSame(txManagerFromWrapper, txManagerFromMarker,
                 "SqlTxWrapper and SqlTargetSystemAuditMarker must share the same TransactionManager instance");
+    }
+
+    @Test
+    @DisplayName("Should close SQL connection after non-transactional apply")
+    void shouldCloseConnectionAfterNonTransactionalApply() throws Exception {
+        Connection connection = mock(Connection.class);
+        DataSource dataSource = mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+
+        SqlTargetSystem targetSystem = new SqlTargetSystem("test-sql", dataSource);
+        targetSystem.applyChange(runtime -> null, mockRuntimeWith(connection));
+
+        verify(dataSource).getConnection();
+        verify(connection).close();
+    }
+
+    @Test
+    @DisplayName("Should close SQL connection after non-transactional rollback")
+    void shouldCloseConnectionAfterNonTransactionalRollback() throws Exception {
+        Connection connection = mock(Connection.class);
+        DataSource dataSource = mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+
+        SqlTargetSystem targetSystem = new SqlTargetSystem("test-sql", dataSource);
+        targetSystem.rollbackChange(runtime -> null, mockRuntimeWith(connection));
+
+        verify(dataSource).getConnection();
+        verify(connection).close();
+    }
+
+    @Test
+    @DisplayName("Should close SQL connection when non-transactional callback fails")
+    void shouldCloseConnectionWhenNonTransactionalCallbackFails() throws Exception {
+        Connection connection = mock(Connection.class);
+        DataSource dataSource = mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        RuntimeException callbackFailure = new RuntimeException("callback failed");
+
+        SqlTargetSystem targetSystem = new SqlTargetSystem("test-sql", dataSource);
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> targetSystem.applyChange(runtime -> {
+                    throw callbackFailure;
+                }, mockRuntimeWith(connection)));
+
+        assertSame(callbackFailure, thrown);
+        verify(dataSource).getConnection();
+        verify(connection).close();
+    }
+
+    private static ExecutionRuntime mockRuntimeWith(Connection connection) {
+        ExecutionRuntime executionRuntime = mock(ExecutionRuntime.class);
+        ContextResolver contextResolver = mock(ContextResolver.class);
+        when(contextResolver.getDependencyValue(Connection.class)).thenReturn(Optional.of(connection));
+        when(executionRuntime.getContext()).thenReturn(contextResolver);
+        return executionRuntime;
     }
 
     private static DataSource mockDataSource() throws Exception {

@@ -15,7 +15,7 @@
  */
 package io.flamingock.externalsystem.dynamodb.api;
 
-import io.flamingock.internal.common.core.transaction.TransactionalExternalSystem;
+import io.flamingock.internal.common.core.external.TransactionalExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public interface DynamoDBExternalSystem extends TransactionalExternalSystem {

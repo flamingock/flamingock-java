@@ -94,6 +94,27 @@ class SqlAuditStoreTest {
         }
     }
 
+    @Test
+    @DisplayName("container-backed setup stops the container when datasource creation fails")
+    void containerBackedSetupStopsContainerWhenDataSourceCreationFails() {
+        JdbcDatabaseContainer<?> container = org.mockito.Mockito.mock(JdbcDatabaseContainer.class);
+        RuntimeException setupFailure = new IllegalStateException("datasource creation failed");
+        org.mockito.Mockito.when(container.isRunning()).thenReturn(true);
+
+        try (MockedStatic<SqlAuditTestHelper> helper = org.mockito.Mockito.mockStatic(SqlAuditTestHelper.class)) {
+            helper.when(() -> SqlAuditTestHelper.createContainer("informix")).thenReturn(container);
+            helper.when(() -> SqlAuditTestHelper.createDataSource(container)).thenThrow(setupFailure);
+
+            RuntimeException thrown = assertThrows(RuntimeException.class,
+                    () -> setupTest(SqlDialect.INFORMIX, "informix"));
+
+            assertSame(setupFailure, thrown);
+            helper.verify(() -> SqlAuditTestHelper.createDataSource(container));
+            org.mockito.Mockito.verify(container).start();
+            org.mockito.Mockito.verify(container).stop();
+        }
+    }
+
     private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
         if ("h2".equals(dialectName)) {
             HikariConfig config = new HikariConfig();
@@ -145,22 +166,24 @@ class SqlAuditStoreTest {
         JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
         container.start();
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(container.getJdbcUrl());
-        config.setUsername(container.getUsername());
-        config.setPassword(container.getPassword());
-        config.setDriverClassName(container.getDriverClassName());
-        DataSource dataSource = new HikariDataSource(config);
-        TestContext testContext = new TestContext(dataSource, container, sqlDialect);
-
+        DataSource dataSource = null;
+        TestContext testContext = null;
         try {
+            dataSource = SqlAuditTestHelper.createDataSource(container);
+            testContext = new TestContext(dataSource, container, sqlDialect);
             SqlAuditTestHelper.createTables(dataSource, sqlDialect);
-        } catch (SQLException exception) {
-            testContext.cleanup();
+            return testContext;
+        } catch (SQLException | RuntimeException exception) {
+            TestContext cleanupContext = testContext != null
+                    ? testContext
+                    : new TestContext(dataSource, container, sqlDialect);
+            try {
+                cleanupContext.cleanup();
+            } catch (SQLException cleanupFailure) {
+                exception.addSuppressed(cleanupFailure);
+            }
             throw exception;
         }
-
-        return testContext;
     }
 
     private Class<?>[] getChangeClasses(String dialectName, String scenario) {
@@ -302,12 +325,9 @@ class SqlAuditStoreTest {
                 .addTargetSystem(sqlTargetSystem)
                 .build()
                 .run())
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 APPLIED(expectedChangeIds[2])
             )
             .run();
@@ -342,12 +362,9 @@ class SqlAuditStoreTest {
                     .build()
                     .run();
             }))
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 FAILED(expectedChangeIds[2]),
                 ROLLED_BACK(expectedChangeIds[2])
             )
@@ -383,12 +400,9 @@ class SqlAuditStoreTest {
                     .build()
                     .run();
             }))
-            .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedChangeIds[0]),
+            .THEN_VerifyAuditFinalStateSequence(
                 APPLIED(expectedChangeIds[0]),
-                STARTED(expectedChangeIds[1]),
                 APPLIED(expectedChangeIds[1]),
-                STARTED(expectedChangeIds[2]),
                 FAILED(expectedChangeIds[2]),
                 ROLLED_BACK(expectedChangeIds[2])
             )

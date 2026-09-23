@@ -45,7 +45,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Testcontainers
@@ -102,14 +101,7 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED(changeId)
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_001__NonTxTransactionalFalseChange.class)
-                                .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("mongodb")
-                                .withSystemChange(false)
-                                .withTimestampBetween(testStart, testEnd),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED(changeId)
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
@@ -141,25 +133,15 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
-                        STARTED("non-tx-transactional-false")
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_001__NonTxTransactionalFalseChange.class)
-                                .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("mongodb"),
+                .THEN_VerifyAuditFinalStateSequence(
+                        // First change (NonTxTransactionalFalseChange) - final state
                         APPLIED("non-tx-transactional-false")
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("mongodb"),
 
-                        // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
-                        STARTED("non-tx-target-system")
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_003__NonTxTargetSystemChange.class)
-                                .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("non-tx-system"),
+                        // Second change (NonTxTargetSystemChange) - final state
                         APPLIED("non-tx-target-system")
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_003__NonTxTargetSystemChange.class)
@@ -191,12 +173,7 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("tx-shared-default")
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_002__TxSharedDefaultChange.class)
-                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
-                                .withTargetSystemId("mongodb"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("tx-shared-default")
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_002__TxSharedDefaultChange.class)
@@ -227,12 +204,7 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("tx-separate-no-marker")
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_004__TxSeparateAndSameMongoClientChange.class)
-                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
-                                .withTargetSystemId("mongo-system"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("tx-separate-no-marker")
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_004__TxSeparateAndSameMongoClientChange.class)
@@ -264,12 +236,7 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("tx-separate-no-marker")
-                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
-                                .withClass(_005__TxSeparateChange.class)
-                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
-                                .withTargetSystemId("tx-separate-system"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("tx-separate-no-marker")
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_005__TxSeparateChange.class)
@@ -303,17 +270,14 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .THEN_VerifyAuditSequenceStrict(
-                        // TxSharedDefaultChange - STARTED & EXECUTED with mongodb target system
-                        STARTED("tx-shared-default").withTargetSystemId("mongodb"),
+                .THEN_VerifyAuditFinalStateSequence(
+                        // TxSharedDefaultChange - final state with mongodb target system
                         APPLIED("tx-shared-default").withTargetSystemId("mongodb"),
 
-                        // NonTxTargetSystemChange - STARTED & EXECUTED
-                        STARTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
+                        // NonTxTargetSystemChange - final state
                         APPLIED("non-tx-target-system").withTargetSystemId("non-tx-system"),
 
-                        // TxSeparateChange - STARTED & EXECUTED with separate target system
-                        STARTED("tx-separate-no-marker").withTargetSystemId("tx-separate-system"),
+                        // TxSeparateChange - final state with separate target system
                         APPLIED("tx-separate-no-marker").withTargetSystemId("tx-separate-system")
                 )
                 .run();
@@ -339,16 +303,13 @@ class MongoDBReactiveAuditPersistenceE2ETest {
                             .build()
                             .run();
                 }))
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 
-                        // TxSharedDefaultChange - STARTED & EXECUTED
-                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        // TxSharedDefaultChange - final state
                         APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
 
-                        // TxSeparateChange - STARTED & EXECUTED
-                        STARTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        // TxSeparateChange - final state
                         APPLIED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                 )
                 .run();

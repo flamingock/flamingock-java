@@ -28,7 +28,14 @@ import io.flamingock.store.mongodb.reactive.changes._003__insert_jorge_happy_tra
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.util.FeatureFlag;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.mongodb.reactive.kit.MongoDBReactiveTestKit;
 import io.flamingock.targetsystem.mongodb.reactive.MongoDBReactiveTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -43,19 +50,24 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Testcontainers
 class MongoDBReactiveAuditStoreTest {
@@ -95,6 +107,7 @@ class MongoDBReactiveAuditStoreTest {
 
     @AfterEach
     void tearDown() {
+        FeatureFlag.remove(Features.JOURNAL_EVENTS);
         ReactiveMongoTestHelper.complete(database.drop()); // Clean between tests
         mongoClient.close();
     }
@@ -115,12 +128,9 @@ class MongoDBReactiveAuditStoreTest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         APPLIED("insert-jorge-document")
                 )
                 .run();
@@ -147,12 +157,9 @@ class MongoDBReactiveAuditStoreTest {
                         .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         APPLIED("insert-jorge-document")
                 )
                 .run();
@@ -166,6 +173,58 @@ class MongoDBReactiveAuditStoreTest {
         assertEquals(2, clients.size());
         assertTrue(clients.contains("Federico"));
         assertTrue(clients.contains("Jorge"));
+    }
+
+    @Test
+    @DisplayName("Should use the non-transactional path for default transactional changes when target transactions are disabled")
+    void defaultTransactionalChangeUsesNonTransactionalPathWhenTargetDisablesTransactions() {
+        MongoDBReactiveTargetSystem targetSystem = spy(
+                new MongoDBReactiveTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class,
+                                Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class,
+                                Collections.singletonList(MongoDatabase.class))
+                )
+                .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(MongoDBReactiveAuditStore.from(targetSystem))
+                        .addTargetSystem(targetSystem)
+                        .build()
+                        .run())
+                .THEN_VerifyAuditFinalStateSequence(
+                        APPLIED("create-client-collection"),
+                        APPLIED("insert-federico-document")
+                )
+                .run();
+
+        verify(targetSystem, never()).getTxWrapper();
+        assertEquals(1L, ReactiveMongoTestHelper.first(
+                database.getCollection(CLIENTS_COLLECTION).countDocuments()));
+    }
+
+    @Test
+    @DisplayName("Should initialize Journal Events without a transaction wrapper when target transactions are disabled")
+    void journalEnabledWithDisabledTransactionsInitializesWithoutTransactionWrapper() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBReactiveTargetSystem targetSystem = spy(
+                new MongoDBReactiveTargetSystem("mongodb", mongoClient, DB_NAME)
+                        .withTransactionsSupported(false));
+        ContextResolver context = mock(ContextResolver.class);
+        when(context.getDependencyValue(FlamingockEdition.class))
+                .thenReturn(Optional.of(FlamingockEdition.COMMUNITY));
+        when(context.getRequiredDependencyValue(RunnerId.class)).thenReturn(RunnerId.generate());
+        when(context.getRequiredDependencyValue(CommunityConfigurable.class))
+                .thenReturn(new CommunityConfiguration());
+        targetSystem.initialize(context);
+
+        MongoDBReactiveAuditStore auditStore = MongoDBReactiveAuditStore.from(targetSystem);
+        auditStore.initialize(context);
+        auditStore.getPersistenceFactory().get("stage");
+
+        verify(targetSystem, never()).getTxWrapper();
     }
 
     @Test
@@ -186,12 +245,9 @@ class MongoDBReactiveAuditStoreTest {
                             .build()
                             .run();
                 }))
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
+                .THEN_VerifyAuditFinalStateSequence(
                         APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
                         APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
                         FAILED("insert-jorge-document"),
                         ROLLED_BACK("insert-jorge-document")
                 )

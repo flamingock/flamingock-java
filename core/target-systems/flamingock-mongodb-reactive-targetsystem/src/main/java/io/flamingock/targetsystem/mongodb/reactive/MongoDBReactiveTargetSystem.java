@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
@@ -51,6 +51,7 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
+    private boolean transactionsSupported = true;
     private MongoDBReactiveTxWrapper txWrapper;
     private ContextResolver baseContext;
 
@@ -73,6 +74,26 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
     public MongoDBReactiveTargetSystem withWriteConcern(WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
         return this;
+    }
+
+    /**
+     * Declares whether the concrete MongoDB deployment supports transactions.
+     *
+     * <p>Set this to {@code false} for standalone MongoDB. Flamingock will then use its normal
+     * non-transactional execution path and will not create reactive transaction infrastructure.
+     * The default is {@code true}; {@code false} explicitly disables transaction use.</p>
+     *
+     * @param transactionsSupported whether MongoDB transactions may be used
+     * @return this target system
+     */
+    public MongoDBReactiveTargetSystem withTransactionsSupported(boolean transactionsSupported) {
+        this.transactionsSupported = transactionsSupported;
+        return this;
+    }
+
+    @Override
+    public boolean supportsTransactions() {
+        return transactionsSupported;
     }
 
     public MongoClient getClient() {
@@ -104,7 +125,7 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
     }
 
     public TransactionManager<ClientSession> getTxManager() {
-        return txWrapper.getTxManager();
+        return getReactiveTxWrapper().getTxManager();
     }
 
     @Override
@@ -118,13 +139,15 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
                 .withWriteConcern(writeConcern);
         targetSystemContext.addDependency(database);
 
-        TransactionManager<ClientSession> txManager =
-                new TransactionManager<>(() -> PublisherSync.first(mongoClient.startSession()));
-        txWrapper = new MongoDBReactiveTxWrapper(txManager);
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
-        auditMarker = edition == COMMUNITY
-                ? new NoOpTargetSystemAuditMarker(this.getId())
-                : MongoDBReactiveAuditMarker.builder(database, txManager).build();
+        if (supportsTransactions()) {
+            TransactionManager<ClientSession> txManager = getReactiveTxWrapper().getTxManager();
+            auditMarker = edition == COMMUNITY
+                    ? new NoOpTargetSystemAuditMarker(this.getId())
+                    : MongoDBReactiveAuditMarker.builder(database, txManager).build();
+        } else {
+            auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        }
     }
 
     private void validate() {
@@ -151,7 +174,31 @@ public class MongoDBReactiveTargetSystem extends TransactionalTargetSystem<Mongo
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
+        return getReactiveTxWrapper();
+    }
+
+    /**
+     * Builds the transaction wrapper on first use rather than in {@link #initialize(ContextResolver)}.
+     * <p>
+     * It only needs the {@code mongoClient}, which is a constructor argument — the same reason
+     * {@link #getMongoDatabase()} works before initialization. This matters because
+     * {@code MongoDBReactiveAuditStore.from(targetSystem)} reuses only the MongoDB instance and does not
+     * require the target system to be registered with the builder, so the store can be asked for a
+     * transaction wrapper on a target system that is never initialized.
+     */
+    private synchronized MongoDBReactiveTxWrapper getReactiveTxWrapper() {
+        if (!supportsTransactions()) {
+            throw new FlamingockException("Transaction wrapper requested for a MongoDB target that does not support transactions.");
+        }
+        if (txWrapper == null) {
+            if (mongoClient == null) {
+                throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance is required.");
+            }
+            TransactionManager<ClientSession> txManager =
+                    new TransactionManager<>(() -> PublisherSync.first(mongoClient.startSession()));
+            txWrapper = new MongoDBReactiveTxWrapper(txManager);
+        }
         return txWrapper;
     }
 

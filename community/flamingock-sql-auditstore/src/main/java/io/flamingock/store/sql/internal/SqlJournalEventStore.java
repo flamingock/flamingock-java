@@ -18,7 +18,7 @@ package io.flamingock.store.sql.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.common.sql.SqlDialectFactory;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
@@ -54,7 +54,7 @@ public class SqlJournalEventStore implements JournalEventStore {
 
     private final DataSource dataSource;
     private final String tableName;
-    private final TransactionWrapper txWrapper;
+    private final ExecutionWrapper txWrapper;
     private SqlJournalEventMapper mapper;
 
     private SqlJournalDialectHelper dialectHelper;
@@ -66,7 +66,7 @@ public class SqlJournalEventStore implements JournalEventStore {
      * @param tableName  journal table name
      * @param txWrapper  SQL transaction wrapper that owns Journal writes
      */
-    public SqlJournalEventStore(DataSource dataSource, String tableName, TransactionWrapper txWrapper) {
+    public SqlJournalEventStore(DataSource dataSource, String tableName, ExecutionWrapper txWrapper) {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource must not be null");
         }
@@ -183,7 +183,7 @@ public class SqlJournalEventStore implements JournalEventStore {
         for (String eventId : validEventIds) {
             RuntimeContext baseContext = new BasicRuntimeContext(
                     "acknowledge-journal-event-" + UUID.randomUUID());
-            acknowledged += txWrapper.wrapInTransaction(baseContext, runtimeContext -> {
+            acknowledged += txWrapper.wrapExecution(baseContext, runtimeContext -> {
                 Connection connection = runtimeContext.getContext().getRequiredDependencyValue(Connection.class);
                 return acknowledgeEvents(connection, Collections.singleton(eventId));
             });

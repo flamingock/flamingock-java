@@ -16,11 +16,11 @@
 package io.flamingock.core.utils;
 
 import io.flamingock.internal.common.core.context.RuntimeContext;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 
 import java.util.function.Function;
 
-public class EmptyTransactionWrapper implements TransactionWrapper {
+public class EmptyTransactionWrapper implements ExecutionWrapper {
 
     private boolean called = false;
 
@@ -31,7 +31,7 @@ public class EmptyTransactionWrapper implements TransactionWrapper {
 
 
     @Override
-    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapInTransaction(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
+    public <CONTEXT extends RuntimeContext, RESULT> RESULT wrapExecution(CONTEXT executionContext, Function<CONTEXT, RESULT> operation) {
         called = true;
         return operation.apply(executionContext);
     }

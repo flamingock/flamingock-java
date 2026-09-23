@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
-import io.flamingock.internal.common.core.transaction.TransactionWrapper;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -47,6 +47,7 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
+    private boolean transactionsSupported = true;
 
     private ContextResolver baseContext;
     private MongoDBSpringDataTxWrapper txWrapper;
@@ -69,6 +70,26 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     public MongoDBSpringDataTargetSystem withWriteConcern(WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
         return this;
+    }
+
+    /**
+     * Declares whether the concrete MongoDB deployment supports transactions.
+     *
+     * <p>Set this to {@code false} for standalone MongoDB. Flamingock will then use its normal
+     * non-transactional execution path and will not create Spring transaction infrastructure.
+     * The default is {@code true}; {@code false} explicitly disables transaction use.</p>
+     *
+     * @param transactionsSupported whether MongoDB transactions may be used
+     * @return this target system
+     */
+    public MongoDBSpringDataTargetSystem withTransactionsSupported(boolean transactionsSupported) {
+        this.transactionsSupported = transactionsSupported;
+        return this;
+    }
+
+    @Override
+    public boolean supportsTransactions() {
+        return transactionsSupported;
     }
 
     public MongoTemplate getMongoTemplate() {
@@ -101,17 +122,20 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
         this.validate();
         targetSystemContext.addDependency(mongoTemplate);
 
-        txWrapper = MongoDBSpringDataTxWrapper.builder()
-                .mongoTemplate(mongoTemplate)
-                .readConcern(readConcern)
-                .readPreference(readPreference)
-                .writeConcern(writeConcern)
-                .build();
-
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
-        auditMarker = edition == COMMUNITY
-                ? new NoOpTargetSystemAuditMarker(this.getId())
-                : MongoDBSpringDataAuditMarker.builder(mongoTemplate).build();
+        if (supportsTransactions()) {
+            txWrapper = MongoDBSpringDataTxWrapper.builder()
+                    .mongoTemplate(mongoTemplate)
+                    .readConcern(readConcern)
+                    .readPreference(readPreference)
+                    .writeConcern(writeConcern)
+                    .build();
+            auditMarker = edition == COMMUNITY
+                    ? new NoOpTargetSystemAuditMarker(this.getId())
+                    : MongoDBSpringDataAuditMarker.builder(mongoTemplate).build();
+        } else {
+            auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        }
     }
 
     private void validate() {
@@ -136,7 +160,10 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     }
 
     @Override
-    public TransactionWrapper getTxWrapper() {
+    public ExecutionWrapper getTxWrapper() {
+        if (!supportsTransactions()) {
+            throw new FlamingockException("Transaction wrapper requested for a MongoDB target that does not support transactions.");
+        }
         return txWrapper;
     }
 
