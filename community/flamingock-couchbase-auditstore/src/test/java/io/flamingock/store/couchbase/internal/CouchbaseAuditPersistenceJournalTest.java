@@ -257,8 +257,9 @@ class CouchbaseAuditPersistenceJournalTest {
     private void occupyStreamPosition(long streamSequence) {
         journalEventStore.initialize(true, SCOPE_NAME, JOURNAL_COLLECTION);
         JournalEvent<AuditEntry> squatter = new JournalEvent<>(
-                "pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
-                STREAM_ID, streamSequence, Instant.now(), auditEntry("pre-existing-change"), false);
+                "pre-existing-event", "pre-existing-idempotency-key", JournalEventType.CHANGE_STATE,
+                JournalEvent.DEFAULT_VERSION, STREAM_ID, streamSequence, Instant.now(),
+                auditEntry("pre-existing-change"), false);
         bucket.scope(SCOPE_NAME).collection(JOURNAL_COLLECTION)
                 .insert("journal::" + STREAM_ID + "::" + streamSequence, mapper.toDocument(squatter));
     }

@@ -24,6 +24,7 @@ package io.flamingock.internal.common.couchbase.journal;
 public final class JournalEventFieldConstants {
 
     public static final String KEY_EVENT_ID = "eventId";
+    public static final String KEY_IDEMPOTENCY_KEY = "idempotencyKey";
     public static final String KEY_EVENT_TYPE = "eventType";
     public static final String KEY_EVENT_VERSION = "eventVersion";
     public static final String KEY_STREAM_ID = "streamId";

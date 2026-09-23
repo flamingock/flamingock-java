@@ -26,6 +26,7 @@ import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldC
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_DATA;
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_EVENT_ID;
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_EVENT_TYPE;
+import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_IDEMPOTENCY_KEY;
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_EVENT_VERSION;
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_OCCURRED_AT;
 import static io.flamingock.internal.common.couchbase.journal.JournalEventFieldConstants.KEY_STREAM_ID;
@@ -53,6 +54,7 @@ public class CouchbaseJournalEventMapper {
         requireSupportedType(event.getEventType());
         JsonObject document = JsonObject.create();
         document.put(KEY_EVENT_ID, event.getEventId());
+        document.put(KEY_IDEMPOTENCY_KEY, event.getIdempotencyKey());
         document.put(KEY_EVENT_TYPE, event.getEventType().name());
         document.put(KEY_EVENT_VERSION, event.getEventVersion());
         document.put(KEY_STREAM_ID, event.getStreamId());
@@ -70,6 +72,7 @@ public class CouchbaseJournalEventMapper {
         Instant occurredAt = Instant.ofEpochMilli(document.getLong(KEY_OCCURRED_AT));
         return new JournalEvent<>(
                 document.getString(KEY_EVENT_ID),
+                document.getString(KEY_IDEMPOTENCY_KEY),
                 eventType,
                 document.getInt(KEY_EVENT_VERSION),
                 document.getString(KEY_STREAM_ID),
