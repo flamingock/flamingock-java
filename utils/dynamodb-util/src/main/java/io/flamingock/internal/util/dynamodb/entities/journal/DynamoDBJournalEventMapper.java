@@ -50,6 +50,7 @@ public final class DynamoDBJournalEventMapper {
         requireSupportedType(event.getEventType());
         JournalEventEntity entity = new JournalEventEntity();
         entity.setEventId(event.getEventId());
+        entity.setIdempotencyKey(event.getIdempotencyKey());
         entity.setEventType(event.getEventType().name());
         entity.setEventVersion(event.getEventVersion());
         entity.setStreamId(event.getStreamId());
@@ -79,6 +80,7 @@ public final class DynamoDBJournalEventMapper {
         boolean acknowledged = partitionKeyMissing;
         return new JournalEvent<>(
                 entity.getEventId(),
+                entity.getIdempotencyKey(),
                 eventType,
                 entity.getEventVersion() != null ? entity.getEventVersion() : JournalEvent.DEFAULT_VERSION,
                 entity.getStreamId(),

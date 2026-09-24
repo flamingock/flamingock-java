@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,6 +86,21 @@ class SqlJournalEventStoreJdbcTest {
         secondStore.initialize(false);
 
         assertFalse(secondStore.getLastEventByStream("missing").isPresent());
+    }
+
+    @Test
+    @DisplayName("persists one non-null payload column instead of flattened audit fields")
+    void persistsNonNullPayloadWithoutFlattenedAuditColumns() throws Exception {
+        journalEventStore.initialize(true);
+        append(event("payload-stage", 1L, "payload-event", false));
+
+        try (Connection connection = dataSource.getConnection();
+             java.sql.Statement statement = connection.createStatement();
+             java.sql.ResultSet resultSet = statement.executeQuery("SELECT * FROM " + TABLE_NAME)) {
+            assertTrue(resultSet.next());
+            assertNotNull(resultSet.getString("payload"));
+            assertThrows(SQLException.class, () -> resultSet.findColumn("execution_id"));
+        }
     }
 
     @Test
@@ -479,6 +495,7 @@ class SqlJournalEventStoreJdbcTest {
                                                   boolean acknowledged) {
         return new JournalEvent<>(
                 eventId,
+                "key-" + eventId,
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 streamId,

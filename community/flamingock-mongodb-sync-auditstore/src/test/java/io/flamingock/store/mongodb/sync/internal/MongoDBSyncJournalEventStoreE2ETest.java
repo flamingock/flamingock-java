@@ -275,6 +275,7 @@ class MongoDBSyncJournalEventStoreE2ETest {
     private static JournalEvent<AuditEntry> event(String eventId, String streamId, long sequence, boolean acknowledged) {
         return new JournalEvent<>(
                 eventId,
+                "key-" + eventId,
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 streamId,

@@ -45,16 +45,17 @@ class SqlJournalDialectHelperTest {
         List<String> indexSql = helper.getCreateIndexSqlStrings(TABLE_NAME);
 
         assertTrue(ddl.contains("EVENT_ID"));
+        assertTrue(ddl.contains("IDEMPOTENCY_KEY"));
         assertTrue(ddl.contains("EVENT_TYPE"));
         assertTrue(ddl.contains("EVENT_VERSION"));
         assertTrue(ddl.contains("STREAM_ID"));
         assertTrue(ddl.contains("STREAM_SEQUENCE"));
         assertTrue(ddl.contains("OCCURRED_AT"));
         assertTrue(ddl.contains("ACKNOWLEDGED"));
-        assertTrue(ddl.contains("CREATED_AT"));
+        assertTrue(ddl.contains("PAYLOAD"));
         assertTrue(ddl.contains("PRIMARY KEY"));
+        assertFalse(ddl.contains("EXECUTION_ID"), "journal payload fields must not be flattened into columns");
         assertFalse(ddl.contains("JSON"), "journal payloads must not use JSON columns");
-        assertFalse(ddl.contains("CLOB"), "journal payloads must not use CLOB columns");
 
         assertEquals(2, countOccurrences(ddl, "STREAM_ID"),
                 "stream_id must appear as a column and as both composite-key references");
@@ -65,7 +66,7 @@ class SqlJournalDialectHelperTest {
                 .allMatch(name -> name.length() <= helper.getMaximumIndexNameLength()));
 
         List<String> definitionNames = columnNames(helper.getColumnDefinitions());
-        assertTrue(Arrays.asList("event_id", "stream_id", "stream_sequence", "occurred_at", "acknowledged")
+        assertTrue(Arrays.asList("event_id", "idempotency_key", "stream_id", "stream_sequence", "occurred_at", "acknowledged")
                 .stream().allMatch(definitionNames::contains));
         assertEquals(definitionNames, insertColumnNames(helper.getInsertSqlString(TABLE_NAME)));
     }
@@ -97,12 +98,13 @@ class SqlJournalDialectHelperTest {
 
     @ParameterizedTest(name = "{0} uses the exact journal type policy")
     @EnumSource(SqlDialect.class)
-    @DisplayName("uses exact portable types and capacities")
+    @DisplayName("uses exact portable types and large-text payload capacity")
     void usesExactPortableTypes(SqlDialect dialect) {
         SqlJournalDialectHelper helper = new SqlJournalDialectHelper(dialect);
         String ddl = helper.getCreateTableSqlString(TABLE_NAME).toUpperCase(Locale.ROOT);
 
         assertTrue(ddl.contains("EVENT_ID " + varcharType(dialect, 255) + " NOT NULL"));
+        assertTrue(ddl.contains("IDEMPOTENCY_KEY " + varcharType(dialect, 64) + " NOT NULL"));
         assertTrue(ddl.contains("EVENT_TYPE " + varcharType(dialect, 32) + " NOT NULL"));
         assertTrue(ddl.contains("EVENT_VERSION INTEGER NOT NULL"));
         assertTrue(ddl.contains("STREAM_ID " + varcharType(dialect, 255) + " NOT NULL"));
@@ -110,11 +112,18 @@ class SqlJournalDialectHelperTest {
         assertTrue(ddl.contains("OCCURRED_AT " + timestampType(dialect) + " NOT NULL"));
         assertTrue(ddl.contains("ACKNOWLEDGED " + booleanType(dialect) + " NOT NULL"));
         assertTrue(ddl.contains("PRIMARY KEY (STREAM_ID, STREAM_SEQUENCE)"));
-        assertTrue(ddl.contains("METADATA " + textType(dialect)));
-        assertTrue(ddl.contains("ERROR_TRACE " + textType(dialect)));
-        assertFalse(ddl.contains("CLOB"));
-        assertTrue(ddl.contains("TRANSACTION_FLAG " + booleanType(dialect)));
-        assertTrue(ddl.contains("SYSTEM_CHANGE " + booleanType(dialect)));
+        assertTrue(ddl.contains("PAYLOAD " + textType(dialect) + " NOT NULL"));
+        assertFalse(ddl.contains("METADATA"));
+        assertFalse(ddl.contains("ERROR_TRACE"));
+    }
+
+    @Test
+    @DisplayName("uses vendor-specific large-text payload types")
+    void usesVendorSpecificLargeTextPayloadTypes() {
+        assertPayloadType(SqlDialect.SQLSERVER, "NVARCHAR(MAX)");
+        assertPayloadType(SqlDialect.ORACLE, "CLOB");
+        assertPayloadType(SqlDialect.INFORMIX, "LVARCHAR(8000)");
+        assertPayloadType(SqlDialect.FIREBIRD, "BLOB SUB_TYPE TEXT");
     }
 
     @Test
@@ -123,19 +132,13 @@ class SqlJournalDialectHelperTest {
         SqlJournalDialectHelper helper = new SqlJournalDialectHelper(SqlDialect.H2);
 
         assertEquals(Arrays.asList(
-                "event_id", "event_type", "event_version", "stream_id", "stream_sequence", "occurred_at",
-                "acknowledged", "execution_id", "stage_id", "change_id", "author", "created_at", "state",
-                "invoked_class", "invoked_method", "source_file", "metadata", "execution_millis",
-                "execution_hostname", "error_trace", "type", "tx_strategy", "target_system_id",
-                "change_order", "recovery_strategy", "transaction_flag", "system_change"),
+                "event_id", "idempotency_key", "event_type", "event_version", "stream_id", "stream_sequence",
+                "occurred_at", "acknowledged", "payload"),
                 columnNames(helper.getColumnDefinitions()));
-        assertEquals(27, helper.getColumnDefinitions().size());
-        assertEquals(SqlJournalDialectHelper.ColumnType.TEXT, helper.getColumnDefinitions().get(16).type);
-        assertEquals(2048, helper.getColumnDefinitions().get(16).size);
-        assertEquals(SqlJournalDialectHelper.ColumnType.TEXT, helper.getColumnDefinitions().get(19).type);
-        assertEquals(2048, helper.getColumnDefinitions().get(19).size);
-        assertTrue(helper.getColumnDefinitions().get(25).nullable);
-        assertTrue(helper.getColumnDefinitions().get(26).nullable);
+        assertEquals(9, helper.getColumnDefinitions().size());
+        assertEquals(SqlJournalDialectHelper.ColumnType.TEXT, helper.getColumnDefinitions().get(8).type);
+        assertEquals(2048, helper.getColumnDefinitions().get(8).size);
+        assertFalse(helper.getColumnDefinitions().get(8).nullable);
     }
 
     private static List<String> columnNames(List<SqlJournalDialectHelper.ColumnDefinition> definitions) {
@@ -224,21 +227,33 @@ class SqlJournalDialectHelperTest {
         switch (dialect) {
             case MYSQL:
             case MARIADB:
+                return "LONGTEXT";
             case POSTGRESQL:
+                return "TEXT";
             case SQLSERVER:
             case SYBASE:
+                return "NVARCHAR(MAX)";
             case SQLITE:
-                return "TEXT";
-            case INFORMIX:
-                return "LVARCHAR(2048)";
-            case ORACLE:
-                return "VARCHAR2(4000)";
-            case DB2:
-            case FIREBIRD:
             case H2:
+                return "TEXT";
+            case FIREBIRD:
+                return "BLOB SUB_TYPE TEXT";
+            case INFORMIX:
+                return "LVARCHAR(8000)";
+            case ORACLE:
+            case DB2:
+                return "CLOB";
             default:
-                return "VARCHAR(4000)";
+                return "TEXT";
         }
+    }
+
+    private static void assertPayloadType(SqlDialect dialect, String expectedType) {
+        String ddl = new SqlJournalDialectHelper(dialect)
+                .getCreateTableSqlString(TABLE_NAME)
+                .toUpperCase(Locale.ROOT);
+
+        assertTrue(ddl.contains("PAYLOAD " + expectedType + " NOT NULL"));
     }
 
     private static int countOccurrences(String value, String token) {

@@ -38,6 +38,7 @@ class MongoDBJournalEventMapperTest {
         Instant occurredAt = Instant.parse("2026-07-21T10:15:30Z");
         JournalEvent<AuditEntry> event = new JournalEvent<>(
                 "evt-1",
+                "key-evt-1",
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 "stageA",
@@ -49,6 +50,7 @@ class MongoDBJournalEventMapperTest {
         JournalEvent<AuditEntry> restored = mapper.fromDocument(mapper.toDocument(event));
 
         assertEquals("evt-1", restored.getEventId());
+        assertEquals("key-evt-1", restored.getIdempotencyKey());
         assertEquals(JournalEventType.CHANGE_STATE, restored.getEventType());
         assertEquals(JournalEvent.DEFAULT_VERSION, restored.getEventVersion());
         assertEquals("stageA", restored.getStreamId());
@@ -63,6 +65,7 @@ class MongoDBJournalEventMapperTest {
     void storesEventFieldsUnderTheAgreedBsonNames() {
         JournalEvent<AuditEntry> event = new JournalEvent<>(
                 "evt-4",
+                "key-evt-4",
                 JournalEventType.CHANGE_STATE,
                 "stageA",
                 3L,
@@ -72,6 +75,7 @@ class MongoDBJournalEventMapperTest {
         Document document = mapper.toDocument(event);
 
         assertEquals("evt-4", document.getString("eventId"));
+        assertEquals("key-evt-4", document.getString("idempotencyKey"));
         assertEquals("stageA", document.getString("streamId"));
         assertEquals(3L, document.get("streamSequence"));
         // acknowledged must be persisted as a real boolean false: the partial index filters on it.
@@ -83,6 +87,7 @@ class MongoDBJournalEventMapperTest {
     void toDocumentRejectsUnsupportedEventType() {
         JournalEvent<AuditEntry> executionEvent = new JournalEvent<>(
                 "evt-2",
+                "key-evt-2",
                 JournalEventType.EXECUTION_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 "stageA",

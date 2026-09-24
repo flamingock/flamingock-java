@@ -65,35 +65,16 @@ public final class SqlJournalDialectHelper {
     }
 
     List<ColumnDefinition> getColumnDefinitions() {
-        List<String> auditColumnNames = AuditEntryMapper.columnNames();
         return Collections.unmodifiableList(Arrays.asList(
                 new ColumnDefinition(JournalEventConstants.EVENT_ID, ColumnType.VARCHAR, 255, false),
+                new ColumnDefinition(JournalEventConstants.IDEMPOTENCY_KEY, ColumnType.VARCHAR, 64, false),
                 new ColumnDefinition(JournalEventConstants.EVENT_TYPE, ColumnType.VARCHAR, 32, false),
                 new ColumnDefinition(JournalEventConstants.EVENT_VERSION, ColumnType.INTEGER, 0, false),
                 new ColumnDefinition(JournalEventConstants.STREAM_ID, ColumnType.VARCHAR, 255, false),
                 new ColumnDefinition(JournalEventConstants.STREAM_SEQUENCE, ColumnType.LONG, 19, false),
                 new ColumnDefinition(JournalEventConstants.OCCURRED_AT, ColumnType.TIMESTAMP, 0, false),
                 new ColumnDefinition(JournalEventConstants.ACKNOWLEDGED, ColumnType.BOOLEAN, 0, false),
-                new ColumnDefinition(auditColumnNames.get(0), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(1), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(2), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(3), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(4), ColumnType.TIMESTAMP, 0, true),
-                new ColumnDefinition(auditColumnNames.get(5), ColumnType.VARCHAR, 64, true),
-                new ColumnDefinition(auditColumnNames.get(6), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(7), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(8), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(9), ColumnType.TEXT, 2048, true),
-                new ColumnDefinition(auditColumnNames.get(10), ColumnType.LONG, 19, true),
-                new ColumnDefinition(auditColumnNames.get(11), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(12), ColumnType.TEXT, 2048, true),
-                new ColumnDefinition(auditColumnNames.get(13), ColumnType.VARCHAR, 64, true),
-                new ColumnDefinition(auditColumnNames.get(14), ColumnType.VARCHAR, 64, true),
-                new ColumnDefinition(auditColumnNames.get(15), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(16), ColumnType.VARCHAR, 255, true),
-                new ColumnDefinition(auditColumnNames.get(17), ColumnType.VARCHAR, 64, true),
-                new ColumnDefinition(auditColumnNames.get(18), ColumnType.BOOLEAN, 0, true),
-                new ColumnDefinition(auditColumnNames.get(19), ColumnType.BOOLEAN, 0, true)));
+                new ColumnDefinition(JournalEventConstants.PAYLOAD, ColumnType.TEXT, 2048, false)));
     }
 
     int getBooleanJdbcType() {
@@ -264,20 +245,24 @@ public final class SqlJournalDialectHelper {
         switch (sqlDialect) {
             case MYSQL:
             case MARIADB:
+                return "LONGTEXT";
             case POSTGRESQL:
+                return "TEXT";
             case SQLSERVER:
             case SYBASE:
+                return "NVARCHAR(MAX)";
             case SQLITE:
-                return "TEXT";
-            case INFORMIX:
-                return "LVARCHAR(2048)";
-            case ORACLE:
-                return "VARCHAR2(4000)";
-            case DB2:
-            case FIREBIRD:
             case H2:
+                return "TEXT";
+            case FIREBIRD:
+                return "BLOB SUB_TYPE TEXT";
+            case INFORMIX:
+                return "LVARCHAR(8000)";
+            case ORACLE:
+            case DB2:
+                return "CLOB";
             default:
-                return "VARCHAR(4000)";
+                return "TEXT";
         }
     }
 

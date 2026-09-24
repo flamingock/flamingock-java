@@ -15,12 +15,14 @@
  */
 package io.flamingock.store.sql.internal;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.util.JsonObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +36,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,12 +46,13 @@ class SqlJournalEventMapperTest {
     private static final String TABLE_NAME = "flamingockJournalEvents";
 
     @Test
-    @DisplayName("round-trips the typed CHANGE_STATE envelope and flattened AuditEntry payload")
+    @DisplayName("round-trips the typed CHANGE_STATE envelope and JSON AuditEntry payload")
     void roundTripsTypedChangeStateEvent() throws Exception {
         AuditEntry auditEntry = auditEntry();
         Instant occurredAt = Instant.parse("2026-08-11T10:20:30.123456Z");
         JournalEvent<AuditEntry> source = new JournalEvent<>(
-                "event-1", JournalEventType.CHANGE_STATE, 3, "stage-1", 7L, occurredAt, auditEntry, false);
+                "event-1", "key-event-1", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
+                "stage-1", 7L, occurredAt, auditEntry, false);
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:journal_mapper;DB_CLOSE_DELAY=-1")) {
             SqlJournalDialectHelper dialectHelper = new SqlJournalDialectHelper(SqlDialect.H2);
@@ -67,9 +71,16 @@ class SqlJournalEventMapperTest {
                 select.setString(1, source.getEventId());
                 try (ResultSet resultSet = select.executeQuery()) {
                     assertTrue(resultSet.next(), "the mapper must write a row");
+                    String payload = resultSet.getString("payload");
+                    assertNotNull(payload);
+                    JsonNode payloadJson = JsonObjectMapper.DEFAULT_INSTANCE.readTree(payload);
+                    assertEquals(auditEntry.getExecutionId(), payloadJson.get("executionId").asText());
+                    assertEquals(auditEntry.getCreatedAt().toString(), payloadJson.get("createdAt").asText());
+                    assertThrows(java.sql.SQLException.class, () -> resultSet.findColumn("execution_id"));
                     JournalEvent<AuditEntry> actual = new SqlJournalEventMapper().fromResultSet(resultSet);
 
                     assertEquals(source.getEventId(), actual.getEventId());
+                    assertEquals(source.getIdempotencyKey(), actual.getIdempotencyKey());
                     assertEquals(source.getEventType(), actual.getEventType());
                     assertEquals(source.getEventVersion(), actual.getEventVersion());
                     assertEquals(source.getStreamId(), actual.getStreamId());
@@ -86,7 +97,7 @@ class SqlJournalEventMapperTest {
     @DisplayName("rejects event types whose payload mapping is not implemented")
     void rejectsUnsupportedEventType() throws Exception {
         JournalEvent<AuditEntry> unsupported = new JournalEvent<>(
-                "event-unsupported", JournalEventType.EXECUTION_STATE, "stage-1", 1L, Instant.now(), auditEntry());
+                "event-unsupported", "key-event-unsupported", JournalEventType.EXECUTION_STATE, "stage-1", 1L, Instant.now(), auditEntry());
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:journal_mapper_unsupported;DB_CLOSE_DELAY=-1");
              PreparedStatement statement = connection.prepareStatement("SELECT 1")) {
@@ -104,7 +115,7 @@ class SqlJournalEventMapperTest {
                 null, null, null, 0L, null, null, false, null, null,
                 null, null, null, null);
         JournalEvent<AuditEntry> source = new JournalEvent<>(
-                "event-acknowledged", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
+                "event-acknowledged", "key-event-acknowledged", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
                 "stage-nullable", 2L,
                 Instant.parse("2026-08-11T10:20:30Z"), auditEntry, true);
 
@@ -118,6 +129,7 @@ class SqlJournalEventMapperTest {
             try (Statement statement = connection.createStatement();
                  ResultSet resultSet = statement.executeQuery("SELECT * FROM " + TABLE_NAME)) {
                 assertTrue(resultSet.next());
+                assertNotNull(resultSet.getString("payload"));
                 JournalEvent<AuditEntry> actual = new SqlJournalEventMapper().fromResultSet(resultSet);
 
                 assertTrue(actual.isAcknowledged());
@@ -137,7 +149,7 @@ class SqlJournalEventMapperTest {
     void keepsEnvelopeAndPayloadTimesDistinct() throws Exception {
         AuditEntry auditEntry = auditEntry();
         JournalEvent<AuditEntry> source = new JournalEvent<>(
-                "event-time", JournalEventType.CHANGE_STATE, "stage-time", 1L,
+                "event-time", "key-event-time", JournalEventType.CHANGE_STATE, "stage-time", 1L,
                 Instant.parse("2026-08-11T12:00:00Z"), auditEntry);
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:journal_mapper_times;DB_CLOSE_DELAY=-1")) {
@@ -148,10 +160,13 @@ class SqlJournalEventMapperTest {
                 insert.executeUpdate();
             }
             try (Statement statement = connection.createStatement();
-                 ResultSet resultSet = statement.executeQuery("SELECT occurred_at, created_at FROM " + TABLE_NAME)) {
+                 ResultSet resultSet = statement.executeQuery("SELECT occurred_at, payload FROM " + TABLE_NAME)) {
                 assertTrue(resultSet.next());
+                JsonNode payload = JsonObjectMapper.DEFAULT_INSTANCE.readTree(resultSet.getString("payload"));
+                assertEquals(Instant.parse("2026-08-11T12:00:00Z"), resultSet.getTimestamp("occurred_at").toInstant());
+                assertEquals(auditEntry.getCreatedAt().toString(), payload.get("createdAt").asText());
                 assertFalse(resultSet.getTimestamp("occurred_at").toLocalDateTime()
-                        .equals(resultSet.getTimestamp("created_at").toLocalDateTime()),
+                                .toString().equals(payload.get("createdAt").asText()),
                         "the envelope and payload timestamps must be stored independently");
             }
         }
@@ -161,11 +176,11 @@ class SqlJournalEventMapperTest {
     @DisplayName("enforces stream position uniqueness without requiring globally unique event IDs")
     void enforcesCompositeStreamPositionAndAllowsDuplicateEventIds() throws Exception {
         JournalEvent<AuditEntry> first = new JournalEvent<>(
-                "event-shared", JournalEventType.CHANGE_STATE, "stage-1", 1L, Instant.now(), auditEntry());
+                "event-shared", "key-event-shared-1", JournalEventType.CHANGE_STATE, "stage-1", 1L, Instant.now(), auditEntry());
         JournalEvent<AuditEntry> otherStream = new JournalEvent<>(
-                "event-shared", JournalEventType.CHANGE_STATE, "stage-2", 1L, Instant.now(), auditEntry());
+                "event-shared", "key-event-shared-2", JournalEventType.CHANGE_STATE, "stage-2", 1L, Instant.now(), auditEntry());
         JournalEvent<AuditEntry> collidingPosition = new JournalEvent<>(
-                "event-other", JournalEventType.CHANGE_STATE, "stage-1", 1L, Instant.now(), auditEntry());
+                "event-other", "key-event-other", JournalEventType.CHANGE_STATE, "stage-1", 1L, Instant.now(), auditEntry());
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:journal_mapper_identity;DB_CLOSE_DELAY=-1")) {
             SqlJournalDialectHelper dialectHelper = new SqlJournalDialectHelper(SqlDialect.H2);
