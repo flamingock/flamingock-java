@@ -26,6 +26,7 @@ import java.util.Date;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_ACKNOWLEDGED;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_DATA;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_ID;
+import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_IDEMPOTENCY_KEY;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_TYPE;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_EVENT_VERSION;
 import static io.flamingock.internal.common.mongodb.journal.JournalEventFieldConstants.KEY_OCCURRED_AT;
@@ -55,6 +56,7 @@ public class MongoDBJournalEventMapper {
         requireSupportedType(event.getEventType());
         Document document = new Document();
         document.append(KEY_EVENT_ID, event.getEventId());
+        document.append(KEY_IDEMPOTENCY_KEY, event.getIdempotencyKey());
         document.append(KEY_EVENT_TYPE, event.getEventType().name());
         document.append(KEY_EVENT_VERSION, event.getEventVersion());
         document.append(KEY_STREAM_ID, event.getStreamId());
@@ -72,6 +74,7 @@ public class MongoDBJournalEventMapper {
         Instant occurredAt = ((Date) document.get(KEY_OCCURRED_AT)).toInstant();
         return new JournalEvent<>(
                 document.getString(KEY_EVENT_ID),
+                document.getString(KEY_IDEMPOTENCY_KEY),
                 eventType,
                 ((Number) document.get(KEY_EVENT_VERSION)).intValue(),
                 document.getString(KEY_STREAM_ID),

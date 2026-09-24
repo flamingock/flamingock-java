@@ -32,6 +32,7 @@ public final class JournalEvent<T> {
     public static final int DEFAULT_VERSION = 1;
 
     private final String eventId;
+    private final String idempotencyKey;
     private final JournalEventType eventType;
     private final int eventVersion;
 
@@ -44,15 +45,17 @@ public final class JournalEvent<T> {
     private boolean acknowledged;
 
     public JournalEvent(String eventId,
+                        String idempotencyKey,
                         JournalEventType eventType,
                         String streamId,
                         long streamSequence,
                         Instant occurredAt,
                         T data) {
-        this(eventId, eventType, DEFAULT_VERSION, streamId, streamSequence, occurredAt, data, false);
+        this(eventId, idempotencyKey, eventType, DEFAULT_VERSION, streamId, streamSequence, occurredAt, data, false);
     }
 
     public JournalEvent(String eventId,
+                        String idempotencyKey,
                         JournalEventType eventType,
                         int eventVersion,
                         String streamId,
@@ -62,6 +65,7 @@ public final class JournalEvent<T> {
                         boolean acknowledged) {
         this.acknowledged = acknowledged;
         this.eventId = requireNotBlank(eventId, "eventId");
+        this.idempotencyKey = requireNotBlank(idempotencyKey, "idempotencyKey");
         this.eventType = Objects.requireNonNull(eventType, "eventType");
         this.streamId = requireNotBlank(streamId, "streamId");
 
@@ -77,6 +81,13 @@ public final class JournalEvent<T> {
 
     public String getEventId() {
         return eventId;
+    }
+
+    /**
+     * Returns the stable logical identity used by downstream receivers to deduplicate this event.
+     */
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public JournalEventType getEventType() {

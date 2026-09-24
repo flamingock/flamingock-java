@@ -263,6 +263,7 @@ class DynamoDBAuditPersistenceJournalTest {
     private void occupyStreamPosition(long sequence) {
         JournalEvent<AuditEntry> squatter = new JournalEvent<>(
                 "pre-existing-event",
+                "key-pre-existing-event",
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 STREAM_ID,

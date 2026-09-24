@@ -331,6 +331,7 @@ class MongoDBReactiveJournalEventStoreE2ETest {
 														boolean acknowledged) {
 		return new JournalEvent<>(
 				eventId,
+				"key-" + eventId,
 				JournalEventType.CHANGE_STATE,
 				3,
 				streamId,
@@ -353,6 +354,7 @@ class MongoDBReactiveJournalEventStoreE2ETest {
                                                   boolean acknowledged) {
         return new JournalEvent<>(
                 eventId,
+                "key-" + eventId,
                 JournalEventType.CHANGE_STATE,
                 JournalEvent.DEFAULT_VERSION,
                 streamId,

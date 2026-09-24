@@ -38,6 +38,7 @@ public class JournalEventEntity {
     private String pendingPartitionKey;
     private String pendingOrderKey;
     private String eventId;
+    private String idempotencyKey;
     private String eventType;
     private String occurredAt;
     private Integer eventVersion;
@@ -89,6 +90,14 @@ public class JournalEventEntity {
 
     public void setEventId(String eventId) {
         this.eventId = eventId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public String getEventType() {

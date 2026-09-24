@@ -316,7 +316,7 @@ class MongoDBReactiveAuditPersistenceJournalTest {
 
     private void occupyStreamPosition(long streamSequence) {
         JournalEvent<AuditEntry> event = new JournalEvent<>(
-                "pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
+                "pre-existing-event", "key-pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
                 STREAM_ID, streamSequence, Instant.now(), auditEntry("pre-existing-change", AuditEntry.Status.APPLIED), false);
         PublisherSync.first(database.getCollection(JOURNAL_COLLECTION).insertOne(mapper.toDocument(event)));
     }
