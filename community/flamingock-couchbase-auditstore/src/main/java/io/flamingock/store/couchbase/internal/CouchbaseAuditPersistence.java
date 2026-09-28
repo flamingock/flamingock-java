@@ -21,60 +21,31 @@ import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
 
 public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final CouchbaseAuditor auditor;
-    private final CouchbaseJournalEventStore journalEventStore;
+    private final CouchbaseJournalWriter journalWriter;
     private final JournalEventSequencer journalEventSequencer;
     private final ExecutionWrapper txWrapper;
-    private final String scopeName;
-    private final String auditRepositoryName;
-    private final String journalRepositoryName;
-    private final boolean autoCreate;
 
 
-    public CouchbaseAuditPersistence(CommunityConfigurable localConfiguration,
-                                     CouchbaseAuditor auditor,
-                                     CouchbaseJournalEventStore journalEventStore,
+    public CouchbaseAuditPersistence(CouchbaseAuditor auditor,
                                      JournalEventSequencer journalEventSequencer,
                                      ExecutionWrapper txWrapper,
-                                     String scopeName,
-                                     String auditRepositoryName,
-                                     String journalRepositoryName,
-                                     boolean autoCreate) {
-        super(localConfiguration);
+                                     CouchbaseJournalWriter journalWriter) {
         this.auditor = auditor;
-        this.journalEventStore = journalEventStore;
+        this.journalWriter = journalWriter;
         this.journalEventSequencer = journalEventSequencer;
         this.txWrapper = txWrapper;
-        this.scopeName = scopeName;
-        this.auditRepositoryName = auditRepositoryName;
-        this.journalRepositoryName = journalRepositoryName;
-        this.autoCreate = autoCreate;
     }
-
-    @Override
-    protected void doInitialize(RunnerId runnerId) {
-        auditor.initialize(autoCreate, scopeName, auditRepositoryName);
-        // Creating the collection/indexes is what brings the journal collection into existence, so skipping
-        // this keeps it from ever appearing while the flag is off. It must stay in step with the append in
-        // writeEntry: skipping setup while still appending would let ctx.insert create the collection
-        // implicitly and without indexes, voiding the stream-position and eventId-lookup guarantees.
-        // Also repeated (idempotently) in CouchbaseAuditStore#getPersistenceFactory, which must run this
-        // before seeding the JournalEventSequencer via forStream(stageId).
-        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
-    }
-
 
     @Override
     public List<AuditEntry> getAuditHistory() {
@@ -88,24 +59,24 @@ public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence
         // without them, the audit record set is itself the history.
         if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
             RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-            Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
-                TransactionAttemptContext ctx = runtimeContext.getContext().getRequiredDependencyValue(TransactionAttemptContext.class);
-                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-                journalEventStore.contributeToTransaction(ctx, journalEvent);
-                return auditor.contributeToTransaction(ctx, auditEntry);
-            });
-            // Spends the stream position, and only a committed transaction attempt may reach this line. A
-            // normal return from wrapExecution does NOT in general mean commit — CouchbaseTxWrapper
-            // returns normally after a deliberate rollback too, when the operation's result is a FailedStep.
-            // It is sound here because this operation returns a Result, which can never be a FailedStep, so
-            // the only way to return normally is a committed attempt; a failing attempt is caught and
-            // rethrown as TransactionFailedException (see CouchbaseTxWrapper — it doesn't yet wrap that as
-            // DatabaseTransactionException, a known deviation from the ExecutionWrapper contract, tracked
-            // separately from this ticket). Keep that true: an operation that could return a failed step
-            // would silently burn a position and gap the stream, and a contiguous sequence is what lets a
-            // consumer tell "in flight" from "lost".
-            journalEventSequencer.confirm();
-            return result;
+            synchronized (journalEventSequencer) {
+                try {
+                    JournalEvent<AuditEntry> event = journalEventSequencer.newEvent(auditEntry);
+                    Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
+                        TransactionAttemptContext ctx = runtimeContext.getContext()
+                                .getRequiredDependencyValue(TransactionAttemptContext.class);
+                        journalWriter.write(ctx, event);
+                        return auditor.contributeToTransaction(ctx, auditEntry);
+                    });
+                    // Result cannot be a FailedStep: a normal wrapper return means commit. Keep the
+                    // transaction and confirmation under the same stream lock as journal-only writes.
+                    journalEventSequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error failure) {
+                    journalEventSequencer.markWriteOutcomeUncertain();
+                    throw failure;
+                }
+            }
         } else {
             return auditor.append(auditEntry);
         }

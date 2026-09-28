@@ -20,12 +20,17 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
@@ -39,19 +44,19 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditor;
 import io.flamingock.store.couchbase.internal.CouchbaseJournalEventStore;
+import io.flamingock.store.couchbase.internal.CouchbaseJournalWriter;
 import io.flamingock.store.couchbase.internal.CouchbaseLockService;
 import io.flamingock.externalsystem.couchbase.api.CouchbaseExternalSystem;
 
 import java.util.Collections;
 import java.util.Set;
 
-public class CouchbaseAuditStore implements CommunityAuditStore {
+public class CouchbaseAuditStore implements CommunityAuditStore, HistoryAppenderProvider {
 
     private final CouchbaseExternalSystem targetSystem;
     private final Cluster cluster;
     private final String bucketName;
     private RunnerId runnerId;
-    private CommunityConfigurable communityConfiguration;
     private CouchbaseLockService lockService;
     private Bucket bucket;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
@@ -122,42 +127,65 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         this.validate();
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
         auditor = new CouchbaseAuditor(cluster, bucket);
         journalEventStore = new CouchbaseJournalEventStore(cluster, bucket);
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
 
         lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
+        auditor.initialize(autoCreate, scopeName, auditRepositoryName);
         lockService.initialize(autoCreate, scopeName, lockRepositoryName);
+        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS,
+                () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            // Must run before forStream(stageId): forStream seeds the sequence from the last persisted event,
-            // which Couchbase reports as empty until the journal store is initialized. Idempotent and
-            // synchronized, so repeating it in CouchbaseAuditPersistence#doInitialize is safe.
-            FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate, scopeName, journalRepositoryName));
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            JournalEventSequencer journalEventSequencer = FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                    ? journalEventSequencerFactory.forStream(stageId) : null;
             CouchbaseAuditPersistence persistence = new CouchbaseAuditPersistence(
-                    communityConfiguration,
                     auditor,
-                    journalEventStore,
                     journalEventSequencer,
                     targetSystem.getTxWrapper(),
-                    scopeName,
-                    auditRepositoryName,
-                    journalRepositoryName,
-                    autoCreate);
+                    new CouchbaseJournalWriter(journalEventStore));
             persistence.initialize(runnerId);
             return persistence;
         };
     }
 
     @Override
+    public AuditHistoryAppender getAuditHistoryAppender() {
+        return auditor::append;
+    }
+
+    @Override
+    public JournalHistoryAppender getJournalHistoryAppender() {
+        return (streamId, entry) -> {
+            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                throw new IllegalStateException("Journal events must be enabled to write journal history");
+            }
+            JournalEventSequencer sequencer = journalEventSequencerFactory.forStream(streamId);
+            CouchbaseJournalWriter writer = new CouchbaseJournalWriter(journalEventStore);
+            synchronized (sequencer) {
+                try {
+                    JournalEvent<AuditEntry> event = sequencer.newEvent(entry);
+                    io.flamingock.internal.util.Result result = targetSystem.getTxWrapper().wrapExecution(
+                            new BasicRuntimeContext("write-journal-" + entry.getChangeId()), runtimeContext ->
+                                    writer.write(runtimeContext.getContext().getRequiredDependencyValue(
+                                            TransactionAttemptContext.class), event));
+                    sequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error failure) {
+                    sequencer.markWriteOutcomeUncertain();
+                    throw failure;
+                }
+            }
+        };
+    }
+
+    @Override
     public AuditReader getAuditReader() {
-        auditor.initialize(autoCreate, scopeName, auditRepositoryName);
         return () -> auditor.getAuditHistory();
     }
 
@@ -198,7 +226,8 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
-        if (journalRepositoryName == null || journalRepositoryName.trim().isEmpty()) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                && (journalRepositoryName == null || journalRepositoryName.trim().isEmpty())) {
             throw new FlamingockException("The 'journalRepositoryName' property is required.");
         }
 
@@ -206,11 +235,13 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
 
-        if (journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                && journalRepositoryName.trim().equalsIgnoreCase(auditRepositoryName.trim())) {
             throw new FlamingockException("The 'journalRepositoryName' and 'auditRepositoryName' properties must not be the same.");
         }
 
-        if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                && journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
     }

@@ -83,7 +83,7 @@ public class CouchbaseAuditor {
      * {@link #contributeToTransaction} would collapse them onto each other, discarding the very history being
      * imported.
      */
-    Result append(AuditEntry auditEntry) {
+    public Result append(AuditEntry auditEntry) {
 
         String key = toKey(auditEntry);
         logger.debug("Saving audit entry with key {}", key);

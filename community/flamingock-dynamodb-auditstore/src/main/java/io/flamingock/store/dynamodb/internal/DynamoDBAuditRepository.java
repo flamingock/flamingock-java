@@ -116,7 +116,7 @@ public class DynamoDBAuditRepository {
      * @param auditEntry entry to append
      * @return successful write result
      */
-    Result writeEntry(AuditEntry auditEntry) {
+    public Result append(AuditEntry auditEntry) {
         AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
         logger.debug("Saving audit entry with key {}", entity.getPartitionKey());
         table.putItem(PutItemEnhancedRequest.builder(AuditEntryEntity.class)

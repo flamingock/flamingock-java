@@ -19,15 +19,12 @@ import com.mongodb.reactivestreams.client.ClientSession;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,34 +33,29 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
 
     private final MongoDBReactiveAuditRepository auditRepository;
     private final MongoDBReactiveJournalEventStore journalEventStore;
+    private final MongoDBReactiveJournalWriter journalWriter;
     private final JournalEventSequencer journalEventSequencer;
     private final boolean supportsTransactions;
     private final ExecutionWrapper txWrapper;
-    private final boolean autoCreate;
 
     /**
-     * @param localConfiguration local Community configuration
      * @param auditRepository audit state repository
      * @param journalEventStore journal event store
      * @param journalEventSequencer sequencer for this persistence stream
      * @param supportsTransactions whether journal and audit writes must share a MongoDB transaction
      * @param txWrapper transaction wrapper; must be non-null if and only if transactions are supported
-     * @param autoCreate whether required MongoDB collections and indexes may be created
      */
-    public MongoDBReactiveAuditPersistence(CommunityConfigurable localConfiguration,
-                                           MongoDBReactiveAuditRepository auditRepository,
+    public MongoDBReactiveAuditPersistence(MongoDBReactiveAuditRepository auditRepository,
                                            MongoDBReactiveJournalEventStore journalEventStore,
                                            JournalEventSequencer journalEventSequencer,
                                            boolean supportsTransactions,
-                                           ExecutionWrapper txWrapper,
-                                           boolean autoCreate) {
-        super(localConfiguration);
+                                           ExecutionWrapper txWrapper) {
         this.auditRepository = auditRepository;
         this.journalEventStore = journalEventStore;
+        this.journalWriter = new MongoDBReactiveJournalWriter(journalEventStore);
         this.journalEventSequencer = journalEventSequencer;
         this.supportsTransactions = supportsTransactions;
         this.txWrapper = validateTransactionWrapper(supportsTransactions, txWrapper);
-        this.autoCreate = autoCreate;
     }
 
     private static ExecutionWrapper validateTransactionWrapper(boolean supportsTransactions,
@@ -81,14 +73,6 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
     }
 
     @Override
-    protected void doInitialize(RunnerId runnerId) {
-        auditRepository.initialize(autoCreate);
-		if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
-            journalEventStore.initialize(autoCreate);
-        }
-    }
-
-    @Override
     public List<AuditEntry> getAuditHistory() {
         return auditRepository.getAuditHistory();
     }
@@ -103,19 +87,22 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
             throw new IllegalStateException("MongoDB reactive journal writes require a sequencer");
         }
 
-        if (!supportsTransactions) {
-            return writeJournalAndAuditWithoutTransaction(auditEntry);
+        synchronized (journalEventSequencer) {
+            try {
+                return supportsTransactions ? writeJournalAndAuditInTransaction(auditEntry)
+                        : writeJournalAndAuditWithoutTransaction(auditEntry);
+            } catch (RuntimeException | Error failure) {
+                journalEventSequencer.markWriteOutcomeUncertain();
+                throw failure;
+            }
         }
-
-        return writeJournalAndAuditInTransaction(auditEntry);
     }
 
     private Result writeJournalAndAuditInTransaction(AuditEntry auditEntry) {
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
         Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-            journalEventStore.append(clientSession, journalEvent);
+            journalWriter.write(clientSession, journalEventSequencer, auditEntry);
             return auditRepository.save(clientSession, auditEntry);
         });
 
@@ -131,9 +118,7 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
      * audit state without its corresponding historical event.
      */
     private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
-        JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-        journalEventStore.append(journalEvent);
-        journalEventSequencer.confirm();
+        journalWriter.write(journalEventSequencer, auditEntry);
         return auditRepository.save(auditEntry);
     }
 }

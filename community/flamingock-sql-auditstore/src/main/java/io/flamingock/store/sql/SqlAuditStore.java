@@ -15,13 +15,15 @@
  */
 package io.flamingock.store.sql;
 
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
@@ -34,21 +36,26 @@ import io.flamingock.store.sql.internal.SqlAuditPersistence;
 import io.flamingock.store.sql.internal.SqlAuditRepository;
 import io.flamingock.store.sql.internal.SqlLockService;
 import io.flamingock.store.sql.internal.SqlJournalEventStore;
+import io.flamingock.store.sql.internal.SqlJournalHistoryAppender;
+import io.flamingock.internal.core.transaction.TransactionManager;
+import io.flamingock.targetsystem.sql.SqlTxWrapper;
+import java.sql.Connection;
+import java.sql.SQLException;
 import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 
 import javax.sql.DataSource;
 
-public class SqlAuditStore implements CommunityAuditStore {
+public class SqlAuditStore implements CommunityAuditStore, HistoryAppenderProvider {
 
     private static final String SQL_IDENTIFIER_PATTERN = "[A-Za-z][A-Za-z0-9_]*";
     private static final String DEFAULT_JOURNAL_REPOSITORY_NAME = "flamingockJournalEvents";
 
     private final SqlExternalSystem targetSystem;
     private final DataSource dataSource;
-    private CommunityConfigurable communityConfiguration;
     private RunnerId runnerId;
     private SqlLockService lockService;
     private SqlJournalEventStore journalEventStore;
+    private SqlJournalHistoryAppender journalHistoryWriter;
     private JournalEventSequencerFactory journalEventSequencerFactory;
     private SqlAuditRepository auditRepository;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -103,18 +110,22 @@ public class SqlAuditStore implements CommunityAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         validate();
         auditRepository = new SqlAuditRepository(dataSource, auditRepositoryName);
         journalEventStore = new SqlJournalEventStore(
                 dataSource,
                 journalRepositoryName,
-                targetSystem.getTxWrapper());
+                new SqlTxWrapper(new TransactionManager<>(this::openAuditConnection)));
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+        journalHistoryWriter = new SqlJournalHistoryAppender(journalEventStore, journalEventSequencerFactory,
+                new SqlTxWrapper(new TransactionManager<>(this::openAuditConnection)));
         auditRepository.initialize(autoCreate);
 
         lockService = new SqlLockService(dataSource, lockRepositoryName);
         lockService.initialize(autoCreate);
+        if (isJournalEventsEnabled()) {
+            journalEventStore.initialize(autoCreate);
+        }
     }
 
     @Override
@@ -123,20 +134,42 @@ public class SqlAuditStore implements CommunityAuditStore {
             boolean journalEventsEnabled = isJournalEventsEnabled();
             JournalEventSequencer journalEventSequencer = null;
             if (journalEventsEnabled) {
-                journalEventStore.initialize(autoCreate);
                 journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             }
 
             SqlAuditPersistence persistence = new SqlAuditPersistence(
-                    communityConfiguration,
                     auditRepository,
                     journalEventStore,
                     journalEventSequencer,
-                    targetSystem.getTxWrapper(),
-                    journalEventsEnabled);
+                    new SqlTxWrapper(new TransactionManager<>(this::openAuditConnection)),
+                    journalEventsEnabled,
+                    journalHistoryWriter);
             persistence.initialize(runnerId);
             return persistence;
         };
+    }
+
+    @Override
+    public AuditHistoryAppender getAuditHistoryAppender() {
+        return auditRepository::append;
+    }
+
+    @Override
+    public JournalHistoryAppender getJournalHistoryAppender() {
+        return (streamId, entry) -> {
+            if (!isJournalEventsEnabled()) {
+                throw new IllegalStateException("Journal Events are disabled");
+            }
+            return journalHistoryWriter.append(streamId, entry);
+        };
+    }
+
+    private Connection openAuditConnection() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Could not open audit SQL connection", exception);
+        }
     }
 
     @Override

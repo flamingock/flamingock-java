@@ -16,6 +16,8 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.external.TargetSystem;
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.Context;
@@ -32,6 +34,7 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
 import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.OperationResolver;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
@@ -221,6 +224,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
+        registerHistoryAppenders(hierarchicalContext, auditStore);
+
         // Registered under the interface, not via new Dependency(instance): the factory is a lambda,
         // so the single-argument constructor would key it by its synthetic class and rely on the
         // resolver's assignable-scan fallback — and would raise a bare NullPointerException, instead
@@ -256,6 +261,21 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         return new RunnerFactory(runnerId, flamingockArgs, operation, auditStore.getCloser()).create();
     }
 
+
+    static void registerHistoryAppenders(PriorityContext context, Object store) {
+        if (!(store instanceof HistoryAppenderProvider)) {
+            return;
+        }
+        HistoryAppenderProvider provider = (HistoryAppenderProvider) store;
+        AuditHistoryAppender appender = provider.getAuditHistoryAppender();
+        if (appender != null) {
+            context.addDependency(new Dependency(AuditHistoryAppender.class, appender));
+        }
+        JournalHistoryAppender journalWriter = provider.getJournalHistoryAppender();
+        if (journalWriter != null) {
+            context.addDependency(new Dependency(JournalHistoryAppender.class, journalWriter));
+        }
+    }
 
     private LoadedPipeline loadPipeline(FlamingockMetadata flamingockMetadata) {
         List<ChangeFilter> changeFiltersFromPlugins = pluginManager.getPlugins()

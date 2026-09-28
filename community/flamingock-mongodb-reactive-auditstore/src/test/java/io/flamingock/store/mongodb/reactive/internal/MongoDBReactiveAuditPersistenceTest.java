@@ -25,7 +25,6 @@ import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.util.FeatureFlag;
@@ -73,14 +72,13 @@ class MongoDBReactiveAuditPersistenceTest {
 		MongoDBReactiveJournalEventStore journalEventStore = new MongoDBReactiveJournalEventStore(
 				database, JOURNAL_COLLECTION,
 				ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
+        auditRepository.initialize(true);
         persistence = new MongoDBReactiveAuditPersistence(
-                mock(CommunityConfigurable.class),
 				auditRepository,
 				journalEventStore,
 				mock(JournalEventSequencer.class),
 				true,
-				mock(ExecutionWrapper.class),
-                true);
+				mock(ExecutionWrapper.class));
         persistence.initialize(RunnerId.fromString("runner-1"));
     }
 

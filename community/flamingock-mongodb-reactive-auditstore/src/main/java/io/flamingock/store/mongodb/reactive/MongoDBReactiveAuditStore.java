@@ -23,11 +23,15 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.externalsystem.mongodb.reactive.api.MongoDBReactiveExternalSystem;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
@@ -39,6 +43,7 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditPersistence;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveAuditRepository;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveJournalEventStore;
+import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveJournalWriter;
 import io.flamingock.store.mongodb.reactive.internal.MongoDBReactiveLockService;
 
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
@@ -51,13 +56,11 @@ import static io.flamingock.internal.common.mongodb.journal.JournalEventPersiste
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
-public class MongoDBReactiveAuditStore implements CommunityAuditStore {
+public class MongoDBReactiveAuditStore implements CommunityAuditStore, HistoryAppenderProvider {
 
     private final MongoDBReactiveExternalSystem mongoDBTargetSystem;
 
     protected RunnerId runnerId;
-    private CommunityConfigurable communityConfiguration;
-    private CommunityAuditPersistence persistence;
     private MongoDBReactiveLockService lockService;
     private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
@@ -70,6 +73,7 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
     private MongoDBReactiveAuditRepository auditRepository;
     private MongoDBReactiveJournalEventStore journalEventStore;
     private JournalEventSequencerFactory journalEventSequencerFactory;
+    private MongoDBReactiveJournalWriter journalWriter;
 
     private MongoDBReactiveAuditStore(MongoDBReactiveExternalSystem mongoDBTargetSystem) {
         this.mongoDBTargetSystem = mongoDBTargetSystem;
@@ -132,7 +136,6 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         database = mongoDBTargetSystem.getMongoDatabase();
 		this.validate();
 
@@ -141,6 +144,7 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
         journalEventStore = new MongoDBReactiveJournalEventStore(
                 database, journalRepositoryName, readConcern, readPreference, writeConcern);
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+        journalWriter = new MongoDBReactiveJournalWriter(journalEventStore);
 
         lockService = new MongoDBReactiveLockService(
                 database,
@@ -151,38 +155,66 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
                 TimeService.getDefault()
         );
         lockService.initialize(autoCreate);
+        auditRepository.initialize(autoCreate);
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(autoCreate);
+        }
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            auditRepository.initialize(autoCreate);
-			if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
-                journalEventStore.initialize(autoCreate);
-            }
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            JournalEventSequencer journalEventSequencer = FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                    ? journalEventSequencerFactory.forStream(stageId) : null;
             boolean supportsTransactions = mongoDBTargetSystem.supportsTransactions();
             ExecutionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
             MongoDBReactiveAuditPersistence stagePersistence = new MongoDBReactiveAuditPersistence(
-                    communityConfiguration,
                     auditRepository,
                     journalEventStore,
                     journalEventSequencer,
                     supportsTransactions,
-                    txWrapper,
-                    autoCreate
+                    txWrapper
             );
             stagePersistence.initialize(runnerId);
-            if (persistence == null) {
-                persistence = stagePersistence;
-            }
             return stagePersistence;
         };
     }
 
     @Override
+    public AuditHistoryAppender getAuditHistoryAppender() {
+        return auditRepository::append;
+    }
+
+    @Override
+    public JournalHistoryAppender getJournalHistoryAppender() {
+        return (streamId, entry) -> {
+            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                throw new IllegalStateException("Journal events must be enabled to write journal history");
+            }
+            JournalEventSequencer sequencer = journalEventSequencerFactory.forStream(streamId);
+            synchronized (sequencer) {
+                try {
+                    if (!mongoDBTargetSystem.supportsTransactions()) {
+                        return journalWriter.write(sequencer, entry);
+                    }
+                    ExecutionWrapper wrapper = mongoDBTargetSystem.getTxWrapper();
+                    RuntimeContext context = new BasicRuntimeContext("write-journalHistory-" + entry.getChangeId());
+                    io.flamingock.internal.util.Result result = wrapper.wrapExecution(context, runtime -> {
+                        ClientSession session = runtime.getContext().getRequiredDependencyValue(ClientSession.class);
+                        return journalWriter.write(session, sequencer, entry);
+                    });
+                    sequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error failure) {
+                    sequencer.markWriteOutcomeUncertain();
+                    throw failure;
+                }
+            }
+        };
+    }
+
+    @Override
     public AuditReader getAuditReader() {
-        auditRepository.initialize(autoCreate);
         return () -> auditRepository.getAuditHistory();
     }
 

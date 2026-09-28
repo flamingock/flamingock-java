@@ -94,6 +94,8 @@ class MongoDBReactiveAuditStoreJournalTest {
     @DisplayName("the flag-off store keeps historical audit rows and does not create the journal")
     void flagOffKeepsHistoricalAuditRows() {
         MongoDBReactiveAuditStore auditStore = initializeStore();
+        assertTrue(collectionExists(AUDIT_COLLECTION));
+        assertFalse(collectionExists(JOURNAL_COLLECTION));
         CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("stage-one");
 
         persistence.writeEntry(auditEntry("change-1", AuditEntry.Status.STARTED));
@@ -104,10 +106,61 @@ class MongoDBReactiveAuditStoreJournalTest {
     }
 
     @Test
+    @DisplayName("history appender preserves legacy rows without creating a journal")
+    void historyAppenderPreservesLegacyRows() {
+        MongoDBReactiveAuditStore store = initializeStore();
+        store.getAuditHistoryAppender().append(auditEntry("history-change", AuditEntry.Status.STARTED));
+        store.getAuditHistoryAppender().append(auditEntry("history-change", AuditEntry.Status.APPLIED));
+
+        assertTrue(collectionExists(AUDIT_COLLECTION));
+        assertTrue(indexesByName(AUDIT_COLLECTION).values().stream()
+                .anyMatch(index -> Boolean.TRUE.equals(index.getBoolean("unique"))));
+        assertEquals(2, store.getAuditReader().getAuditHistory().size());
+        assertFalse(collectionExists(JOURNAL_COLLECTION));
+    }
+
+    @Test
+    @DisplayName("journal history rejects writes when the flag is disabled")
+    void journalHistoryRejectsDisabledFlag() {
+        MongoDBReactiveAuditStore store = initializeStore();
+        assertThrows(IllegalStateException.class, () -> store.getJournalHistoryAppender()
+                .append("history-stage", auditEntry("history-change", AuditEntry.Status.APPLIED)));
+        assertFalse(collectionExists(JOURNAL_COLLECTION));
+    }
+
+    @Test
+    @DisplayName("journal history writes its own stream without changing current audit state")
+    void journalHistoryWritesWithoutAuditState() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBReactiveAuditStore store = initializeStore();
+        store.getJournalHistoryAppender().append("history-stage", auditEntry("first", AuditEntry.Status.APPLIED));
+        store.getJournalHistoryAppender().append("history-stage", auditEntry("second", AuditEntry.Status.APPLIED));
+
+        assertTrue(store.getAuditReader().getAuditHistory().isEmpty());
+        assertEquals(Arrays.asList(1L, 2L), sequences(storedEvents()));
+        assertTrue(storedEvents().stream().allMatch(event -> "history-stage".equals(event.getStreamId())));
+    }
+
+    @Test
+    void stagePersistenceAndHistoryWriterShareStreamSequence() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBReactiveAuditStore store = initializeStore();
+        CommunityAuditPersistence persistence = store.getPersistenceFactory().get("history-stage");
+        persistence.writeEntry(auditEntry("first", AuditEntry.Status.APPLIED));
+        store.getJournalHistoryAppender().append("history-stage", auditEntry("second", AuditEntry.Status.APPLIED));
+        assertEquals(1, store.getAuditReader().getAuditHistory().size());
+        persistence.writeEntry(auditEntry("third", AuditEntry.Status.APPLIED));
+        assertEquals(Arrays.asList(1L, 2L, 3L), sequences(storedEvents()));
+        assertEquals(2, store.getAuditReader().getAuditHistory().size());
+    }
+
+    @Test
     @DisplayName("journal-enabled store creates independent streams for each stage")
     void flagOnCreatesStageAwareJournalStreams() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         MongoDBReactiveAuditStore auditStore = initializeStore();
+        assertTrue(collectionExists(AUDIT_COLLECTION));
+        assertTrue(collectionExists(JOURNAL_COLLECTION));
         AuditPersistenceFactory<CommunityAuditPersistence> factory = auditStore.getPersistenceFactory();
 
         factory.get("stage-one").writeEntry(auditEntry("change-one", AuditEntry.Status.APPLIED));
@@ -141,8 +194,8 @@ class MongoDBReactiveAuditStoreJournalTest {
     }
 
     @Test
-    @DisplayName("an audit-only installation remains readable until journal persistence is first accessed")
-    void auditOnlyUpgradeCreatesJournalSchemaLazily() {
+    @DisplayName("an audit-only installation gains journal schema during store initialization")
+    void auditOnlyUpgradeCreatesJournalSchemaDuringInitialization() {
 		MongoDBReactiveAuditStore legacyStore = initializeStore();
 		CommunityAuditPersistence legacyPersistence = legacyStore.getPersistenceFactory().get("legacy-stage");
 		legacyPersistence.writeEntry(auditEntry("legacy-started", AuditEntry.Status.STARTED));
@@ -154,7 +207,7 @@ class MongoDBReactiveAuditStoreJournalTest {
 		FeatureFlag.enable(Features.JOURNAL_EVENTS);
 		MongoDBReactiveAuditStore upgradedStore = initializeStore();
 		assertEquals(Arrays.asList("legacy-applied", "legacy-started"), auditChangeIds(upgradedStore.getAuditReader().getAuditHistory()));
-		assertFalse(collectionExists(JOURNAL_COLLECTION));
+		assertTrue(collectionExists(JOURNAL_COLLECTION));
 
 		upgradedStore.getPersistenceFactory().get("upgrade-stage");
 
@@ -169,8 +222,8 @@ class MongoDBReactiveAuditStoreJournalTest {
 	}
 
 	@Test
-	@DisplayName("manual schemas validate at their lazy access boundaries")
-	void manualSchemaValidationIsLazyAndAcceptsValidSchema() {
+	@DisplayName("manual schemas validate during store initialization")
+	void manualSchemaValidationOccursDuringInitialization() {
 		createManualSchema(false);
 		MongoDBReactiveAuditStore validStore = initializeManualStore();
 		validStore.getAuditReader().getAuditHistory();
@@ -181,16 +234,12 @@ class MongoDBReactiveAuditStoreJournalTest {
 
 		PublisherSync.complete(database.drop());
 		createLockSchema();
-		MongoDBReactiveAuditStore missingAuditStore = initializeManualStore();
-		assertInvalidSchema(AUDIT_COLLECTION, () -> missingAuditStore.getAuditReader());
-		assertInvalidSchema(AUDIT_COLLECTION, () -> missingAuditStore.getPersistenceFactory().get("manual-stage"));
+		assertInvalidSchema(AUDIT_COLLECTION, () -> initializeManualStore());
 
 		PublisherSync.complete(database.drop());
 		createLockSchema();
 		createAuditSchema();
-		MongoDBReactiveAuditStore missingJournalStore = initializeManualStore();
-		missingJournalStore.getAuditReader().getAuditHistory();
-		assertInvalidSchema(JOURNAL_COLLECTION, () -> missingJournalStore.getPersistenceFactory().get("manual-stage"));
+		assertInvalidSchema(JOURNAL_COLLECTION, () -> initializeManualStore());
 	}
 
 	@Test
@@ -289,7 +338,7 @@ class MongoDBReactiveAuditStoreJournalTest {
 		} catch (Throwable throwable) {
 			throw new RuntimeException(throwable);
 		}
-		assertInvalidSchema(JOURNAL_COLLECTION, () -> initializeManualStore().getPersistenceFactory().get("invalid-stage"));
+		assertInvalidSchema(JOURNAL_COLLECTION, () -> initializeManualStore());
 	}
 
 	private void assertInvalidSchema(String collectionName, Executable access) {

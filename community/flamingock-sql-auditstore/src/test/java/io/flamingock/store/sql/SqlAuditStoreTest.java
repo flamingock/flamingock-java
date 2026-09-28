@@ -30,6 +30,8 @@ import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
+import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.common.sql.SqlDialect;
@@ -443,6 +445,94 @@ class SqlAuditStoreTest {
         assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
         assertEquals(1, countRows("flamingockAuditLog"));
         assertEquals(2, countRows("customJournalEvents"));
+        auditStore.getJournalHistoryAppender().append("history-stage",
+                auditEntry("independent-history", AuditEntry.Status.APPLIED));
+        assertEquals(1, countRows("flamingockAuditLog"));
+        assertEquals(3, countRows("customJournalEvents"));
+        auditStore.getAuditHistoryAppender().append(auditEntry("legacy-history", AuditEntry.Status.APPLIED));
+        assertEquals(2, countRows("flamingockAuditLog"));
+    }
+
+    @Test
+    @DisplayName("audit and journal commit independently when the SQL target transaction rolls back")
+    void journalAndAuditSurviveTargetTransactionRollback() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.H2, "h2");
+        try (Connection connection = context.dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE rollback_probe (id INT PRIMARY KEY)");
+        }
+
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("rollback-stage");
+
+        DatabaseTransactionException failure = assertThrows(DatabaseTransactionException.class,
+                () -> targetSystem.getTxWrapper().wrapExecution(new BasicRuntimeContext("rollback-probe"), runtime -> {
+                    Connection changeConnection = runtime.getContext().getRequiredDependencyValue(Connection.class);
+                    try (Statement statement = changeConnection.createStatement()) {
+                        statement.executeUpdate("INSERT INTO rollback_probe (id) VALUES (1)");
+                    } catch (SQLException exception) {
+                        throw new IllegalStateException(exception);
+                    }
+                    persistence.writeEntry(auditEntry("rollback-change", AuditEntry.Status.APPLIED));
+                    throw new IllegalStateException("roll back change transaction");
+                }));
+
+        assertEquals("roll back change transaction", failure.getCause().getMessage());
+        assertEquals(1, auditStore.getAuditReader().getAuditHistory().size());
+        assertEquals(1, countRows("flamingockAuditLog"));
+        assertEquals(1, countRows("flamingockJournalEvents"));
+        assertEquals(0, countRows("rollback_probe"));
+    }
+
+    @Test
+    void stageCreatedBeforeJournalOnlyAppendSharesStreamSequence() throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        context = setupTest(SqlDialect.H2, "h2");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore store = SqlAuditStore.from(targetSystem);
+        store.initialize(baseContext);
+
+        CommunityAuditPersistence persistence = store.getPersistenceFactory().get("shared-stage");
+        store.getJournalHistoryAppender().append("shared-stage", auditEntry("history", AuditEntry.Status.STARTED));
+        persistence.writeEntry(auditEntry("first", AuditEntry.Status.APPLIED));
+        persistence.writeEntry(auditEntry("second", AuditEntry.Status.APPLIED));
+
+        SqlJournalEventStore journal = new SqlJournalEventStore(
+                context.dataSource, "flamingockJournalEvents", targetSystem.getTxWrapper());
+        journal.initialize(false);
+        assertEquals(3L, journal.getLastEventByStream("shared-stage").get().getStreamSequence());
+        assertEquals(3, countRows("flamingockJournalEvents"));
+        assertEquals(2, countRows("flamingockAuditLog"));
+    }
+
+    @Test
+    void journalFacadeRejectsFlagOffButHistoricalAppenderStillWorks() throws Exception {
+        context = setupTest(SqlDialect.H2, "h2");
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        assertThrows(IllegalStateException.class, () -> auditStore.getJournalHistoryAppender().append(
+                "history-stage", auditEntry("disabled", AuditEntry.Status.APPLIED)));
+        assertFalse(tableExists("flamingockJournalEvents"));
+        auditStore.getAuditHistoryAppender().append(auditEntry("legacy", AuditEntry.Status.STARTED));
+        auditStore.getAuditHistoryAppender().append(auditEntry("legacy", AuditEntry.Status.APPLIED));
+        assertEquals(2, countRows("flamingockAuditLog"));
     }
 
     @ParameterizedTest
@@ -547,8 +637,9 @@ class SqlAuditStoreTest {
 
     @ParameterizedTest
     @MethodSource("dialectProvider")
-    @DisplayName("a stage snapshots the journal flag once and uses the captured value")
+    @DisplayName("a journal-enabled store bootstraps storage before a stage writes")
     void stageSnapshotsJournalFlagOnce(SqlDialect sqlDialect, String dialectName) throws Exception {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
         context = setupTest(sqlDialect, dialectName);
         SimpleContext baseContext = new SimpleContext();
         baseContext.addDependency(RunnerId.generate());
@@ -557,16 +648,12 @@ class SqlAuditStoreTest {
         targetSystem.initialize(baseContext);
         SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
         auditStore.initialize(baseContext);
+        assertTrue(tableExists("flamingockJournalEvents"));
 
-        try (MockedStatic<FeatureFlag> flags = org.mockito.Mockito.mockStatic(FeatureFlag.class)) {
-            flags.when(() -> FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false))
-                    .thenReturn(true, false);
+        CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("captured-stage");
+        persistence.writeEntry(auditEntry("captured-flag", AuditEntry.Status.APPLIED));
 
-            CommunityAuditPersistence persistence = auditStore.getPersistenceFactory().get("captured-stage");
-            persistence.writeEntry(auditEntry("captured-flag", AuditEntry.Status.APPLIED));
-
-            assertEquals(1, countRows("flamingockJournalEvents"));
-        }
+        assertEquals(1, countRows("flamingockJournalEvents"));
     }
 
     @ParameterizedTest

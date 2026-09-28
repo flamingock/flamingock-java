@@ -26,6 +26,7 @@ import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventEntity;
 import io.flamingock.internal.util.id.RunnerId;
@@ -87,6 +88,66 @@ class DynamoDBAuditStoreJournalTest {
     }
 
     @Test
+    @DisplayName("historical append preserves the legacy key without creating a journal table")
+    void historicalAppenderWorksWithJournalDisabled() {
+        SimpleContext context = newContext();
+        DynamoDBAuditStore store = initializeStore(context);
+        AuditEntry entry = auditEntry("history-only");
+        store.getAuditHistoryAppender().append(entry);
+
+        List<AuditEntryEntity> rows = new DynamoDBUtil(client).getEnhancedClient()
+                .table(auditTableName, TableSchema.fromBean(AuditEntryEntity.class))
+                .scan().items().stream().collect(Collectors.toList());
+        assertEquals(1, rows.size());
+        assertEquals(new AuditEntryEntity(entry).getPartitionKey(), rows.get(0).getPartitionKey());
+        assertFalse(client.listTables().tableNames().contains(journalTableName));
+        assertThrows(IllegalStateException.class,
+                () -> store.getJournalHistoryAppender().append(STAGE_ONE, auditEntry("rejected")));
+        assertFalse(client.listTables().tableNames().contains(journalTableName));
+    }
+
+    @Test
+    @DisplayName("journal-only history uses independent per-stream transactions without audit state")
+    void journalHistoryWritesOnlyEventsAndReseedsStreams() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        DynamoDBAuditStore store = initializeStore(newContext());
+        store.getJournalHistoryAppender().append(STAGE_ONE, auditEntry("first"));
+        store.getJournalHistoryAppender().append(STAGE_TWO, auditEntry("other"));
+        store.getJournalHistoryAppender().append(STAGE_ONE, auditEntry("second"));
+
+        assertEquals(3, storedEvents().size());
+        assertTrue(storedEvents().stream().anyMatch(event -> STAGE_ONE.equals(event.getStreamId())
+                && event.getStreamSequence() == 2L && "second".equals(event.getData().getChangeId())));
+        assertTrue(storedEvents().stream().anyMatch(event -> STAGE_TWO.equals(event.getStreamId())
+                && event.getStreamSequence() == 1L));
+        assertTrue(store.getAuditReader().getAuditHistory().isEmpty());
+    }
+
+    @Test
+    @DisplayName("persistence created before journal-only writes shares the stream sequence")
+    void persistenceCreatedFirstSharesJournalHistorySequence() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        DynamoDBAuditStore store = initializeStore(newContext());
+        CommunityAuditPersistence persistence = store.getPersistenceFactory().get(STAGE_ONE);
+
+        store.getJournalHistoryAppender().append(STAGE_ONE, auditEntry("history-first"));
+        store.getJournalHistoryAppender().append(STAGE_ONE, auditEntry("history-second"));
+        persistence.writeEntry(auditEntry("normal-third"));
+
+        List<JournalEvent<AuditEntry>> events = storedEvents().stream()
+                .filter(event -> STAGE_ONE.equals(event.getStreamId()))
+                .collect(Collectors.toList());
+        assertEquals(3, events.size());
+        assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 1L
+                && "history-first".equals(event.getData().getChangeId())));
+        assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 2L
+                && "history-second".equals(event.getData().getChangeId())));
+        assertTrue(events.stream().anyMatch(event -> event.getStreamSequence() == 3L
+                && "normal-third".equals(event.getData().getChangeId())));
+        assertEquals(1, store.getAuditReader().getAuditHistory().size());
+    }
+
+    @Test
     @DisplayName("journal-enabled stores create independent persistence streams for each stage")
     void journalEnabledStoreCreatesPerStagePersistenceStreams() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
@@ -141,6 +202,7 @@ class DynamoDBAuditStoreJournalTest {
 
         assertTrue(auditStore.getAuditReader().getAuditHistory().isEmpty());
         assertTrue(client.listTables().tableNames().contains(auditTableName));
+        assertTrue(client.listTables().tableNames().contains(journalTableName));
 
         auditStore.getPersistenceFactory().get(STAGE_ONE).writeEntry(auditEntry("audit-only-change"));
         auditStore.getPersistenceFactory().get(STAGE_TWO);
@@ -166,8 +228,8 @@ class DynamoDBAuditStoreJournalTest {
                 .withJournalRepositoryName(journalTableName)
                 .withWriteCapacityUnits(-1L);
 
-        assertThrows(DynamoDbException.class, () -> invalidReadCapacity.initialize(context));
-        assertThrows(DynamoDbException.class, () -> invalidWriteCapacity.initialize(context));
+        assertThrows(FlamingockException.class, () -> invalidReadCapacity.initialize(context));
+        assertThrows(FlamingockException.class, () -> invalidWriteCapacity.initialize(context));
         assertTrue(client.listTables().tableNames().isEmpty());
     }
 
@@ -181,11 +243,9 @@ class DynamoDBAuditStoreJournalTest {
                 .withLockRepositoryName(lockTableName)
                 .withJournalRepositoryName(journalTableName)
                 .withAutoCreate(false);
-        auditStore.initialize(context);
-
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
-                () -> auditStore.getPersistenceFactory().get(STAGE_ONE));
+                () -> auditStore.initialize(context));
 
         assertTrue(exception.getMessage().contains("audit table"));
         assertFalse(client.listTables().tableNames().contains(journalTableName));
@@ -221,6 +281,18 @@ class DynamoDBAuditStoreJournalTest {
                 .withJournalRepositoryName(auditTableName);
 
         assertThrows(FlamingockException.class, () -> auditStore.initialize(context));
+
+        DynamoDBAuditStore lockCollision = DynamoDBAuditStore.from(targetSystem)
+                .withAuditRepositoryName(auditTableName)
+                .withLockRepositoryName(lockTableName)
+                .withJournalRepositoryName(" " + lockTableName.toUpperCase() + " ");
+        assertThrows(FlamingockException.class, () -> lockCollision.initialize(context));
+
+        DynamoDBAuditStore missingJournalName = DynamoDBAuditStore.from(targetSystem)
+                .withAuditRepositoryName(auditTableName)
+                .withLockRepositoryName(lockTableName)
+                .withJournalRepositoryName(null);
+        assertThrows(FlamingockException.class, () -> missingJournalName.initialize(context));
     }
 
     private List<JournalEvent<AuditEntry>> storedEvents() {

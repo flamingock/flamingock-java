@@ -49,6 +49,7 @@ public class MongoDBSyncAuditRepository {
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
+    private boolean initialized;
 
     public MongoDBSyncAuditRepository(MongoDatabase database,
                                       String collectionName,
@@ -61,7 +62,10 @@ public class MongoDBSyncAuditRepository {
                 .withWriteConcern(writeConcern);
     }
 
-    protected void initialize(boolean autoCreate) {
+    public synchronized void initialize(boolean autoCreate) {
+        if (initialized) {
+            return;
+        }
         CollectionInitializator<MongoDBDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(collection),
                 () -> new MongoDBDocumentHelper(new Document()),
@@ -72,7 +76,7 @@ public class MongoDBSyncAuditRepository {
         } else {
             initializer.justValidateCollection();
         }
-
+        initialized = true;
     }
 
     /**
@@ -133,7 +137,7 @@ public class MongoDBSyncAuditRepository {
      * regardless: a legacy changelog can hold several entries for the same change across executions, and
      * {@link #save} would collapse them onto each other, discarding the very history being imported.
      */
-    Result append(AuditEntry auditEntry) {
+    public Result append(AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),

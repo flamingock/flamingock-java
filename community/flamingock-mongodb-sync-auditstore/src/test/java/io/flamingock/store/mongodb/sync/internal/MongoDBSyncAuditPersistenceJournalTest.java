@@ -30,7 +30,6 @@ import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -97,6 +96,11 @@ class MongoDBSyncAuditPersistenceJournalTest {
                 database, JOURNAL_COLLECTION,
                 ReadConcern.MAJORITY, ReadPreference.primary(), WriteConcern.MAJORITY.withJournal(true));
         txWrapper = new MongoDBSyncTxWrapper(new TransactionManager<>(mongoClient::startSession));
+        auditRepository.initialize(true);
+        // Prepare the real collaborators before any fixture obtains a stream sequencer.
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true);
+        }
     }
 
     @AfterEach
@@ -112,32 +116,32 @@ class MongoDBSyncAuditPersistenceJournalTest {
     @DisplayName("constructor accepts a transaction wrapper when transactions are supported")
     void constructorAcceptsWrapperWhenTransactionsAreSupported() {
         assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), auditRepository, journalEventStore,
-                mock(JournalEventSequencer.class), true, txWrapper, true));
+                auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, txWrapper));
     }
 
     @Test
     @DisplayName("constructor rejects a missing transaction wrapper when transactions are supported")
     void constructorRejectsMissingWrapperWhenTransactionsAreSupported() {
         assertThrows(NullPointerException.class, () -> new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), auditRepository, journalEventStore,
-                mock(JournalEventSequencer.class), true, null, true));
+                auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), true, null));
     }
 
     @Test
     @DisplayName("constructor accepts no transaction wrapper when transactions are not supported")
     void constructorAcceptsMissingWrapperWhenTransactionsAreNotSupported() {
         assertDoesNotThrow(() -> new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), auditRepository, journalEventStore,
-                mock(JournalEventSequencer.class), false, null, true));
+                auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, null));
     }
 
     @Test
     @DisplayName("constructor rejects a transaction wrapper when transactions are not supported")
     void constructorRejectsWrapperWhenTransactionsAreNotSupported() {
         assertThrows(IllegalArgumentException.class, () -> new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), auditRepository, journalEventStore,
-                mock(JournalEventSequencer.class), false, txWrapper, true));
+                auditRepository, journalEventStore,
+                mock(JournalEventSequencer.class), false, txWrapper));
     }
 
     @Test
@@ -312,20 +316,27 @@ class MongoDBSyncAuditPersistenceJournalTest {
      * Builds a persistence over {@code STREAM_ID}. The sequencer has to come from the factory because
      * {@link JournalEventSequencer}'s constructor is package-private in another package.
      * <p>
-     * Call only after deciding the flag state: {@code initialize} is where the journal collection setup is
-     * gated.
+     * Prepare the journal collaborator after deciding the flag state and before obtaining a sequencer.
      */
     private MongoDBSyncAuditPersistence persistenceFor(MongoDBSyncAuditRepository repository) {
+        prepareJournal();
         return persistenceFor(repository, new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
     }
 
     private MongoDBSyncAuditPersistence persistenceFor(MongoDBSyncAuditRepository repository,
                                                        JournalEventSequencer sequencer) {
+        prepareJournal();
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), repository, journalEventStore, sequencer,
-                true, txWrapper, true);
+                repository, journalEventStore, sequencer,
+                true, txWrapper);
         persistence.initialize(RunnerId.generate());
         return persistence;
+    }
+
+    private void prepareJournal() {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true);
+        }
     }
 
     private MongoDBSyncAuditPersistence persistenceWithoutTransactions(
@@ -333,7 +344,7 @@ class MongoDBSyncAuditPersistenceJournalTest {
             MongoDBSyncJournalEventStore journalStore,
             JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
+                repository, journalStore, sequencer, false, null);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

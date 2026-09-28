@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.store.audit.community;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.Result;
 
-public abstract class AbstractCommunityAuditPersistence implements CommunityAuditPersistence {
+/** Appends a journal entry to the specified history stream. */
+public interface JournalHistoryAppender {
 
-    protected void doInitialize(RunnerId runnerId) {
-    }
-
-    public void initialize(RunnerId runnerId) {
-        doInitialize(runnerId);
-    }
+    /** Appends an audit entry to a stream and returns the write outcome. */
+    Result append(String streamId, AuditEntry entry);
 }

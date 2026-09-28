@@ -29,7 +29,6 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseJournalEventMapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -236,16 +235,40 @@ class CouchbaseAuditPersistenceJournalTest {
                 "the stream must stay contiguous, so consumers can tell in-flight from lost");
     }
 
+    @Test
+    @DisplayName("shared journal writer stages an event without changing audit current state")
+    void journalWriterStagesEventWithoutAuditState() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        journalEventStore.initialize(true, SCOPE_NAME, JOURNAL_COLLECTION);
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
+        CouchbaseJournalWriter writer = new CouchbaseJournalWriter(journalEventStore);
+        JournalEvent<AuditEntry> event = sequencer.newEvent(auditEntry("journal-only-change"));
+
+        txWrapper.wrapExecution(new io.flamingock.internal.core.context.BasicRuntimeContext("journal-only"), context ->
+                writer.write(context.getContext().getRequiredDependencyValue(TransactionAttemptContext.class), event));
+        sequencer.confirm();
+
+        assertEquals(1, storedEvents().size());
+        assertEquals(1L, storedEvents().get(0).getStreamSequence());
+        assertFalse(CouchbaseCollectionHelper.collectionExists(cluster, BUCKET_NAME, SCOPE_NAME, AUDIT_COLLECTION));
+    }
+
     // ----------------------------- helpers -----------------------------
 
     private CouchbaseAuditPersistence persistenceFor(CouchbaseAuditor auditor) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true, SCOPE_NAME, JOURNAL_COLLECTION);
+        }
         return persistenceFor(auditor, new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
     }
 
     private CouchbaseAuditPersistence persistenceFor(CouchbaseAuditor auditor, JournalEventSequencer sequencer) {
+        if (auditor == this.auditor) {
+            auditor.initialize(true, SCOPE_NAME, AUDIT_COLLECTION);
+        }
         CouchbaseAuditPersistence persistence = new CouchbaseAuditPersistence(
-                new CommunityConfiguration(), auditor, journalEventStore, sequencer, txWrapper,
-                SCOPE_NAME, AUDIT_COLLECTION, JOURNAL_COLLECTION, true);
+                auditor, sequencer, txWrapper,
+                new CouchbaseJournalWriter(journalEventStore));
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

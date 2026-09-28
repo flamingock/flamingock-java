@@ -17,9 +17,7 @@ package io.flamingock.store.sql.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
-import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
@@ -36,29 +34,30 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
     private final JournalEventSequencer journalEventSequencer;
     private final ExecutionWrapper txWrapper;
     private final boolean journalEventsEnabled;
+    private final SqlJournalHistoryAppender journalHistoryWriter;
 
     /**
      * Creates persistence over collaborators whose schema readiness belongs to the store and stage factory.
      *
-     * @param localConfiguration    community configuration
      * @param auditRepository       ready audit table writer/reader
      * @param journalEventStore     ready relational Journal Event store
      * @param journalEventSequencer stage-scoped sequence allocator
      * @param txWrapper             transaction wrapper shared with the SQL target system
      * @param journalEventsEnabled  feature flag snapshot captured for this stage
+     * @param journalHistoryWriter  explicitly configured journal history writer
      */
-    public SqlAuditPersistence(CommunityConfigurable localConfiguration,
-                               SqlAuditRepository auditRepository,
+    public SqlAuditPersistence(SqlAuditRepository auditRepository,
                                SqlJournalEventStore journalEventStore,
                                JournalEventSequencer journalEventSequencer,
                                ExecutionWrapper txWrapper,
-                               boolean journalEventsEnabled) {
-        super(localConfiguration);
+                               boolean journalEventsEnabled,
+                               SqlJournalHistoryAppender journalHistoryWriter) {
         this.auditRepository = auditRepository;
         this.journalEventStore = journalEventStore;
         this.journalEventSequencer = journalEventSequencer;
         this.txWrapper = txWrapper;
         this.journalEventsEnabled = journalEventsEnabled;
+        this.journalHistoryWriter = journalHistoryWriter;
     }
 
     @Override
@@ -78,27 +77,33 @@ public class SqlAuditPersistence extends AbstractCommunityAuditPersistence {
         return auditRepository.getAuditHistory();
     }
 
-    // Keep the lock through transaction commit: save uses a caller-owned connection.
     @Override
-    public synchronized Result writeEntry(AuditEntry auditEntry) {
+    public Result writeEntry(AuditEntry auditEntry) {
         if (!journalEventsEnabled) {
             return auditRepository.append(auditEntry);
         }
 
-        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-        Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
-            Connection connection = runtimeContext.getContext().getRequiredDependencyValue(Connection.class);
-            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-            journalEventStore.append(connection, journalEvent);
-            Result currentStateResult = auditRepository.save(connection, auditEntry);
-            if (currentStateResult instanceof Result.Error) {
-                throw new IllegalStateException("Failed to replace local current audit state",
-                        ((Result.Error) currentStateResult).getError());
+        // The same stream lock protects independent history writes and audit writes through commit.
+        synchronized (journalEventSequencer) {
+            try {
+                RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+                Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
+                    Connection connection = runtimeContext.getContext().getRequiredDependencyValue(Connection.class);
+                    journalHistoryWriter.append(connection, journalEventSequencer, auditEntry);
+                    Result currentStateResult = auditRepository.save(connection, auditEntry);
+                    if (currentStateResult instanceof Result.Error) {
+                        throw new IllegalStateException("Failed to replace local current audit state",
+                                ((Result.Error) currentStateResult).getError());
+                    }
+                    return currentStateResult == null ? Result.OK() : currentStateResult;
+                });
+                journalEventSequencer.confirm();
+                return result;
+            } catch (RuntimeException | Error failure) {
+                journalEventSequencer.markWriteOutcomeUncertain();
+                throw failure;
             }
-            return currentStateResult == null ? Result.OK() : currentStateResult;
-        });
-        journalEventSequencer.confirm();
-        return result;
+        }
     }
 
 }

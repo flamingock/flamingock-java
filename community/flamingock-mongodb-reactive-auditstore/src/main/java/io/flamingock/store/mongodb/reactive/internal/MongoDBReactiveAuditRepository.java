@@ -137,7 +137,7 @@ public class MongoDBReactiveAuditRepository {
      * @param auditEntry entry to append or replace
      * @return successful write result; driver failures are propagated
      */
-    Result append(AuditEntry auditEntry) {
+    public Result append(AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),

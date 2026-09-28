@@ -23,7 +23,6 @@ import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
-import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -107,7 +106,8 @@ class SqlAuditPersistenceJournalTest {
         SqlAuditRepository auditRepository = new SqlAuditRepository(dataSource, AUDIT_TABLE);
         auditRepository.initialize(true);
         SqlAuditPersistence persistence = new SqlAuditPersistence(
-                new CommunityConfiguration(), auditRepository, null, null, null, false);
+                auditRepository, null, null, null, false,
+                new SqlJournalHistoryAppender(null, null, txWrapper));
 
         persistence.initialize(RunnerId.generate());
         persistence.writeEntry(auditEntry("legacy-constructor", AuditEntry.Status.APPLIED));
@@ -122,12 +122,55 @@ class SqlAuditPersistenceJournalTest {
         SqlJournalEventStore journalStore = org.mockito.Mockito.mock(SqlJournalEventStore.class);
         JournalEventSequencer sequencer = org.mockito.Mockito.mock(JournalEventSequencer.class);
         SqlAuditPersistence persistence = new SqlAuditPersistence(
-                new CommunityConfiguration(), auditRepository, journalStore, sequencer, txWrapper, true);
+                auditRepository, journalStore, sequencer, txWrapper, true,
+                new SqlJournalHistoryAppender(journalStore, new JournalEventSequencerFactory(journalStore), txWrapper));
 
         persistence.initialize(RunnerId.generate());
 
         verify(auditRepository, never()).initialize(ArgumentMatchers.anyBoolean());
         verify(journalStore, never()).initialize(ArgumentMatchers.anyBoolean());
+    }
+
+    @Test
+    @DisplayName("independent journal writer commits history without changing current audit state")
+    void independentJournalWriterDoesNotUpdateCurrentState() throws Exception {
+        SqlAuditRepository auditor = new SqlAuditRepository(dataSource, AUDIT_TABLE);
+        auditor.initialize(true);
+        SqlJournalEventStore journalStore = initializedJournalStore();
+        SqlJournalHistoryAppender writer = new SqlJournalHistoryAppender(journalStore,
+                new JournalEventSequencerFactory(journalStore), txWrapper);
+
+        writer.append(STREAM_ID, auditEntry("history-only", AuditEntry.Status.STARTED));
+        writer.append(STREAM_ID, auditEntry("history-only", AuditEntry.Status.APPLIED));
+
+        assertTrue(auditor.getAuditHistory().isEmpty());
+        assertEquals(2, journalStore.getUnacknowledgedEvents(10).size());
+        assertEquals(2L, journalStore.getLastEventByStream(STREAM_ID).get().getStreamSequence());
+    }
+
+    @Test
+    @DisplayName("audit transaction commits independently of a rolled-back change transaction")
+    void auditWriteDoesNotEnlistInChangeTransaction() throws Exception {
+        SqlJournalEventStore journalStore = initializedJournalStore();
+        SqlAuditPersistence persistence = persistenceFor(new SqlAuditRepository(dataSource, AUDIT_TABLE),
+                journalStore, newSequencer(journalStore), true);
+        try (Connection changeConnection = dataSource.getConnection()) {
+            changeConnection.createStatement().execute("CREATE TABLE change_work (id INTEGER)");
+            changeConnection.setAutoCommit(false);
+            changeConnection.createStatement().execute("INSERT INTO change_work (id) VALUES (1)");
+
+            persistence.writeEntry(auditEntry("independent-audit", AuditEntry.Status.APPLIED));
+            assertEquals(1, persistence.getAuditHistory().size());
+            assertEquals(1, journalStore.getUnacknowledgedEvents(10).size());
+            changeConnection.rollback();
+        }
+        try (Connection verification = dataSource.getConnection();
+             ResultSet rows = verification.createStatement().executeQuery("SELECT COUNT(*) FROM change_work")) {
+            assertTrue(rows.next());
+            assertEquals(0, rows.getInt(1));
+        }
+        assertEquals(1, persistence.getAuditHistory().size());
+        assertEquals(1L, journalStore.getLastEventByStream(STREAM_ID).get().getStreamSequence());
     }
 
     @Test
@@ -329,7 +372,8 @@ class SqlAuditPersistenceJournalTest {
         SqlAuditRepository auditor = mock(SqlAuditRepository.class);
         when(auditor.append(ArgumentMatchers.any(AuditEntry.class))).thenReturn(Result.OK());
         SqlAuditPersistence persistence = new SqlAuditPersistence(
-                new CommunityConfiguration(), auditor, null, null, null, false);
+                auditor, null, null, null, false,
+                new SqlJournalHistoryAppender(null, null, txWrapper));
 
         Result result = persistence.writeEntry(auditEntry("append-only", AuditEntry.Status.APPLIED));
 
@@ -518,7 +562,8 @@ class SqlAuditPersistenceJournalTest {
                                                 boolean journalEventsEnabled) {
         auditor.initialize(true);
         SqlAuditPersistence persistence = new SqlAuditPersistence(
-                new CommunityConfiguration(), auditor, journalStore, sequencer, txWrapper, journalEventsEnabled);
+                auditor, journalStore, sequencer, txWrapper, journalEventsEnabled,
+                new SqlJournalHistoryAppender(journalStore, new JournalEventSequencerFactory(journalStore), txWrapper));
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

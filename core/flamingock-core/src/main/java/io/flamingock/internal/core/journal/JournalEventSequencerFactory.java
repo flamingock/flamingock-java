@@ -15,18 +15,24 @@
  */
 package io.flamingock.internal.core.journal;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class JournalEventSequencerFactory {
 
     private final JournalEventReader journalEventReader;
+    private final ConcurrentMap<String, JournalEventSequencer> sequencers = new ConcurrentHashMap<>();
 
     public JournalEventSequencerFactory(JournalEventReader journalEventReader) {
         this.journalEventReader = journalEventReader;
     }
 
     public JournalEventSequencer forStream(String streamId) {
-        long initialSequence = journalEventReader.getLastEventByStream(streamId)
-                .map(e -> e.getStreamSequence() + 1)
-                .orElse(1L);
-        return new JournalEventSequencer(streamId, initialSequence);
+        return sequencers.computeIfAbsent(streamId, id -> {
+            long initialSequence = journalEventReader.getLastEventByStream(id)
+                    .map(e -> Math.addExact(e.getStreamSequence(), 1L))
+                    .orElse(1L);
+            return new JournalEventSequencer(id, initialSequence, journalEventReader);
+        });
     }
 }

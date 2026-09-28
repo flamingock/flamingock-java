@@ -1,0 +1,43 @@
+/*
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.store.mongodb.reactive.internal;
+
+import com.mongodb.reactivestreams.client.ClientSession;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.journal.JournalEvent;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
+import io.flamingock.internal.util.Result;
+
+/** Shares event construction and persistence between normal and history-only writes. */
+public class MongoDBReactiveJournalWriter {
+    private final MongoDBReactiveJournalEventStore store;
+
+    public MongoDBReactiveJournalWriter(MongoDBReactiveJournalEventStore store) {
+        this.store = store;
+    }
+
+    public Result write(ClientSession session, JournalEventSequencer sequencer, AuditEntry entry) {
+        JournalEvent<AuditEntry> event = sequencer.newEvent(entry);
+        return store.append(session, event);
+    }
+
+    public Result write(JournalEventSequencer sequencer, AuditEntry entry) {
+        JournalEvent<AuditEntry> event = sequencer.newEvent(entry);
+        Result result = store.append(event);
+        sequencer.confirm();
+        return result;
+    }
+}

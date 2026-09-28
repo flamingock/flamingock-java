@@ -22,7 +22,6 @@ import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
-import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -245,18 +244,19 @@ class DynamoDBAuditPersistenceJournalTest {
     }
 
     private DynamoDBAuditPersistence persistenceFor(JournalEventSequencer sequencer) {
+        DynamoDBAuditRepository repository = new DynamoDBAuditRepository(client, auditTableName, 5L, 5L);
+        repository.initialize(true);
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
-                new CommunityConfiguration(),
-                new DynamoDBAuditRepository(client, auditTableName, 5L, 5L),
-                journalEventStore,
-                sequencer,
-                txWrapper,
-                true);
+                repository, sequencer, txWrapper,
+                new DynamoDBJournalWriter(journalEventStore));
         persistence.initialize(io.flamingock.internal.util.id.RunnerId.generate());
         return persistence;
     }
 
     private JournalEventSequencer newSequencer() {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true);
+        }
         return new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID);
     }
 

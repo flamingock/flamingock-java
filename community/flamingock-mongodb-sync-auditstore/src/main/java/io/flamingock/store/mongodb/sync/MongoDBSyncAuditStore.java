@@ -21,12 +21,16 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
+import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
@@ -40,6 +44,7 @@ import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditRepository;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncJournalEventStore;
+import io.flamingock.store.mongodb.sync.internal.MongoDBSyncJournalWriter;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
@@ -53,15 +58,13 @@ import static io.flamingock.internal.common.mongodb.journal.JournalEventPersiste
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
-public class MongoDBSyncAuditStore implements CommunityAuditStore {
+public class MongoDBSyncAuditStore implements CommunityAuditStore, HistoryAppenderProvider {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncAuditStore");
 
     private final MongoDBExternalSystem mongoDBTargetSystem;
 
     protected RunnerId runnerId;
-    private CommunityConfigurable communityConfiguration;
-    private MongoDBSyncAuditPersistence persistence;
     private MongoDBSyncLockService lockService;
     private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
@@ -74,6 +77,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private MongoDBSyncAuditRepository auditRepository;
     private MongoDBSyncJournalEventStore journalEventStore;
     private JournalEventSequencerFactory journalEventSequencerFactory;
+    private MongoDBSyncJournalWriter journalWriter;
 
 
     private MongoDBSyncAuditStore(MongoDBExternalSystem mongoDBTargetSystem) {
@@ -137,11 +141,11 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         database = mongoDBTargetSystem.getMongoDatabase();
         auditRepository = new MongoDBSyncAuditRepository(database, auditRepositoryName, readConcern, readPreference, writeConcern);
         journalEventStore = new MongoDBSyncJournalEventStore(database, journalRepositoryName, readConcern, readPreference, writeConcern);
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+        journalWriter = new MongoDBSyncJournalWriter(journalEventStore);
 
         lockService = new MongoDBSyncLockService(
                 database,
@@ -151,28 +155,64 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
                 writeConcern,
                 TimeService.getDefault()
         );
-        lockService.initialize(autoCreate);
         this.validate();
+        lockService.initialize(autoCreate);
+        auditRepository.initialize(autoCreate);
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(autoCreate);
+        }
         warnIfJournalWritesAreNonAtomic();
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
+            JournalEventSequencer journalEventSequencer = FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                    ? journalEventSequencerFactory.forStream(stageId) : null;
             boolean supportsTransactions = mongoDBTargetSystem.supportsTransactions();
             ExecutionWrapper txWrapper = supportsTransactions ? mongoDBTargetSystem.getTxWrapper() : null;
-            persistence = new MongoDBSyncAuditPersistence(
-                    communityConfiguration,
+            MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
                     auditRepository,
                     journalEventStore,
                     journalEventSequencer,
                     supportsTransactions,
-                    txWrapper,
-                    autoCreate
+                    txWrapper
             );
             persistence.initialize(runnerId);
             return persistence;
+        };
+    }
+
+    @Override
+    public AuditHistoryAppender getAuditHistoryAppender() {
+        return auditRepository::append;
+    }
+
+    @Override
+    public JournalHistoryAppender getJournalHistoryAppender() {
+        return (streamId, entry) -> {
+            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                throw new IllegalStateException("Journal events must be enabled to write journal history");
+            }
+            JournalEventSequencer sequencer = journalEventSequencerFactory.forStream(streamId);
+            synchronized (sequencer) {
+                try {
+                    if (!mongoDBTargetSystem.supportsTransactions()) {
+                        return journalWriter.write(sequencer, entry);
+                    }
+                    ExecutionWrapper wrapper = mongoDBTargetSystem.getTxWrapper();
+                    RuntimeContext context = new BasicRuntimeContext("write-journalHistory-" + entry.getChangeId());
+                    io.flamingock.internal.util.Result result = wrapper.wrapExecution(context, runtime -> {
+                        ClientSession session = runtime.getContext().getRequiredDependencyValue(ClientSession.class);
+                        return journalWriter.write(session, sequencer, entry);
+                    });
+                    sequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error failure) {
+                    sequencer.markWriteOutcomeUncertain();
+                    throw failure;
+                }
+            }
         };
     }
 

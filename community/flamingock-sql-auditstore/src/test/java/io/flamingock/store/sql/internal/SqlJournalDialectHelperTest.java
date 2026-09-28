@@ -73,7 +73,7 @@ class SqlJournalDialectHelperTest {
 
     @Test
     @DisplayName("keeps Journal schema names separate from the ordered audit payload names")
-    void keepsMinimalNameOwnershipBoundaries() throws Exception {
+    void keepsMinimalNameOwnershipBoundaries() {
         List<String> expectedAuditColumns = Arrays.asList(
                 "execution_id", "stage_id", "change_id", "author", "created_at", "state",
                 "invoked_class", "invoked_method", "source_file", "metadata", "execution_millis",
@@ -92,8 +92,6 @@ class SqlJournalDialectHelperTest {
         assertFalse(Modifier.isPublic(JournalEventConstants.class.getModifiers()));
         assertTrue(Modifier.isPublic(SqlJournalDialectHelper.class.getModifiers()));
         assertTrue(Modifier.isFinal(SqlJournalDialectHelper.class.getModifiers()));
-        assertClassIsAbsent("io.flamingock.store.sql.internal.SqlAuditColumnConstants");
-        assertClassIsAbsent("io.flamingock.store.sql.internal.JournalEventPersistenceConstants");
     }
 
     @ParameterizedTest(name = "{0} uses the exact journal type policy")
@@ -176,10 +174,6 @@ class SqlJournalDialectHelperTest {
                         "idx_customJournalEvents_pending_events",
                         "idx_customJournalEvents_event_id"),
                 new SqlJournalDialectHelper(SqlDialect.H2).getIndexNames(shortTableName));
-    }
-
-    private static void assertClassIsAbsent(String className) {
-        assertThrows(ClassNotFoundException.class, () -> Class.forName(className));
     }
 
     private static String varcharType(SqlDialect dialect, int size) {

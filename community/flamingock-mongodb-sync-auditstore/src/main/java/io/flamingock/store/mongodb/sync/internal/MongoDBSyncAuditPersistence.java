@@ -21,13 +21,11 @@ import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
 import java.util.Objects;
@@ -35,35 +33,28 @@ import java.util.Objects;
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final MongoDBSyncAuditRepository auditRepository;
-    private final MongoDBSyncJournalEventStore journalEventStore;
+    private final MongoDBSyncJournalWriter journalWriter;
     private final JournalEventSequencer journalEventSequencer;
     private final boolean supportsTransactions;
     private final ExecutionWrapper txWrapper;
-    private final boolean autoCreate;
 
     /**
-     * @param localConfiguration local Community configuration
      * @param auditRepository audit state repository
      * @param journalEventStore journal event store
      * @param journalEventSequencer sequencer for this persistence stream
      * @param supportsTransactions whether journal and audit writes must share a MongoDB transaction
      * @param txWrapper transaction wrapper; must be non-null if and only if transactions are supported
-     * @param autoCreate whether required MongoDB collections and indexes may be created
      */
-    public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
-                                       MongoDBSyncAuditRepository auditRepository,
+    public MongoDBSyncAuditPersistence(MongoDBSyncAuditRepository auditRepository,
                                        MongoDBSyncJournalEventStore journalEventStore,
                                        JournalEventSequencer journalEventSequencer,
                                        boolean supportsTransactions,
-                                       ExecutionWrapper txWrapper,
-                                       boolean autoCreate) {
-        super(localConfiguration);
+                                       ExecutionWrapper txWrapper) {
         this.auditRepository = auditRepository;
-        this.journalEventStore = journalEventStore;
+        this.journalWriter = new MongoDBSyncJournalWriter(journalEventStore);
         this.journalEventSequencer = journalEventSequencer;
         this.supportsTransactions = supportsTransactions;
         this.txWrapper = validateTransactionWrapper(supportsTransactions, txWrapper);
-        this.autoCreate = autoCreate;
     }
 
     private static ExecutionWrapper validateTransactionWrapper(boolean supportsTransactions,
@@ -81,17 +72,6 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     }
 
     @Override
-    protected void doInitialize(RunnerId runnerId) {
-        auditRepository.initialize(autoCreate);
-        // Creating the indexes is what brings the journal collection into existence — there is no explicit
-        // createCollection call — so skipping this keeps it from ever appearing. It must stay in step with the
-        // append in writeEntry: skipping setup while still appending would let insertOne create the collection
-        // implicitly and without indexes, voiding the unique (streamId, streamSequence) and eventId guarantees.
-        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () -> journalEventStore.initialize(autoCreate));
-    }
-
-
-    @Override
     public List<AuditEntry> getAuditHistory() {
         return auditRepository.getAuditHistory();
     }
@@ -101,13 +81,20 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         // Read once rather than per branch: the journal append and the audit write shape are two halves of one
         // model. With events, the audit record is the change's current state and the journal is the history;
         // without them, the audit record set is itself the history.
-        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS)) {
-            if (!supportsTransactions) {
-                return writeJournalAndAuditWithoutTransaction(auditEntry);
-            }
-            return writeJournalAndAuditInTransaction(auditEntry);
-        } else {
+        if (FeatureFlag.isDisabled(Features.JOURNAL_EVENTS, false)) {
             return auditRepository.append(auditEntry);
+        }
+        if (journalEventSequencer == null) {
+            throw new IllegalStateException("MongoDB sync journal writes require a sequencer");
+        }
+        synchronized (journalEventSequencer) {
+            try {
+                return supportsTransactions ? writeJournalAndAuditInTransaction(auditEntry)
+                        : writeJournalAndAuditWithoutTransaction(auditEntry);
+            } catch (RuntimeException | Error failure) {
+                journalEventSequencer.markWriteOutcomeUncertain();
+                throw failure;
+            }
         }
     }
 
@@ -115,8 +102,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
         Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-            journalEventStore.write(clientSession, journalEvent);
+            journalWriter.write(clientSession, journalEventSequencer, auditEntry);
             return auditRepository.save(clientSession, auditEntry);
         });
         // Spends the stream position, and only a committed transaction may reach this line. In general a
@@ -138,9 +124,7 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
      * accepted best-effort behavior for non-transactional deployments.
      */
     private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
-        JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-        journalEventStore.write(journalEvent);
-        journalEventSequencer.confirm();
+        journalWriter.write(journalEventSequencer, auditEntry);
         return auditRepository.save(auditEntry);
     }
 

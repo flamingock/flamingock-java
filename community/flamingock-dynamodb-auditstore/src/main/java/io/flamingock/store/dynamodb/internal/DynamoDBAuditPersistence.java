@@ -18,15 +18,12 @@ package io.flamingock.store.dynamodb.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 
 import java.util.List;
@@ -34,41 +31,26 @@ import java.util.List;
 public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final DynamoDBAuditRepository auditRepository;
-    private final DynamoDBJournalEventStore journalEventStore;
+    private final DynamoDBJournalWriter journalWriter;
     private JournalEventSequencer journalEventSequencer;
     private final ExecutionWrapper txWrapper;
-    private final boolean autoCreate;
 
     /**
      * Creates a persistence over explicitly supplied audit, journal and transaction collaborators.
      *
-     * @param localConfiguration          community configuration
      * @param auditRepository             repository for audits
-     * @param journalEventStore           journal store receiving staged events
      * @param journalEventSequencer       sequencer for the stage journal stream
      * @param txWrapper                   transaction wrapper shared with the target system
-     * @param autoCreate                  whether missing tables may be created
+     * @param journalWriter               explicitly configured journal writer
      */
-    public DynamoDBAuditPersistence(CommunityConfigurable localConfiguration,
-                                    DynamoDBAuditRepository auditRepository,
-                                    DynamoDBJournalEventStore journalEventStore,
+    public DynamoDBAuditPersistence(DynamoDBAuditRepository auditRepository,
                                     JournalEventSequencer journalEventSequencer,
                                     ExecutionWrapper txWrapper,
-                                    boolean autoCreate) {
-        super(localConfiguration);
+                                    DynamoDBJournalWriter journalWriter) {
         this.auditRepository = auditRepository;
-        this.journalEventStore = journalEventStore;
+        this.journalWriter = journalWriter;
         this.journalEventSequencer = journalEventSequencer;
         this.txWrapper = txWrapper;
-        this.autoCreate = autoCreate;
-    }
-
-    @Override
-    protected void doInitialize(RunnerId runnerId) {
-        auditRepository.initialize(autoCreate);
-        if (isJournalEventsEnabled()) {
-            journalEventStore.initialize(autoCreate);
-        }
     }
 
     @Override
@@ -79,18 +61,24 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
         if (isJournalEventsEnabled()) {
-            RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-            Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
-                TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
-                        .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
-                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-                journalEventStore.contributeToTransaction(builder, journalEvent);
-                return auditRepository.contributeToTransaction(builder, auditEntry);
-            });
-            journalEventSequencer.confirm();
-            return result;
+            synchronized (journalEventSequencer) {
+                try {
+                    RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+                    Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
+                        TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
+                                .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
+                        journalWriter.write(builder, journalEventSequencer, auditEntry);
+                        return auditRepository.contributeToTransaction(builder, auditEntry);
+                    });
+                    journalEventSequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error exception) {
+                    journalEventSequencer.markWriteOutcomeUncertain();
+                    throw exception;
+                }
+            }
         }
-        return auditRepository.writeEntry(auditEntry);
+        return auditRepository.append(auditEntry);
     }
 
     private static boolean isJournalEventsEnabled() {

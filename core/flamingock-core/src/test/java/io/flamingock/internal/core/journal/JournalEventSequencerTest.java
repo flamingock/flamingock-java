@@ -23,10 +23,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class JournalEventSequencerTest {
 
@@ -52,6 +59,85 @@ class JournalEventSequencerTest {
         assertNotEquals(first.getIdempotencyKey(), differentExecution.getIdempotencyKey());
         assertNotEquals(first.getIdempotencyKey(), differentChange.getIdempotencyKey());
         assertNotEquals(first.getIdempotencyKey(), differentState.getIdempotencyKey());
+    }
+
+    @Test
+    void factorySharesSequencerPerStreamAndIsolatesOtherStreams() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        when(reader.getLastEventByStream("one")).thenReturn(Optional.empty());
+        when(reader.getLastEventByStream("two")).thenReturn(Optional.empty());
+        JournalEventSequencerFactory factory = new JournalEventSequencerFactory(reader);
+        JournalEventSequencer first = factory.forStream("one");
+        JournalEventSequencer concurrent = CompletableFuture.supplyAsync(() -> factory.forStream("one")).join();
+        JournalEventSequencer other = factory.forStream("two");
+
+        assertSame(first, concurrent);
+        assertNotEquals(first, other);
+        first.newEvent(auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED));
+        first.confirm();
+        assertEquals(2L, first.newEvent(auditEntry("execution-1", "change-2", AuditEntry.Status.APPLIED))
+                .getStreamSequence());
+        assertEquals(1L, other.newEvent(auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED))
+                .getStreamSequence());
+        verify(reader).getLastEventByStream("one");
+    }
+
+    @Test
+    void deterministicFailureReusesUnconfirmedPosition() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        when(reader.getLastEventByStream("one")).thenReturn(Optional.empty());
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(reader).forStream("one");
+        AuditEntry payload = auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED);
+
+        JournalEvent<AuditEntry> failed = sequencer.newEvent(payload);
+        JournalEvent<AuditEntry> retry = sequencer.newEvent(payload);
+        assertEquals(failed.getStreamSequence(), retry.getStreamSequence());
+        assertEquals(failed.getIdempotencyKey(), retry.getIdempotencyKey());
+        assertNotEquals(failed.getEventId(), retry.getEventId());
+    }
+
+    @Test
+    void uncertainCommittedWriteReseedsFromDurableTail() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        JournalEvent<AuditEntry> durable = mock(JournalEvent.class);
+        when(durable.getStreamSequence()).thenReturn(3L);
+        when(reader.getLastEventByStream("one"))
+                .thenReturn(Optional.empty(), Optional.of(durable));
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(reader).forStream("one");
+        sequencer.newEvent(auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED));
+        sequencer.markWriteOutcomeUncertain();
+        sequencer.confirm();
+
+        assertEquals(4L, sequencer.newEvent(auditEntry("execution-1", "change-2", AuditEntry.Status.APPLIED))
+                .getStreamSequence());
+    }
+
+    @Test
+    void uncertainRolledBackWriteReusesPosition() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        when(reader.getLastEventByStream("one")).thenReturn(Optional.empty());
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(reader).forStream("one");
+        sequencer.newEvent(auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED));
+        sequencer.markWriteOutcomeUncertain();
+        assertEquals(1L, sequencer.newEvent(auditEntry("execution-1", "change-2", AuditEntry.Status.APPLIED))
+                .getStreamSequence());
+    }
+
+    @Test
+    void unreadableTailFailsClosedAndCanRetryReconciliation() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        when(reader.getLastEventByStream("one"))
+                .thenReturn(Optional.empty())
+                .thenThrow(new IllegalStateException("tail unavailable"))
+                .thenReturn(Optional.empty());
+        JournalEventSequencer sequencer = new JournalEventSequencerFactory(reader).forStream("one");
+        sequencer.newEvent(auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED));
+        sequencer.markWriteOutcomeUncertain();
+        assertThrows(IllegalStateException.class,
+                () -> sequencer.newEvent(auditEntry("execution-1", "change-2", AuditEntry.Status.APPLIED)));
+        sequencer.confirm();
+        assertEquals(1L, sequencer.newEvent(auditEntry("execution-1", "change-2", AuditEntry.Status.APPLIED))
+                .getStreamSequence());
     }
 
     private static AuditEntry auditEntry(String executionId, String changeId, AuditEntry.Status state) {

@@ -17,11 +17,13 @@ package io.flamingock.store.dynamodb;
 
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditHistoryAppender;
+import io.flamingock.internal.common.core.audit.JournalHistoryAppender;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.HistoryAppenderProvider;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
@@ -35,17 +37,18 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditRepository;
 import io.flamingock.store.dynamodb.internal.DynamoDBJournalEventStore;
+import io.flamingock.store.dynamodb.internal.DynamoDBJournalWriter;
+import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
 import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBAuditStore implements CommunityAuditStore {
+public class DynamoDBAuditStore implements CommunityAuditStore, HistoryAppenderProvider {
 
     private final DynamoDBExternalSystem targetSystem;
 
     private RunnerId runnerId;
-    private CommunityConfigurable communityConfiguration;
-    private DynamoDBAuditPersistence persistence;
     private DynamoDBLockService lockService;
     private final DynamoDbClient client;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -57,6 +60,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     private DynamoDBAuditRepository auditRepository;
     private DynamoDBJournalEventStore journalEventStore;
     private JournalEventSequencerFactory journalEventSequencerFactory;
+    private DynamoDBJournalWriter journalWriter;
 
     private DynamoDBAuditStore(DynamoDBExternalSystem targetSystem) {
         this.targetSystem = targetSystem;
@@ -114,7 +118,6 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         auditRepository = new DynamoDBAuditRepository(client, auditRepositoryName, readCapacityUnits, writeCapacityUnits);
         journalEventStore = new DynamoDBJournalEventStore(
                 client,
@@ -123,6 +126,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
                 writeCapacityUnits
         );
         journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+        journalWriter = new DynamoDBJournalWriter(journalEventStore);
 
         lockService = new DynamoDBLockService(
             client,
@@ -131,25 +135,24 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
             writeCapacityUnits,
             TimeService.getDefault()
         );
-        lockService.initialize(autoCreate);
         this.validate();
+        auditRepository.initialize(autoCreate);
+        lockService.initialize(autoCreate);
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(autoCreate);
+        }
     }
 
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
-            auditRepository.initialize(autoCreate);
-            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
-                journalEventStore.initialize(autoCreate);
-            }
-            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
-            persistence = new DynamoDBAuditPersistence(
-                communityConfiguration,
+            JournalEventSequencer journalEventSequencer = FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)
+                    ? journalEventSequencerFactory.forStream(stageId) : null;
+            DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
                 auditRepository,
-                journalEventStore,
                 journalEventSequencer,
                 targetSystem.getTxWrapper(),
-                autoCreate
+                journalWriter
             );
             persistence.initialize(runnerId);
             return persistence;
@@ -157,8 +160,34 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     }
 
     @Override
+    public AuditHistoryAppender getAuditHistoryAppender() {
+        return auditRepository::append;
+    }
+
+    @Override
+    public JournalHistoryAppender getJournalHistoryAppender() {
+        return (streamId, entry) -> {
+            if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                throw new IllegalStateException("Journal events must be enabled to write journal history");
+            }
+            JournalEventSequencer sequencer = journalEventSequencerFactory.forStream(streamId);
+            synchronized (sequencer) {
+                try {
+                    TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
+                    io.flamingock.internal.util.Result result = journalWriter.write(builder, sequencer, entry);
+                    new DynamoDBUtil(client).getEnhancedClient().transactWriteItems(builder.build());
+                    sequencer.confirm();
+                    return result;
+                } catch (RuntimeException | Error exception) {
+                    sequencer.markWriteOutcomeUncertain();
+                    throw exception;
+                }
+            }
+        };
+    }
+
+    @Override
     public AuditReader getAuditReader() {
-        auditRepository.initialize(autoCreate);
         return () -> auditRepository.getAuditHistory();
     }
 

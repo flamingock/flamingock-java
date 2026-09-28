@@ -35,33 +35,61 @@ import java.util.UUID;
  * beyond tidiness: a contiguous {@code streamSequence} is what lets a consumer reconstruct order and tell
  * "still in flight" from "lost", so gaps must never be produced by ordinary failure handling.
  * <p>
- * If a caller forgets to confirm a write that did land, the reused position collides with the unique
- * {@code (streamId, streamSequence)} index — a loud failure rather than a silent duplicate.
+ * If the write outcome is uncertain, the caller must mark it before the next allocation. The sequencer
+ * then reads the durable tail and will not allocate if that read fails. A caller that forgets both confirmation
+ * and uncertainty marking can still collide with the unique {@code (streamId, streamSequence)} index.
  */
 public class JournalEventSequencer {
     private final String streamId;
     private long nextSequence;
     private boolean pendingConfirmation;
+    private boolean uncertainWriteOutcome;
+    private final JournalEventReader journalEventReader;
 
     JournalEventSequencer(String streamId, long initialSequence) {
+        this(streamId, initialSequence, null);
+    }
+
+    JournalEventSequencer(String streamId, long initialSequence, JournalEventReader journalEventReader) {
         this.streamId = streamId;
         this.nextSequence = initialSequence;   // seeded from outside
+        this.journalEventReader = journalEventReader;
     }
 
     /**
      * Builds the next event <em>without</em> spending its stream position; call {@link #confirm()} once the
      * event is durably written.
      */
-    public JournalEvent<AuditEntry> newEvent(AuditEntry payload) {
+    public synchronized JournalEvent<AuditEntry> newEvent(AuditEntry payload) {
+        if (uncertainWriteOutcome) {
+            if (journalEventReader == null) {
+                throw new IllegalStateException("Cannot reconcile stream without a journal reader");
+            }
+            long durableNext = journalEventReader.getLastEventByStream(streamId)
+                    .map(event -> Math.addExact(event.getStreamSequence(), 1L))
+                    .orElse(1L);
+            nextSequence = Math.max(nextSequence, durableNext);
+            pendingConfirmation = false;
+            uncertainWriteOutcome = false;
+        }
         return getAuditEntryJournalEvent(payload, JournalEventType.CHANGE_STATE);
+    }
+
+    /**
+     * Marks a write outcome as uncertain. The next allocation rereads the durable tail before issuing a position.
+     * Do not confirm an uncertain write: only the caller can confirm a known successful commit.
+     */
+    public synchronized void markWriteOutcomeUncertain() {
+        uncertainWriteOutcome = true;
+        pendingConfirmation = false;
     }
 
     /**
      * Marks the position handed out by the last {@link #newEvent} as durably written, moving the stream on.
      * A no-op if nothing is outstanding.
      */
-    public void confirm() {
-        if (pendingConfirmation) {
+    public synchronized void confirm() {
+        if (pendingConfirmation && !uncertainWriteOutcome) {
             nextSequence++;
             pendingConfirmation = false;
         }
