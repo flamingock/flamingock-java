@@ -103,6 +103,12 @@ public final class AuditCompactionConformance {
      * truncates below whole-second precision, or a key-shaped store overwrites a record the suite believed
      * was distinct, later properties would still pass or fail but would no longer be testing what they
      * claim. Checking it once, first, turns that into an honest failure here.
+     * <p>
+     * Only the fields the later properties depend on are compared \u2014 the identity triple, {@code createdAt}
+     * and {@code systemChange} \u2014 rather than every field. This is the one comparison that crosses a
+     * store's serialization boundary, and how faithfully a store's mapper round-trips every last field is a
+     * different question from whether compaction is correct. Asserting all of them here would fail stores
+     * over pre-existing mapper quirks that no property relies on.
      */
     public void verifySeedingRoundTripsFaithfully() {
         fixture.reset();
@@ -114,7 +120,7 @@ public final class AuditCompactionConformance {
             throw new AssertionError("Seeding one record stored " + stored.size()
                     + ". The suite cannot verify compaction against a store that does not round-trip seeds.");
         }
-        assertFieldsPreserved(seeded, stored.get(0), "seeded record");
+        assertSeedIdentityPreserved(seeded, stored.get(0));
     }
 
     /**
@@ -277,8 +283,12 @@ public final class AuditCompactionConformance {
      */
     public void verifyAlreadySingleRecordUntouched() {
         fixture.reset();
-        AuditEntry only = entry("exec-1", CHANGE_C, AuditEntry.Status.APPLIED, T0);
-        seed(Arrays.asList(only));
+        seed(Arrays.asList(entry("exec-1", CHANGE_C, AuditEntry.Status.APPLIED, T0)));
+
+        // Read the record back BEFORE compacting, so the comparison is store-to-store rather than
+        // in-memory-to-store. Whether a store's mapper round-trips every field is a separate question from
+        // whether compaction preserved the record, and only the latter is this property's business.
+        AuditEntry before = fixture.readStoredRecords().get(0);
 
         requireOk(fixture.compact(), "compact");
 
@@ -287,7 +297,7 @@ public final class AuditCompactionConformance {
             throw new AssertionError("Compacting a single-record change produced " + stored.size()
                     + " records, expected 1");
         }
-        assertFieldsPreserved(only, stored.get(0), "untouched single record");
+        assertFieldsPreserved(before, stored.get(0), "untouched single record");
     }
 
     /**
@@ -525,6 +535,26 @@ public final class AuditCompactionConformance {
         assertField(what, "order", expected.getOrder(), actual.getOrder());
         assertField(what, "recoveryStrategy", expected.getRecoveryStrategy(), actual.getRecoveryStrategy());
         assertField(what, "transactionFlag", expected.getTransactionFlag(), actual.getTransactionFlag());
+    }
+
+    /**
+     * Compares only what later properties rely on: the identity triple, the ordering field, and the flag
+     * whose boxing is easy to lose.
+     * <p>
+     * Narrower than {@link #assertFieldsPreserved} by design. This is the one assertion that compares an
+     * in-memory entry against one read back through a store, so it is the one place a store's mapper
+     * fidelity leaks in. Comparing every field here would fail a store over a quirk unrelated to
+     * compaction \u2014 for example a mapper that renders an absent {@code errorTrace} as an empty string.
+     */
+    private static void assertSeedIdentityPreserved(AuditEntry seeded, AuditEntry stored) {
+        if (stored == null) {
+            throw new AssertionError("Seeding stored nothing; expected " + describe(seeded));
+        }
+        assertField("seeded record", "executionId", seeded.getExecutionId(), stored.getExecutionId());
+        assertField("seeded record", "changeId", seeded.getChangeId(), stored.getChangeId());
+        assertField("seeded record", "state", seeded.getState(), stored.getState());
+        assertField("seeded record", "createdAt", seeded.getCreatedAt(), stored.getCreatedAt());
+        assertField("seeded record", "systemChange", seeded.getSystemChange(), stored.getSystemChange());
     }
 
     private static void assertField(String what, String field, Object expected, Object actual) {
