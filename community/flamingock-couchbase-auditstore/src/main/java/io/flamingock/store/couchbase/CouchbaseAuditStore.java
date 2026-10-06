@@ -25,6 +25,7 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
@@ -213,5 +214,21 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
         if (journalRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'journalRepositoryName' and 'lockRepositoryName' properties must not be the same.");
         }
+    }
+
+    /**
+     * Not implemented yet — audit compaction lands for this store in its own change.
+     * <p>
+     * A temporary stub so that adding the mandatory {@code getAuditCompactor()} to
+     * {@link CommunityAuditStore} does not break the build before each store has been done. It throws
+     * rather than silently doing nothing: a no-op would leave the audit store in ledger shape while the
+     * current-state write path is already active, which surfaces much later and much more confusingly.
+     */
+    @Override
+    public AuditCompactor getAuditCompactor() {
+        return () -> {
+            throw new UnsupportedOperationException(
+                    "Audit compaction is not yet implemented for " + getId());
+        };
     }
 }

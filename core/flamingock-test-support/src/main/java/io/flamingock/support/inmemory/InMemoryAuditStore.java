@@ -16,9 +16,11 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class InMemoryAuditStore implements CommunityAuditStore {
@@ -64,8 +66,33 @@ public class InMemoryAuditStore implements CommunityAuditStore {
         return new InMemoryLockService(lockStorage, runnerId);
     }
 
+    /**
+     * Package-private access to the backing storage, for tests in this package that need to seed records
+     * directly or inspect them physically. Not widened beyond the package: it is not part of what users of
+     * this store are offered.
+     */
+    InMemoryAuditStorage getAuditStorage() {
+        return auditStorage;
+    }
+
     public void cleanUp() {
         auditStorage.clear();
         lockStorage.clear();
+    }
+
+    /**
+     * Compaction against the in-memory storage. Real, not a stub: this is the store users are pointed at
+     * for their own tests, so it has to keep working once core starts compacting.
+     */
+    @Override
+    public AuditCompactor getAuditCompactor() {
+        return () -> {
+            try {
+                auditStorage.compact();
+                return Result.OK();
+            } catch (RuntimeException exception) {
+                return new Result.Error(exception);
+            }
+        };
     }
 }
