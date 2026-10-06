@@ -21,9 +21,11 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class InternalInMemoryTestAuditStore implements CommunityAuditStore {
@@ -102,5 +104,22 @@ public class InternalInMemoryTestAuditStore implements CommunityAuditStore {
     @Override
     public CommunityLockService getLockService() {
         return new InternalInMemoryLockService(lockStorage, runnerId);
+    }
+
+    /**
+     * The reference implementation of the {@code AuditCompactor} contract: it is the one implementation
+     * that trivially satisfies every guarantee, so the shared conformance suite is proven against it
+     * before any real store implements compaction.
+     */
+    @Override
+    public AuditCompactor getAuditCompactor() {
+        return () -> {
+            try {
+                auditStorage.compact();
+                return Result.OK();
+            } catch (RuntimeException exception) {
+                return new Result.Error(exception);
+            }
+        };
     }
 }

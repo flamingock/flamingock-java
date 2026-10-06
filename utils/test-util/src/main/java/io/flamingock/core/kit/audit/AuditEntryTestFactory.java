@@ -300,4 +300,51 @@ public class AuditEntryTestFactory {
                 null                          // transactionFlag
         );
     }
+
+    /**
+     * Creates a fully determined audit entry: the caller owns {@code executionId}, {@code createdAt} and
+     * {@code systemChange}.
+     * <p>
+     * The other factory methods stamp {@code UUID.randomUUID()} as the execution id and
+     * {@code LocalDateTime.now()} as the timestamp, so they cannot express a realistic ledger — several
+     * transitions of one change under the <em>same</em> execution, or two records whose {@code createdAt} is
+     * deliberately equal so that the status-priority tie-break decides. Audit-compaction conformance needs
+     * both, which is why this overload exists.
+     *
+     * @param executionId  the execution the entry belongs to
+     * @param changeId     the change the entry belongs to
+     * @param status       the state recorded
+     * @param createdAt    when the fact occurred; use whole seconds, since SQL column types truncate
+     *                     sub-second precision differently per dialect
+     * @param systemChange whether the entry records a system change
+     * @return a deterministic AuditEntry for testing
+     */
+    public static AuditEntry createDeterministicAuditEntry(String executionId,
+                                                           String changeId,
+                                                           AuditEntry.Status status,
+                                                           LocalDateTime createdAt,
+                                                           boolean systemChange) {
+        return new AuditEntry(
+                executionId,                   // executionId
+                "test-stage",                  // stageId
+                changeId,                      // changeId
+                "test-author",                 // author
+                createdAt,                     // timestamp
+                status,                        // state
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
+                "TestChangeClass",             // className
+                "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
+                0L,                            // executionMillis
+                "localhost",                   // executionHostname
+                null,                          // metadata
+                systemChange,                  // systemChange
+                null,                          // errorTrace
+                AuditTxType.NON_TX,            // txStrategy
+                "test-target-system",          // targetSystemId
+                "001",                         // order
+                RecoveryStrategy.MANUAL_INTERVENTION,  // recoveryStrategy
+                null                           // transactionFlag
+        );
+    }
 }

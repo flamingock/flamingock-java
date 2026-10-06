@@ -16,6 +16,7 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditSnapshotBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,22 @@ class InMemoryAuditStorage {
 
     public synchronized void addAuditEntry(AuditEntry auditEntry) {
         auditEntries.add(auditEntry);
+    }
+
+    /**
+     * Collapses the stored records to one per changeId — the in-memory counterpart to a real store's
+     * compaction, and the reference implementation of the {@code AuditCompactor} contract.
+     * <p>
+     * Delegates the choice of survivor to {@link AuditSnapshotBuilder} rather than reimplementing
+     * {@code AuditEntry.getMostRelevant}, which is what guarantees the snapshot is unchanged by the call.
+     * A single synchronized mutation, so no instant exists in which a changeId has no record.
+     */
+    public synchronized void compact() {
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
+        auditEntries.forEach(builder::addEntry);
+        List<AuditEntry> survivors = builder.buildList();
+        auditEntries.clear();
+        auditEntries.addAll(survivors);
     }
 
     public synchronized List<AuditEntry> getAuditEntries() {
