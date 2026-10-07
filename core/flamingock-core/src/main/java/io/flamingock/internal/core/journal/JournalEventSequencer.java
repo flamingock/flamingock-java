@@ -57,8 +57,21 @@ public class JournalEventSequencer {
     }
 
     /**
-     * Marks the position handed out by the last {@link #newEvent} as durably written, moving the stream on.
-     * A no-op if nothing is outstanding.
+     * Reserves the current stream position without requiring a payload or spending the position.
+     * The caller can use it to construct a complete {@link JournalEvent} and must call {@link #confirm()}
+     * only after the write is durably completed. Repeated reservations before confirmation return the
+     * same position; an unconfirmed write that did succeed can therefore collide on retry.
+     *
+     * @return the reserved stream sequence
+     */
+    public long reserveSequence() {
+        pendingConfirmation = true;
+        return nextSequence;
+    }
+
+    /**
+     * Marks the position handed out by {@link #reserveSequence()} or {@link #newEvent} as durably written,
+     * moving the stream on. A no-op if nothing is outstanding.
      */
     public void confirm() {
         if (pendingConfirmation) {
@@ -69,13 +82,13 @@ public class JournalEventSequencer {
 
     @NotNull
     private JournalEvent<AuditEntry> getAuditEntryJournalEvent(AuditEntry payload, JournalEventType type) {
-        pendingConfirmation = true;
+        long sequence = reserveSequence();
         return new JournalEvent<>(
                 UUID.randomUUID().toString(),   // eventId
                 deriveIdempotencyKey(type, payload),
                 type,
                 streamId,
-                nextSequence,                   // spent only on confirm(), so a failed write leaves no gap
+                sequence,                       // spent only on confirm(), so a failed write leaves no gap
                 Instant.now(),                  // occurredAt
                 payload);
     }
