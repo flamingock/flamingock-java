@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.external.store;
 
+import io.flamingock.api.NonLockGuardedType;
+import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.Result;
 
@@ -35,8 +37,12 @@ public interface AuditHistoryAppender {
      * Unsuccessful writes must be propagated as an unsuccessful result or a thrown failure; they must not
      * be converted into success.
      *
+     * <p>Only the returned outcome bypasses recursive lock guarding, preserving its concrete result type.
+     * Execution of this method remains lock guarded.
+     *
      * @param entry complete historical entry, including its intended destination
      * @return the durable write outcome
      */
+    @NonLockGuarded(NonLockGuardedType.RETURN)
     Result append(AuditEntry entry);
 }

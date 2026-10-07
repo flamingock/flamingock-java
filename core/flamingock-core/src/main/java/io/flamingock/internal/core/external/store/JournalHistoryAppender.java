@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.external.store;
 
+import io.flamingock.api.NonLockGuardedType;
+import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Result;
@@ -44,10 +46,14 @@ public interface JournalHistoryAppender<T> {
      * or a thrown failure, never converted into success. The caller confirms sequencing only after durable
      * success.
      *
+     * <p>Only the returned outcome bypasses recursive lock guarding, preserving its concrete result type.
+     * Execution of this method remains lock guarded.
+     *
      * @param event complete event, including its intended destination and sequence
      * @return the durable write outcome
      * @throws IllegalStateException if {@code JOURNAL_EVENTS} is disabled
      */
+    @NonLockGuarded(NonLockGuardedType.RETURN)
     Result append(JournalEvent<T> event);
 
     /**
@@ -55,8 +61,12 @@ public interface JournalHistoryAppender<T> {
      * not be the executing stage. Factory access does not itself imply shared per-stream sequencing or a
      * distributed allocation guarantee.
      *
+     * <p>The returned factory bypasses recursive lock guarding so sequencing helpers retain their concrete
+     * behavior. Factory acquisition remains lock guarded, as does appending the resulting complete event.
+     *
      * @return the store-owned sequencer factory
      * @throws IllegalStateException if {@code JOURNAL_EVENTS} is disabled
      */
+    @NonLockGuarded(NonLockGuardedType.RETURN)
     JournalEventSequencerFactory getSequencerFactory();
 }
