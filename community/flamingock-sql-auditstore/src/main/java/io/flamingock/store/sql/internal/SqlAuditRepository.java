@@ -16,8 +16,10 @@
 package io.flamingock.store.sql.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.common.sql.dialectHelpers.SqlAuditorDialectHelper;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.util.Result;
 
 import javax.sql.DataSource;
@@ -153,6 +155,68 @@ public class SqlAuditRepository {
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to replace local current audit state", exception);
         }
+    }
+
+    /**
+     * Replaces every stored record for a change with a single row holding the survivor's state, on a
+     * caller-owned transactional connection.
+     * <p>
+     * SQL's current-state row and its ledger rows share the same key shape, filtered only by
+     * {@code change_id} — there is no rekey to perform, unlike DynamoDB or Couchbase. So compaction here
+     * is simply: delete every row for the change, then insert the survivor fresh. The caller (an
+     * {@link AuditCompactor}) is expected to wrap this call in a transaction, so a crash between the
+     * delete and the insert rolls back to the pre-compaction state rather than leaving the change with no
+     * record at all.
+     *
+     * @param connection transaction-scoped connection, owned and committed by the caller
+     * @param changeId   the change whose records are being collapsed
+     * @param survivor   the record selected to represent the change's current effective state
+     * @return {@link Result#OK()} once the change holds exactly one record
+     */
+    Result replaceForCompaction(Connection connection, String changeId, AuditEntry survivor) {
+        if (connection == null) {
+            throw new IllegalArgumentException("connection must not be null");
+        }
+        if (changeId == null || changeId.trim().isEmpty()) {
+            throw new IllegalArgumentException("changeId must not be blank");
+        }
+        if (survivor == null) {
+            throw new IllegalArgumentException("survivor must not be null");
+        }
+        if (dialectHelper == null) {
+            throw new IllegalStateException("SQL auditor is not initialized");
+        }
+
+        try (PreparedStatement delete = connection.prepareStatement(
+                "DELETE FROM " + auditTableName + " WHERE change_id = ?")) {
+            delete.setString(1, changeId);
+            delete.executeUpdate();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to delete superseded audit records for changeId '"
+                    + changeId + "'", exception);
+        }
+
+        try (PreparedStatement insert = connection.prepareStatement(
+                dialectHelper.getInsertSqlString(auditTableName))) {
+            AuditEntryMapper.bind(insert, survivor, 1, getNullableBooleanJdbcType());
+            insert.executeUpdate();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to write the surviving audit record for changeId '"
+                    + changeId + "'", exception);
+        }
+        return Result.OK();
+    }
+
+    /**
+     * @param txWrapper the SQL target system's transaction wrapper, used to make each change's
+     *                  delete-then-insert atomic
+     * @return a compactor collapsing this table to one record per change
+     */
+    public AuditCompactor getAuditCompactor(ExecutionWrapper txWrapper) {
+        if (dialectHelper == null) {
+            throw new IllegalStateException("SQL auditor is not initialized");
+        }
+        return new SqlAuditCompactor(this, txWrapper);
     }
 
     public List<AuditEntry> getAuditHistory() {
