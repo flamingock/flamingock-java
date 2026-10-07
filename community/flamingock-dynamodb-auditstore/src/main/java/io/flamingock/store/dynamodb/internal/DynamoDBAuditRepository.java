@@ -18,6 +18,7 @@ package io.flamingock.store.dynamodb.internal;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -142,6 +143,23 @@ public class DynamoDBAuditRepository {
             .build());
         logger.debug("Staged current-state audit entry with key {}", entity.getPartitionKey());
         return Result.OK();
+    }
+
+    /**
+     * Returns the compactor bound to this repository's table.
+     *
+     * Public because {@code DynamoDBAuditStore} lives in the parent package, same as
+     * {@link #getAuditHistory()}. The returned implementation stays package-private; callers only ever see
+     * the {@link AuditCompactor} contract.
+     *
+     * @throws IllegalStateException if {@link #initialize(Boolean)} has not run, since the table handle is
+     *                               created there
+     */
+    public AuditCompactor getAuditCompactor() {
+        if (table == null) {
+            throw new IllegalStateException("DynamoDB audit repository is not initialized");
+        }
+        return new DynamoDBAuditCompactor(table);
     }
 
     public List<AuditEntry> getAuditHistory() {
