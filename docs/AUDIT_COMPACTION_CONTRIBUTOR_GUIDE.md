@@ -186,8 +186,59 @@ Follow the DynamoDB shape (`community/flamingock-dynamodb-auditstore/src/main/ja
 
 **Reuse `AuditSnapshotBuilder` — do not reimplement selection.** That is what guarantees clause 1.
 
-If your store needs the surviving **record** (not the converted `AuditEntry`) — as DynamoDB does, because
-it must rewrite the stored row — map converted entries back to their originals by identity:
+### First decide whether you need record identity at all — most stores don't
+
+**Read this before copying the DynamoDB shape.** "Scan everything, then pick the winner per change" is
+*already implemented*: `AuditReader.getAuditSnapshotByChangeId()` is a default method that runs
+`getAuditHistory()` through `AuditSnapshotBuilder` and hands back `Map<String, AuditEntry>` — exactly the
+survivors, keyed by change. If you can work from that, **your compactor is a short loop and you can skip
+everything below.**
+
+You can work from it when **both** are true:
+
+- **You don't rekey** — so you never have to write the stored record back, only delete others.
+- **You can address records from an `AuditEntry` alone** — so you don't need a physical row/doc identity
+  that `AuditEntry` doesn't carry.
+
+| Store | Can work from `getAuditSnapshotByChangeId()`? | Why |
+|---|---|---|
+| MongoDB sync / reactive | **yes** | no rekey, and the unique index on `(executionId, changeId, state)` makes the survivor addressable by filter |
+| SQL | **yes** | no rekey, and it deletes by `change_id` and re-inserts from an `AuditEntry` |
+| DynamoDB / Couchbase | **no** | they rekey, and the physical key is not derivable — see below |
+
+So for MongoDB the whole implementation is roughly:
+
+```java
+for (Map.Entry<String, AuditEntry> survivor : auditReader.getAuditSnapshotByChangeId().entrySet()) {
+    AuditEntry winner = survivor.getValue();
+    collection.deleteMany(Filters.and(
+            Filters.eq(KEY_CHANGE_ID, survivor.getKey()),
+            Filters.nor(Filters.and(
+                    Filters.eq(KEY_EXECUTION_ID, winner.getExecutionId()),
+                    Filters.eq(KEY_STATE, winner.getState().name())))));
+}
+```
+
+Nothing is rewritten at all, so clause 5 (preserve verbatim) is satisfied trivially and the survivor keeps
+its original `_id`. One atomic operation per change. And for SQL, per change inside one JDBC transaction:
+`DELETE … WHERE change_id = ?` then insert the survivor — note the re-inserted row gets a fresh surrogate
+`id`, which is harmless since nothing reads it and it is not in `AuditEntry`.
+
+### Why DynamoDB and Couchbase can't do that
+
+Two reasons, and the second is the one that actually blocks it:
+
+1. They must write the stored record back under a new key, and rebuilding it from an `AuditEntry` **launders
+   it** — `txStrategy` becomes `NON_TX` and `recoveryStrategy` becomes `MANUAL_INTERVENTION` for records that
+   never had those attributes.
+2. **The physical key is not derivable from an `AuditEntry`.** A record stored at
+   `executionId#changeId#state` and one stored at the bare `changeId` produce an *identical* `AuditEntry` —
+   same fields, no distinguishing mark. So from the snapshot you cannot tell which records live at which
+   keys, which means you cannot know what to delete, nor whether a change is already compacted. You need the
+   store's own record representation (DynamoDB's `AuditEntryEntity.getPartitionKey()`, Couchbase's
+   `META().id`).
+
+If that's you, map converted entries back to their originals by identity:
 
 ```java
 Map<AuditEntry, StoredRecord> originalOf = new IdentityHashMap<>();
@@ -223,6 +274,10 @@ fail on a malformed legacy record.
 
 Clause 8 (survivor-before-delete) is **critical** for the two that rekey and trivially satisfied by the
 three that don't. But all five must still be idempotent.
+
+The three that don't rekey can almost certainly skip the entity-level scan entirely and build on
+`getAuditSnapshotByChangeId()` — see "First decide whether you need record identity at all" in §5 before
+you write anything.
 
 ---
 
@@ -381,10 +436,10 @@ from §6.
 
 ## 8. The test bar
 
-Compaction is destructive and partially non-atomic. The bar set by the DynamoDB PR is **34 tests**, and the
+Compaction is destructive and partially non-atomic. The bar set by the DynamoDB PR is **35 tests**, and the
 split matters:
 
-**Unit tests against a mocked handle, no container (19 in DynamoDB's case).** The properties that matter
+**Unit tests against a mocked handle, no container (20 in DynamoDB's case).** The properties that matter
 most — survivor written before anything is deleted, reads unbounded and consistent, failure deletes
 nothing, fail-fast — are about the **sequence of calls**. A mock observes that sequence directly; a
 container only lets it be inferred from the end state. This is also the only part contributors without
@@ -393,6 +448,15 @@ absence of `limit`/`filter`; multi-page reads; survivor identity; the tie-break;
 skipping; failure on write deleting nothing; failure on delete after the survivor is safe; fail-fast; a
 malformed record failing with an actionable message; order-independence; and
 `verifyNoMoreInteractions` — which proves clauses 9 and 10 **by construction**.
+
+One of those twenty guards the *repository*, not the compactor: `DynamoDBAuditRepositoryTest` asserts that
+`getAuditHistory()` reads strongly consistently, unbounded and unfiltered. It exists because none of those
+three properties was enforced anywhere, and all three fail silently — a truncated or stale history makes the
+planner mis-decide with no error. If your store's audit read has equivalent requirements, pin them the same
+way. Note it deliberately duplicates the compactor's equivalent assertions rather than sharing a helper: the
+two reads share a flag value, not a reason (there, a stale read makes compaction delete the real survivor;
+here it misleads the planner), and collapsing them into one symbol would hide why either matters. Resist the
+urge to DRY them.
 
 **Integration tests against a real container (15 in DynamoDB's case).** The shared suite, plus your
 store-specific physical-key assertions, plus one convergence test from a hand-made half-finished state.
@@ -415,6 +479,9 @@ able to do better:
    before any write, so nothing is lost) so this is a diagnosability gap, not a safety one — but it's worth
    closing.
 3. **Clause 13 is untested** — `getAuditCompactor()` before `initialize()`. Five lines, no Docker.
+
+Already closed, so don't redo it: the repository's audit read is now covered by `DynamoDBAuditRepositoryTest`
+(consistency, no limit, no filter), each assertion mutation-verified.
 
 ---
 
@@ -513,6 +580,7 @@ utils/test-util/.../kit/audit/AuditStorage.java                       raw seed/r
 community/flamingock-dynamodb-auditstore/.../internal/DynamoDBAuditCompactor.java       reference impl
 community/flamingock-dynamodb-auditstore/src/test/.../DynamoDBAuditCompactorTest.java   reference unit tests
 community/flamingock-dynamodb-auditstore/src/test/.../DynamoDBAuditCompactionConformanceTest.java
+community/flamingock-dynamodb-auditstore/src/test/.../DynamoDBAuditRepositoryTest.java  pins the audit read
 ```
 
 Your PR should touch **only** your store's module. If you need to change the shared suite or the contract,
