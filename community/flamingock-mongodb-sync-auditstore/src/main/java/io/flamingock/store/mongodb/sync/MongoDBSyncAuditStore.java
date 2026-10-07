@@ -244,19 +244,13 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
         return new HashSet<>(Collections.singletonList(ClientSession.class));
     }
 
-    /**
-     * Not implemented yet — audit compaction lands for this store in its own change.
-     * <p>
-     * A temporary stub so that adding the mandatory {@code getAuditCompactor()} to
-     * {@link CommunityAuditStore} does not break the build before each store has been done. It throws
-     * rather than silently doing nothing: a no-op would leave the audit store in ledger shape while the
-     * current-state write path is already active, which surfaces much later and much more confusingly.
-     */
     @Override
     public AuditCompactor getAuditCompactor() {
-        return () -> {
-            throw new UnsupportedOperationException(
-                    "Audit compaction is not yet implemented for " + getId());
-        };
+        if (auditRepository == null) {
+            throw new IllegalStateException("AuditStore not initialized - call initialize first");
+        }
+        // No lazy initialize call, unlike the DynamoDB store: the repository builds its collection handle
+        // in its constructor, and compaction only deletes, so it needs no index to exist.
+        return auditRepository.getAuditCompactor();
     }
 }
