@@ -202,27 +202,41 @@ You can work from it when **both** are true:
 
 | Store | Can work from `getAuditSnapshotByChangeId()`? | Why |
 |---|---|---|
-| MongoDB sync / reactive | **yes** | no rekey, and the unique index on `(executionId, changeId, state)` makes the survivor addressable by filter |
-| SQL | **yes** | no rekey, and it deletes by `change_id` and re-inserts from an `AuditEntry` |
-| DynamoDB / Couchbase | **no** | they rekey, and the physical key is not derivable — see below |
+| SQL | **yes** | no rekey, and it deletes by `change_id` and re-inserts the survivor — it never has to address one row among several |
+| MongoDB sync / reactive | **no — revised, see below** | no rekey, but it must address the surviving document among its siblings, and `AuditEntry` carries no `_id` |
+| DynamoDB / Couchbase | **no** | they rekey, and the physical key is not derivable |
 
-So for MongoDB the whole implementation is roughly:
+> **Revised after implementing MongoDB sync.** This table originally said MongoDB could work from the
+> snapshot, deleting everything for a change except the document matching the survivor's
+> `(executionId, state)`. That was implemented and passed 22 tests — and then a mutation test showed that
+> **dropping the `executionId` half of the predicate survived every one of them.** The bug it would have
+> caused is real, not theoretical: a change applied in `exec-1` and re-applied in `exec-2` has `APPLIED`
+> twice in the ledger, and both would have been spared.
+>
+> The lesson generalises, so treat it as a rule: **in a destructive operation, address the surviving record
+> by its primary key, not by a combination of attributes.** Attribute matching needs every clause to be
+> right, leans on a unique index to be single-valued at all, and makes you reason about missing fields
+> inside a negation. A primary key needs one clause and none of that. For MongoDB the extra cost was one
+> pass over the collection to collect `_id`s — the same read the snapshot would have done anyway.
+
+For SQL that means, per change inside one JDBC transaction: `DELETE … WHERE change_id = ?` then insert the
+survivor taken straight from the snapshot. The re-inserted row gets a fresh surrogate `id`, which is
+harmless — nothing reads it and it is not in `AuditEntry`.
+
+MongoDB is already implemented; read `MongoDBSyncAuditCompactor` rather than reinventing it. It reads the
+documents once, keeps each one's `_id` beside the `AuditEntry` it maps to, picks the survivor with
+`AuditSnapshotBuilder`, then per change issues:
 
 ```java
-for (Map.Entry<String, AuditEntry> survivor : auditReader.getAuditSnapshotByChangeId().entrySet()) {
-    AuditEntry winner = survivor.getValue();
-    collection.deleteMany(Filters.and(
-            Filters.eq(KEY_CHANGE_ID, survivor.getKey()),
-            Filters.nor(Filters.and(
-                    Filters.eq(KEY_EXECUTION_ID, winner.getExecutionId()),
-                    Filters.eq(KEY_STATE, winner.getState().name())))));
-}
+collection.deleteMany(Filters.and(
+        Filters.eq(KEY_CHANGE_ID, changeId),
+        Filters.ne("_id", survivorId)));
 ```
 
-Nothing is rewritten at all, so clause 5 (preserve verbatim) is satisfied trivially and the survivor keeps
-its original `_id`. One atomic operation per change. And for SQL, per change inside one JDBC transaction:
-`DELETE … WHERE change_id = ?` then insert the survivor — note the re-inserted row gets a fresh surrogate
-`id`, which is harmless since nothing reads it and it is not in `AuditEntry`.
+Both clauses are load-bearing: without the `changeId` scope, `_id != survivorId` matches almost the whole
+collection. Nothing is rewritten, so clause 5 is satisfied trivially and the survivor keeps its `_id` —
+there is a test asserting exactly that. One atomic operation per change, and no `ClientSession`, so it also
+works where `supportsTransactions == false`.
 
 ### Why DynamoDB and Couchbase can't do that
 
@@ -287,12 +301,16 @@ you write anything.
   both `replaceOne(filter: changeId, upsert)` — and `append(entry)` —
   `replaceOne(filter: executionId+changeId+state, upsert)`. The collection **has a UNIQUE index on
   `(executionId, changeId, state)`**, created by `CollectionInitializator`.
-- `_id` is an auto ObjectId and `getAuditHistory()` maps it away — but **you don't need it**. Because the
-  triple is unique, you can identify the survivor by its triple and delete the rest with one filter.
-- `CollectionHelper` already exposes `deleteMany(DOCUMENT)` and `dropIndex(name)`.
-- **Easiest conformant shape:** per change, `replaceOne(changeId, winnerDoc, upsert)` is unnecessary (no
-  rekey) — just `deleteMany(changeId == X AND NOT(executionId == w.exec AND state == w.state))`. One round
-  trip per change, and it is atomic per operation.
+- **Implemented — `MongoDBSyncAuditCompactor`. Mirror it for reactive rather than re-deriving.**
+- `_id` is an auto ObjectId and `getAuditHistory()` maps it away, so the compactor reads raw `Document`s
+  and keeps the `_id` alongside each mapped `AuditEntry` (an `IdentityHashMap`, sound because
+  `AuditSnapshotBuilder` returns the instances it was given and `AuditEntry` declares no `equals`).
+  Identifying the survivor by its triple instead was tried first and rejected — see the revision note in
+  section 5.
+- Per change: `deleteMany(changeId == X AND _id != survivorId)`. One round trip, atomic per operation,
+  nothing written, no `ClientSession`.
+- `CollectionHelper.deleteMany(DOCUMENT)` takes an exact-match document, not a `Bson`, so it cannot express
+  `$ne` — use the raw `MongoCollection`, as the repository already does for every data operation.
 - A `ClientSession` transaction is available if you want the whole thing atomic. Permitted, not required.
 - **Trap (relevant to a FUTURE step, not yours):** `CollectionInitializator`'s "rule (a)" drops any unique
   non-`_id` index that doesn't match a declared spec. So if anyone ever makes compaction create a unique

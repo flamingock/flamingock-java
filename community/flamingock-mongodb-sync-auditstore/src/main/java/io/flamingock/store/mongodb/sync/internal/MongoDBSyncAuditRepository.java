@@ -158,10 +158,10 @@ public class MongoDBSyncAuditRepository {
      * the {@link AuditCompactor} contract.
      * <p>
      * Needs no prior {@link #initialize(boolean)}: the collection handle is built in the constructor, and
-     * compaction only deletes, so it depends on no index existing.
+     * compaction only deletes and addresses documents by {@code _id}, so it depends on no index existing.
      */
     public AuditCompactor getAuditCompactor() {
-        return new MongoDBSyncAuditCompactor(collection, this::getAuditHistory);
+        return new MongoDBSyncAuditCompactor(collection, mapper);
     }
 
     public List<AuditEntry> getAuditHistory() {

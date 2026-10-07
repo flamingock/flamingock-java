@@ -16,12 +16,14 @@
 package io.flamingock.store.mongodb.sync.internal;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
 import io.flamingock.internal.util.Result;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -34,7 +36,6 @@ import org.mockito.Mockito;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,15 +44,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit coverage for {@link MongoDBSyncAuditCompactor} against a mocked collection.
  * <p>
- * Deliberately smaller than the DynamoDB equivalent, and that is the point rather than an omission.
- * DynamoDB rekeys, so ordering, paging, survivor identity, key collisions and crash convergence are all
- * live risks there and each needs its own test. Here nothing is written and the survivor is excluded from
- * every delete by construction, so the only things that can go wrong are: the wrong documents are
- * targeted, something gets written that should not, or a failure is mishandled. Those are what follows.
+ * Smaller than the DynamoDB equivalent on purpose. DynamoDB rekeys, so ordering, paging, survivor
+ * identity, key collisions and crash convergence are each a live risk there. Here nothing is written and
+ * the survivor is excluded from every delete by its primary key, so what remains to get wrong is narrow:
+ * the wrong documents are targeted, something gets written, or a failure is mishandled.
  * <p>
- * The {@link AuditReader} needs no mocking framework — it is a functional interface whose single abstract
- * method is {@code getAuditHistory()}, so a lambda is the whole stub. Note this is the first test in the
- * repo to mock a {@code MongoCollection}; the end state it implies is covered against a real MongoDB by
+ * The one assertion that earns its white-box cost is {@link #theDeleteFilterIsScopedAndExcludesTheSurvivor()}.
+ * An earlier version of this class identified the survivor by its {@code (executionId, state)} pair rather
+ * than by {@code _id}; dropping the {@code executionId} half of that predicate silently spared extra
+ * documents and <em>survived every test in this module and in the shared conformance suite</em>. Addressing
+ * the survivor by primary key removed that failure mode rather than testing around it, and this assertion
+ * pins the filter that replaced it.
+ * <p>
+ * Note this is the first test in the repo to mock a {@code MongoCollection}. The end state these tests
+ * imply is covered against a real MongoDB by
  * {@code io.flamingock.store.mongodb.sync.MongoDBSyncAuditCompactionConformanceTest}.
  */
 class MongoDBSyncAuditCompactorTest {
@@ -61,163 +67,182 @@ class MongoDBSyncAuditCompactorTest {
     private static final LocalDateTime T0 = LocalDateTime.of(2026, 1, 1, 12, 0, 0);
     private static final LocalDateTime T1 = LocalDateTime.of(2026, 1, 1, 12, 5, 0);
 
-    @Test
-    @DisplayName("one delete per change in the snapshot")
-    void deletesOneBatchPerChange() {
-        MongoCollection<Document> collection = collectionDeleting(1);
-        AuditCompactorUnderTest compactor = compactorOver(collection,
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1),
-                entry(CHANGE_B, "exec-1", AuditEntry.Status.APPLIED, T0));
+    private final MongoDBAuditMapper<MongoDBDocumentHelper> mapper =
+            new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
 
-        assertOk(compactor.compact());
+    @Test
+    @DisplayName("one delete per change that has superseded documents")
+    void deletesOneBatchPerChangeThatNeedsIt() {
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-a1", CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-a2", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1),
+                stored("id-b1", CHANGE_B, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-b2", CHANGE_B, "exec-1", AuditEntry.Status.APPLIED, T1));
+
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
 
         Mockito.verify(collection, Mockito.times(2)).deleteMany(Mockito.any(Bson.class));
     }
 
     @Test
-    @DisplayName("nothing is ever written — only deletes reach the collection")
+    @DisplayName("nothing is ever written — only the read and the deletes reach the collection")
     void neverWritesAnything() {
-        MongoCollection<Document> collection = collectionDeleting(1);
-        AuditCompactorUnderTest compactor = compactorOver(collection,
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-a1", CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-a2", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
 
-        assertOk(compactor.compact());
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
 
         // Proves three contract clauses by construction rather than by inspecting state afterwards: the
-        // survivor is preserved verbatim (never rewritten), no index or schema is altered, and no journal
-        // event is emitted. There is simply no other call the compactor can make.
+        // survivor is preserved verbatim because it is never rewritten, no index or schema is altered, and
+        // no journal event is emitted. There is no other call the compactor can make.
+        Mockito.verify(collection).find();
         Mockito.verify(collection).deleteMany(Mockito.any(Bson.class));
         Mockito.verifyNoMoreInteractions(collection);
     }
 
     @Test
-    @DisplayName("the delete filter targets the change and excludes its surviving document")
-    void theSurvivorIsExcludedFromTheDeleteFilter() {
-        MongoCollection<Document> collection = collectionDeleting(1);
-        AuditCompactorUnderTest compactor = compactorOver(collection,
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
+    @DisplayName("the delete filter is scoped to the change and excludes the survivor by _id")
+    void theDeleteFilterIsScopedAndExcludesTheSurvivor() {
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-superseded", CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-survivor", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
 
-        assertOk(compactor.compact());
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
 
-        // White-box, and justified: this is the one filter whose inversion would delete the survivor
-        // instead of its superseded siblings, which is the single unrecoverable outcome in the contract.
-        BsonDocument filter = renderFilter(collection);
-        String rendered = filter.toJson();
-        assertTrue(rendered.contains("\"changeId\""), "filter must be scoped to the change: " + rendered);
-        assertTrue(rendered.contains("$nor"), "the survivor must be excluded, not matched: " + rendered);
-        assertTrue(rendered.contains("APPLIED"),
-                "the excluded document must be the surviving APPLIED state, not the superseded one: "
-                        + rendered);
-        assertTrue(!rendered.contains("STARTED"),
-                "the superseded state must not appear in the exclusion: " + rendered);
+        String rendered = capturedFilter(collection).toJson();
+        // Scope: without it, `_id != survivor` would match almost the whole collection.
+        assertTrue(rendered.contains("\"changeId\"") && rendered.contains(CHANGE_A),
+                "the filter must be scoped to the change: " + rendered);
+        // Exclusion: by identity, so there is exactly one predicate and no attribute combination to get
+        // wrong. `id-survivor` must be the one spared, not the superseded document.
+        assertTrue(rendered.contains("$ne") && rendered.contains("id-survivor"),
+                "the survivor must be excluded by _id: " + rendered);
+        assertTrue(!rendered.contains("id-superseded"),
+                "the superseded document must not appear in the exclusion: " + rendered);
     }
 
     @Test
-    @DisplayName("an empty store is left completely alone")
-    void emptyStoreDoesNothing() {
-        MongoCollection<Document> collection = collectionDeleting(0);
-        AuditCompactorUnderTest compactor = compactorOver(collection);
+    @DisplayName("on an exact createdAt tie the higher status priority survives")
+    void survivorIsChosenByStatusPriorityOnTie() {
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-applied", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T0),
+                stored("id-rolled-back", CHANGE_A, "exec-1", AuditEntry.Status.ROLLED_BACK, T0));
 
-        assertOk(compactor.compact());
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
 
-        Mockito.verifyNoInteractions(collection);
+        String rendered = capturedFilter(collection).toJson();
+        assertTrue(rendered.contains("id-rolled-back"),
+                "ROLLED_BACK outranks APPLIED on an equal createdAt; selecting on createdAt alone would"
+                        + " resolve this arbitrarily: " + rendered);
     }
 
     @Test
-    @DisplayName("a failure is reported, not thrown")
+    @DisplayName("a change that already has one document is left alone")
+    void singleDocumentChangeIsLeftAlone() {
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-a1", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T0));
+
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
+
+        Mockito.verify(collection).find();
+        Mockito.verify(collection, Mockito.never()).deleteMany(Mockito.any(Bson.class));
+    }
+
+    @Test
+    @DisplayName("an empty collection is left completely alone")
+    void emptyCollectionDoesNothing() {
+        MongoCollection<Document> collection = collectionHolding();
+
+        assertOk(new MongoDBSyncAuditCompactor(collection, mapper).compact());
+
+        Mockito.verify(collection).find();
+        Mockito.verifyNoMoreInteractions(collection);
+    }
+
+    @Test
+    @DisplayName("a failed delete is reported, not thrown")
     void failureIsReportedNotThrown() {
-        MongoCollection<Document> collection = collectionDeleting(1);
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-a1", CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-a2", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
         Mockito.doThrow(new IllegalStateException("delete failed"))
                 .when(collection).deleteMany(Mockito.any(Bson.class));
-        AuditCompactorUnderTest compactor = compactorOver(collection,
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1));
 
-        Result result = compactor.compact();
-
-        assertTrue(result.isError(), "the caller decides what a failed compaction means");
+        assertTrue(new MongoDBSyncAuditCompactor(collection, mapper).compact().isError(),
+                "the caller decides what a failed compaction means");
     }
 
     @Test
     @DisplayName("the first failing change stops the rest")
     void failFastStopsAtTheFirstFailingChange() {
-        MongoCollection<Document> collection = collectionDeleting(1);
+        MongoCollection<Document> collection = collectionHolding(
+                stored("id-a1", CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-a2", CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1),
+                stored("id-b1", CHANGE_B, "exec-1", AuditEntry.Status.STARTED, T0),
+                stored("id-b2", CHANGE_B, "exec-1", AuditEntry.Status.APPLIED, T1));
         Mockito.doThrow(new IllegalStateException("delete failed"))
                 .when(collection).deleteMany(Mockito.any(Bson.class));
-        AuditCompactorUnderTest compactor = compactorOver(collection,
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_A, "exec-1", AuditEntry.Status.APPLIED, T1),
-                entry(CHANGE_B, "exec-1", AuditEntry.Status.STARTED, T0),
-                entry(CHANGE_B, "exec-1", AuditEntry.Status.APPLIED, T1));
 
-        assertTrue(compactor.compact().isError());
+        assertTrue(new MongoDBSyncAuditCompactor(collection, mapper).compact().isError());
 
-        // One attempt only. Nothing was written, so the changes already compacted stay compacted and a
+        // One attempt only. Nothing was written, so anything already compacted stays compacted and a
         // re-run finishes the job.
         Mockito.verify(collection, Mockito.times(1)).deleteMany(Mockito.any(Bson.class));
     }
 
     @Test
-    @DisplayName("a reader failure is reported without touching the collection")
-    void readerFailureIsReportedWithoutDeleting() {
-        MongoCollection<Document> collection = collectionDeleting(1);
-        MongoDBSyncAuditCompactor compactor = new MongoDBSyncAuditCompactor(collection, () -> {
-            throw new IllegalStateException("read failed");
-        });
+    @DisplayName("a failed read is reported without deleting anything")
+    void readFailureIsReportedWithoutDeleting() {
+        @SuppressWarnings("unchecked")
+        MongoCollection<Document> collection = Mockito.mock(MongoCollection.class);
+        Mockito.when(collection.find()).thenThrow(new IllegalStateException("read failed"));
 
-        assertTrue(compactor.compact().isError());
+        assertTrue(new MongoDBSyncAuditCompactor(collection, mapper).compact().isError());
 
-        // Relevant because a document missing its state makes the snapshot aggregation throw. Failing
+        // Relevant because a document missing its state makes the mapping or aggregation throw. Failing
         // before any delete is what makes that safe rather than destructive.
-        Mockito.verifyNoInteractions(collection);
+        Mockito.verify(collection, Mockito.never()).deleteMany(Mockito.any(Bson.class));
     }
 
     // ---------------------------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------------------------
 
-    /** Narrow alias so the tests read as being about the capability, not the concrete class. */
-    private interface AuditCompactorUnderTest {
-        Result compact();
-    }
-
-    private static AuditCompactorUnderTest compactorOver(MongoCollection<Document> collection,
-                                                         AuditEntry... history) {
-        final List<AuditEntry> entries = Arrays.asList(history);
-        MongoDBSyncAuditCompactor compactor =
-                new MongoDBSyncAuditCompactor(collection, () -> new ArrayList<>(entries));
-        return compactor::compact;
-    }
-
     @SuppressWarnings("unchecked")
-    private static MongoCollection<Document> collectionDeleting(long deletedCount) {
+    private static MongoCollection<Document> collectionHolding(Document... documents) {
         MongoCollection<Document> collection = Mockito.mock(MongoCollection.class);
+        FindIterable<Document> findIterable = Mockito.mock(FindIterable.class);
+        Mockito.when(collection.find()).thenReturn(findIterable);
+        // The production code reads with find().into(...), the same idiom as
+        // MongoDBSyncAuditRepository.getAuditHistory(), so the returned collection is what it consumes.
+        Mockito.when(findIterable.into(Mockito.any(ArrayList.class)))
+                .thenReturn(new ArrayList<>(Arrays.asList(documents)));
         Mockito.when(collection.deleteMany(Mockito.any(Bson.class)))
-                .thenReturn(DeleteResult.acknowledged(deletedCount));
+                .thenReturn(DeleteResult.acknowledged(1));
         return collection;
     }
 
     /**
-     * Renders the captured filter to BSON so it can be inspected.
+     * Renders the captured delete filter to BSON.
      * <p>
      * The driver here is 4.0.0, where {@code Bson} has only the two-argument
-     * {@code toBsonDocument(Class, CodecRegistry)} — the no-argument convenience overload arrived in 4.2.
+     * {@code toBsonDocument(Class, CodecRegistry)} — the no-argument overload arrived in 4.2.
      */
-    private static BsonDocument renderFilter(MongoCollection<Document> collection) {
+    private static BsonDocument capturedFilter(MongoCollection<Document> collection) {
         ArgumentCaptor<Bson> captor = ArgumentCaptor.forClass(Bson.class);
         Mockito.verify(collection).deleteMany(captor.capture());
         return captor.getValue()
                 .toBsonDocument(Document.class, MongoClientSettings.getDefaultCodecRegistry());
     }
 
-    private static AuditEntry entry(String changeId,
-                                    String executionId,
-                                    AuditEntry.Status status,
-                                    LocalDateTime createdAt) {
-        return new AuditEntry(
+    /** A stored audit document, with the {@code _id} the real collection would have assigned. */
+    private Document stored(String id,
+                            String changeId,
+                            String executionId,
+                            AuditEntry.Status status,
+                            LocalDateTime createdAt) {
+        Document document = mapper.toDocument(new AuditEntry(
                 executionId,
                 "test-stage",
                 changeId,
@@ -237,7 +262,9 @@ class MongoDBSyncAuditCompactorTest {
                 "test-target-system",
                 "001",
                 RecoveryStrategy.MANUAL_INTERVENTION,
-                null);
+                null)).getDocument();
+        document.put(MongoDBSyncAuditCompactor.KEY_ID, id);
+        return document;
     }
 
     private static void assertOk(Result result) {
