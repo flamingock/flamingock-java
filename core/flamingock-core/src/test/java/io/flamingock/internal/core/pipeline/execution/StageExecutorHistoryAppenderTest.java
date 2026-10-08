@@ -341,10 +341,10 @@ class StageExecutorHistoryAppenderTest {
         assertSame(expectedFactory, actualFactory, "factory must be usable, not a recursively guarded return proxy");
         JournalEventSequencer sequencer = actualFactory.forStream("historical-stage");
         JournalEvent<AuditEntry> event = new JournalEvent<>("caller-event", "caller-key", JournalEventType.CHANGE_STATE,
-                3, "historical-stage", sequencer.reserveSequence(),
+                3, "historical-stage", sequencer.newEvent(HISTORY).getStreamSequence(),
                 Instant.parse("2020-01-02T03:04:00Z"), HISTORY, true);
         assertTrue(appender.append(event) instanceof Result.Ok, "durable success must retain its Result subtype");
         sequencer.confirm();
-        assertEquals(2L, sequencer.reserveSequence());
+        assertEquals(2L, sequencer.newEvent(HISTORY).getStreamSequence());
     }
 }

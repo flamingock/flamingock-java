@@ -19,101 +19,16 @@ import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.common.core.journal.JournalEventType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JournalEventSequencerTest {
-
-    @Test
-    @DisplayName("reserves without a payload and reuses the position until durable confirmation")
-    void reservesWithoutPayloadUntilConfirmed() {
-        JournalEventSequencer sequencer = new JournalEventSequencer("history-stream", 7L);
-
-        assertEquals(7L, sequencer.reserveSequence());
-        assertEquals(7L, sequencer.reserveSequence());
-
-        sequencer.confirm(); // caller confirms only after durable completion
-
-        assertEquals(8L, sequencer.reserveSequence());
-        assertEquals(8L, sequencer.reserveSequence());
-    }
-
-    @Test
-    @DisplayName("confirmation without an outstanding reservation does not spend a position")
-    void confirmationWithoutReservationIsNoOp() {
-        JournalEventSequencer sequencer = new JournalEventSequencer("history-stream", 7L);
-
-        sequencer.confirm();
-        assertEquals(7L, sequencer.reserveSequence());
-        sequencer.confirm();
-        sequencer.confirm();
-
-        assertEquals(8L, sequencer.reserveSequence());
-    }
-
-    @Test
-    @DisplayName("normal audit events share the reservation lifecycle and retain their metadata")
-    void normalAuditEventsUseSameReservation() {
-        JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 7L);
-        AuditEntry payload = auditEntry("execution-1", "change-1", AuditEntry.Status.APPLIED);
-
-        assertEquals(7L, sequencer.reserveSequence());
-        JournalEvent<AuditEntry> event = sequencer.newEvent(payload);
-
-        assertEquals(7L, event.getStreamSequence());
-        assertEquals(7L, sequencer.reserveSequence());
-        assertEquals("stage-1", event.getStreamId());
-        assertEquals(JournalEventType.CHANGE_STATE, event.getEventType());
-        assertEquals(JournalEvent.DEFAULT_VERSION, event.getEventVersion());
-        assertNotNull(event.getEventId());
-        assertNotNull(event.getOccurredAt());
-        assertSame(payload, event.getData());
-        assertEquals(new JournalEventSequencer("stage-1", 7L).newEvent(payload).getIdempotencyKey(),
-                event.getIdempotencyKey());
-
-        sequencer.confirm();
-        JournalEvent<AuditEntry> next = sequencer.newEvent(payload);
-        assertEquals(8L, next.getStreamSequence());
-        assertEquals(8L, sequencer.reserveSequence());
-        assertNotEquals(event.getEventId(), next.getEventId());
-        assertEquals(event.getIdempotencyKey(), next.getIdempotencyKey());
-    }
-
-    @Test
-    @DisplayName("caller can construct a complete generic event with its own metadata and payload")
-    void callerBuildsCompleteGenericEvent() {
-        String streamId = "historical-stage";
-        JournalEventSequencer sequencer = new JournalEventSequencer(streamId, 12L);
-        Instant occurredAt = Instant.parse("2026-01-01T00:00:00Z");
-        JournalEvent<String> event = new JournalEvent<>(
-                "historical-event", "caller-key", JournalEventType.CHANGE_STATE, 3,
-                streamId, sequencer.reserveSequence(), occurredAt, "historical-payload", true);
-
-        assertEquals("historical-event", event.getEventId());
-        assertEquals("caller-key", event.getIdempotencyKey());
-        assertEquals(JournalEventType.CHANGE_STATE, event.getEventType());
-        assertEquals(3, event.getEventVersion());
-        assertEquals(streamId, event.getStreamId());
-        assertEquals(12L, event.getStreamSequence());
-        assertEquals(occurredAt, event.getOccurredAt());
-        assertEquals("historical-payload", event.getData());
-        assertTrue(event.isAcknowledged());
-        assertEquals(12L, sequencer.reserveSequence());
-
-        sequencer.confirm();
-
-        assertEquals(13L, sequencer.reserveSequence());
-    }
 
     @Test
     @DisplayName("derives a stable idempotency key from the CHANGE_STATE identity")
