@@ -17,56 +17,41 @@ package io.flamingock.internal.core.external.store;
 
 import io.flamingock.api.NonLockGuardedType;
 import io.flamingock.api.annotations.NonLockGuarded;
-import io.flamingock.internal.common.core.journal.JournalEvent;
-import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.Result;
 
 /**
- * Independent capability for appending complete, caller-supplied journal events.
+ * Independent capability for appending journal events from source payloads.
  *
- * <p>When {@code JOURNAL_EVENTS} is disabled, implementations must explicitly reject both append calls
- * and sequencer factory access without initializing or reading journal storage, allocating sequences or
- * writing events. Neither operation may implicitly activate journaling. Audit-history appending remains
- * independent of this gate. When journaling is enabled, storage must be initialized before reading its
- * durable tail; an uninitialized journal must not be treated as an empty stream.
+ * <p>When {@code JOURNAL_EVENTS} is disabled, implementations must explicitly reject calls before journal
+ * storage initialization, reads, sequence allocation or writes. This operation must not implicitly activate
+ * journaling. Audit-history appending remains independent of this gate. When journaling is enabled, storage
+ * must be initialized before reading its durable tail; an uninitialized journal is not an empty stream.
  *
- * @param <T> payload type supported by the implementing backend; this generic boundary does not imply
- *            support for arbitrary backend payload types
+ * <p>Supported source payload types are declared by explicit overloads. Only {@link AuditEntry} is supported
+ * currently; this contract does not imply support for arbitrary payload types.
  */
-public interface JournalHistoryAppender<T> {
+public interface JournalHistoryAppender {
 
     /**
-     * Appends the complete supplied event, preserving its payload, event metadata, destination stream and
-     * stream sequence. The destination is not replaced by the executing stage. This operation does not
-     * construct events, generate identifiers or sequences, re-sequence events or confirm sequencing.
+     * Constructs and appends a journal event from the supplied source payload. The stage Persistence selected
+     * through the existing factory determines the journal destination. The backend constructs the event
+     * envelope and owns sequence allocation and confirmation; callers do not supply a complete journal event.
      *
-     * <p>The public append owns its journal-only transaction boundary and does not depend on an ambient
-     * business transaction. A {@link Result.Ok} means durable completion, not an internal staging
-     * acknowledgement. Unsuccessful contributions or commits must be propagated as an unsuccessful result
-     * or a thrown failure, never converted into success. The caller confirms sequencing only after durable
-     * success.
+     * <p>This operation owns a journal-only durable transaction, does not depend on an ambient business
+     * transaction and must not append or update audit rows. A {@link Result.Ok} means durable commit, not an
+     * internal staging acknowledgement. Unsuccessful contributions or commits must be propagated as an
+     * unsuccessful result or a thrown failure, never converted into success. The backend confirms its owned
+     * sequencer only after successful durable completion, never after a failed write.
      *
      * <p>Only the returned outcome bypasses recursive lock guarding, preserving its concrete result type.
      * Execution of this method remains lock guarded.
      *
-     * @param event complete event, including its intended destination and sequence
-     * @return the durable write outcome
+     * @param payload source audit entry for the journal event
+     * @return the durable journal write outcome
      * @throws IllegalStateException if {@code JOURNAL_EVENTS} is disabled
+     * @throws UnsupportedOperationException if the backend does not support this operation
      */
     @NonLockGuarded(NonLockGuardedType.RETURN)
-    Result append(JournalEvent<T> event);
-
-    /**
-     * Returns the store-owned concrete factory for sequencing the intended destination stream, which need
-     * not be the executing stage. Factory access does not itself imply shared per-stream sequencing or a
-     * distributed allocation guarantee.
-     *
-     * <p>The returned factory bypasses recursive lock guarding so sequencing helpers retain their concrete
-     * behavior. Factory acquisition remains lock guarded, as does appending the resulting complete event.
-     *
-     * @return the store-owned sequencer factory
-     * @throws IllegalStateException if {@code JOURNAL_EVENTS} is disabled
-     */
-    @NonLockGuarded(NonLockGuardedType.RETURN)
-    JournalEventSequencerFactory getSequencerFactory();
+    Result appendEventFrom(AuditEntry payload);
 }

@@ -20,12 +20,9 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.context.PriorityContext;
-import io.flamingock.internal.core.external.store.AuditHistoryAppender;
-import io.flamingock.internal.core.external.store.JournalHistoryAppender;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.result.StageResultBuilder;
@@ -35,7 +32,6 @@ import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessResu
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
-import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -87,15 +83,8 @@ public class StageExecutor {
 
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
-        AuditPersistence persistence = auditPersistenceFactory.get(stageName);
-        if (persistence instanceof AuditHistoryAppender) {
-            dependencyContext.addDependency(new Dependency(AuditHistoryAppender.class, persistence));
-        }
-        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS) && persistence instanceof JournalHistoryAppender) {
-            dependencyContext.addDependency(new Dependency(JournalHistoryAppender.class, persistence));
-        }
-        ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(
-                executionContext, persistence, lock, dependencyContext);
+        AuditWriter auditWriter = auditPersistenceFactory.get(stageName);
+        ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, auditWriter, lock, dependencyContext);
 
         try {
             logger.debug("Processing changes [stage={} context={}]", stageName, executionContext.getExecutionId());
