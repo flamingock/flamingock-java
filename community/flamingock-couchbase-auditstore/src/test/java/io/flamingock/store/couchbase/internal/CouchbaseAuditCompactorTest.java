@@ -180,6 +180,28 @@ class CouchbaseAuditCompactorTest {
     }
 
     @Test
+    @DisplayName("a single document still at its ledger key is rekeyed, not skipped as already current-state")
+    void singleLedgerKeyedDocumentIsStillRekeyed() {
+        Collection collection = mockCollection();
+        String ledgerKey = "exec-1#" + CHANGE_A + "#APPLIED";
+        Cluster cluster = clusterReturning(collection,
+                ledgerRow(CHANGE_A, ledgerKey, "exec-1", AuditEntry.Status.APPLIED, T0));
+        TransactionAttemptContext txContext = Mockito.mock(TransactionAttemptContext.class);
+        Mockito.when(txContext.get(collection, CHANGE_A)).thenThrow(new DocumentNotFoundException(null));
+        TransactionGetResult ledgerHandle = Mockito.mock(TransactionGetResult.class);
+        Mockito.when(txContext.get(collection, ledgerKey)).thenReturn(ledgerHandle);
+        ExecutionWrapper txWrapper = passthroughWrapper(txContext);
+
+        assertOk(new CouchbaseAuditCompactor(cluster, collection, txWrapper).compact());
+
+        // A single record whose physical key is still the ledger key, not the changeId, must be rekeyed:
+        // treating "one record" as "already current-state" (dropping the key check) would skip this and
+        // leave it un-rekeyed, so a later current-state write would insert a second document at changeId.
+        Mockito.verify(txContext).insert(Mockito.eq(collection), Mockito.eq(CHANGE_A), Mockito.any());
+        Mockito.verify(txContext).remove(ledgerHandle);
+    }
+
+    @Test
     @DisplayName("the first failing change stops the rest")
     void failFastStopsAtTheFirstFailingChange() {
         Collection collection = mockCollection();
@@ -226,7 +248,7 @@ class CouchbaseAuditCompactorTest {
         String collidingId = "exec-1#" + CHANGE_A + "#APPLIED";
         Cluster cluster = clusterReturning(collection,
                 ledgerRow(CHANGE_A, "exec-1#" + CHANGE_A + "#STARTED", "exec-1", AuditEntry.Status.STARTED, T0),
-                ledgerRow(CHANGE_A, "exec-1#" + CHANGE_A + "#APPLIED2", "exec-1", AuditEntry.Status.APPLIED, T1),
+                ledgerRow(CHANGE_A, collidingId, "exec-1", AuditEntry.Status.APPLIED, T1),
                 ledgerRow(collidingId, collidingId, "exec-9", AuditEntry.Status.APPLIED, T0));
         TransactionAttemptContext txContext = Mockito.mock(TransactionAttemptContext.class);
         Mockito.when(txContext.get(Mockito.eq(collection), Mockito.anyString()))

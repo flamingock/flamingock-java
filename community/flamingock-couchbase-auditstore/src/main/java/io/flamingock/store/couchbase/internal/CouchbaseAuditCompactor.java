@@ -195,6 +195,9 @@ class CouchbaseAuditCompactor implements AuditCompactor {
             supersededIds.add(record.id);
         }
 
+        // The returned Result is discarded: the lambda below always returns Result.OK(), never a
+        // FailedStep, so there is nothing a transactional wrapper could roll back and hand back by value
+        // for this call to miss. A real failure still surfaces - wrapExecution throws instead.
         BasicRuntimeContext runtimeContext = new BasicRuntimeContext("compact-" + changeId);
         txWrapper.wrapExecution(runtimeContext, ctx -> {
             TransactionAttemptContext txContext = ctx.getContext().getRequiredDependencyValue(TransactionAttemptContext.class);
