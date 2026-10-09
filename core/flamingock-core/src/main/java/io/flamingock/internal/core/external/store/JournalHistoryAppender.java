@@ -34,9 +34,10 @@ import io.flamingock.internal.util.Result;
 public interface JournalHistoryAppender {
 
     /**
-     * Constructs and appends a journal event from the supplied source payload. The stage Persistence selected
-     * through the existing factory determines the journal destination. The backend constructs the event
-     * envelope and owns sequence allocation and confirmation; callers do not supply a complete journal event.
+     * Constructs and appends a journal event from the supplied source payload. The payload's stage ID
+     * determines the journal destination, independently of the stage selected through the persistence factory.
+     * The backend constructs the event envelope and owns sequence allocation and confirmation; callers do not
+     * supply a complete journal event.
      *
      * <p>This operation owns a journal-only durable transaction, does not depend on an ambient business
      * transaction and must not append or update audit rows. A {@link Result.Ok} means durable commit, not an
