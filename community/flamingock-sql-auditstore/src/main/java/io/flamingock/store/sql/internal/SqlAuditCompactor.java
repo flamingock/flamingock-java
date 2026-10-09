@@ -141,10 +141,14 @@ class SqlAuditCompactor implements AuditCompactor {
         }
 
         BasicRuntimeContext runtimeContext = new BasicRuntimeContext("compact-" + changeId);
-        txWrapper.wrapExecution(runtimeContext, ctx -> {
+        Result result = txWrapper.wrapExecution(runtimeContext, ctx -> {
             Connection connection = ctx.getContext().getRequiredDependencyValue(Connection.class);
             return auditRepository.replaceForCompaction(connection, changeId, survivor);
         });
+        if (result.isError()) {
+            throw new IllegalStateException("Compaction of changeId '" + changeId + "' failed",
+                    ((Result.Error) result).getError());
+        }
 
         logger.debug("Compacted change [changeId={} records={} survivingState={}]",
                 changeId, recordCount, survivor.getState());

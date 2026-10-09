@@ -17,8 +17,10 @@ package io.flamingock.store.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.compaction.AuditCompactionConformance;
 import io.flamingock.core.kit.audit.compaction.AuditStorageCompactionFixture;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
@@ -42,18 +44,24 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Audit compaction against every runtime SQL dialect: the shared contract, once per dialect.
  * <p>
  * SQL does not rekey — its current-state row and ledger rows share the same key shape, filtered only by
  * {@code change_id} (contrast DynamoDB/Couchbase, which key the two shapes differently and so need a
- * store-specific physical-key assertion on top of the shared suite). So the shared conformance suite is
- * the whole of what needs proving here; there is nothing SQL-specific left to assert on raw rows.
+ * store-specific physical-key assertion on top of the shared suite). The shared conformance suite covers
+ * that. What it cannot cover is the one property that is SQL-specific in the other direction: SQL has no
+ * unique constraint on {@code (executionId, changeId, state)}, so it is the only store where two rows can
+ * share that triple (see {@link #duplicateTriplesCollapseToOne}).
  * <p>
  * One {@code verifyAll()} call per dialect, rather than one {@code @Test} per property, to avoid spinning
  * a container (Oracle in particular) once per property per dialect.
@@ -114,6 +122,65 @@ class SqlAuditCompactionConformanceTest {
                 new AuditStorageCompactionFixture(auditStore, auditStorage, "compaction-stage"));
 
         conformance.verifyAll();
+        if ("h2".equals(dialectName)) {
+            // In-process, no container, so free to run here even though it is opt-in for every other
+            // dialect (300 transactions per dialect would otherwise multiply the cost of this suite).
+            conformance.verifyLargeLedgerIsCompacted(30, 7);
+        }
+    }
+
+    /**
+     * SQL is the only audit store with no unique constraint on {@code (executionId, changeId, state)}, so
+     * it is the only one where two rows can legitimately share that triple - the shared conformance suite's
+     * seeding rule forbids duplicates precisely because the other stores reject or silently overwrite them.
+     * A legacy table written before the triple was constrained could still hold such duplicates, so
+     * compaction must collapse them to one row like any other superseded records.
+     */
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
+    @DisplayName("duplicate (executionId, changeId, state) rows collapse to one")
+    void duplicateTriplesCollapseToOne(SqlDialect sqlDialect, String dialectName) throws Exception {
+        context = setupTest(sqlDialect, dialectName);
+
+        SimpleContext baseContext = new SimpleContext();
+        baseContext.addDependency(RunnerId.generate());
+        baseContext.addDependency(new CommunityConfiguration());
+        SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+        targetSystem.initialize(baseContext);
+
+        SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
+        auditStore.initialize(baseContext);
+
+        SqlAuditStorage storage = new SqlAuditStorage(context.dataSource);
+        AuditStorageCompactionFixture fixture =
+                new AuditStorageCompactionFixture(auditStore, storage, "compaction-stage");
+
+        LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 12, 0, 0);
+        AuditEntry entry = AuditEntryTestFactory.createDeterministicAuditEntry(
+                "exec-1", "dup-change", AuditEntry.Status.APPLIED, createdAt, false);
+        // Only SQL permits this: no unique constraint on (executionId, changeId, state).
+        fixture.seedLedgerEntry(entry);
+        fixture.seedLedgerEntry(entry);
+
+        assertFalse(fixture.compact().isError());
+        assertEquals(1, fixture.readStoredRecords().size());
+
+        // The follow-on assertion is the one that actually breaks later: after compaction the ordinary
+        // current-state write must still succeed, since SqlAuditRepository.save throws when more than one
+        // row matches.
+        boolean journalEventsWereEnabled = FeatureFlag.isEnabled(Features.JOURNAL_EVENTS);
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        try {
+            AuditEntry followUp = AuditEntryTestFactory.createDeterministicAuditEntry(
+                    "exec-2", "dup-change", AuditEntry.Status.APPLIED, createdAt.plusMinutes(1), false);
+            assertFalse(fixture.writeCurrentState(followUp).isError());
+        } finally {
+            if (journalEventsWereEnabled) {
+                FeatureFlag.enable(Features.JOURNAL_EVENTS);
+            } else {
+                FeatureFlag.remove(Features.JOURNAL_EVENTS);
+            }
+        }
     }
 
     /**
