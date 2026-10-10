@@ -24,6 +24,8 @@ import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.AuditHistoryAppender;
+import io.flamingock.internal.core.external.store.JournalHistoryAppender;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.dynamodb.entities.journal.DynamoDBJournalEventMapper;
@@ -221,6 +223,64 @@ class DynamoDBAuditStoreJournalTest {
                 .withJournalRepositoryName(auditTableName);
 
         assertThrows(FlamingockException.class, () -> auditStore.initialize(context));
+    }
+
+    @Test
+    void sameStagePersistencesRouteNormalAndSourceWritesToTheirOwnDurableStreams() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        DynamoDBAuditStore store = initializeStore(newContext());
+        CommunityAuditPersistence first = store.getPersistenceFactory().get(STAGE_ONE);
+        CommunityAuditPersistence second = store.getPersistenceFactory().get(STAGE_ONE);
+        org.junit.jupiter.api.Assertions.assertNotSame(first, second);
+        AuditEntry started = AuditEntryTestFactory.createTestAuditEntry(
+                "normal", AuditEntry.Status.STARTED, AuditTxType.NON_TX, (Class<?>) null);
+        AuditEntry applied = auditEntry("normal");
+        AuditEntry source = auditEntry("historical-source");
+
+        assertFalse(first.writeEntry(started).isError());
+        JournalHistoryAppender appender = second;
+        assertFalse(appender.appendEventFrom(source).isError());
+        List<AuditEntry> afterJournalOnly = store.getAuditReader().getAuditHistory();
+        assertEquals(1, afterJournalOnly.size());
+        assertEquals(started.getChangeId(), afterJournalOnly.get(0).getChangeId());
+        assertEquals(started.getState(), afterJournalOnly.get(0).getState());
+        assertEquals(started.getExecutionId(), afterJournalOnly.get(0).getExecutionId());
+        assertEquals(started.getCreatedAt(), afterJournalOnly.get(0).getCreatedAt());
+        assertFalse(first.writeEntry(applied).isError());
+
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(3, events.size());
+        List<JournalEvent<AuditEntry>> normalEvents = events.stream()
+                .filter(event -> STAGE_ONE.equals(event.getStreamId()))
+                .sorted(java.util.Comparator.comparingLong(JournalEvent::getStreamSequence))
+                .collect(Collectors.toList());
+        assertEquals(2, normalEvents.size());
+        assertEquals(1L, normalEvents.get(0).getStreamSequence());
+        assertEquals(2L, normalEvents.get(1).getStreamSequence());
+        assertEquals(started.getState(), normalEvents.get(0).getData().getState());
+        assertEquals(applied.getChangeId(), normalEvents.get(1).getData().getChangeId());
+        assertEquals(applied.getState(), normalEvents.get(1).getData().getState());
+        JournalEvent<AuditEntry> sourceEvent = events.stream()
+                .filter(event -> source.getStageId().equals(event.getStreamId())).findFirst().get();
+        assertEquals(1L, sourceEvent.getStreamSequence());
+        assertEquals(source.getChangeId(), sourceEvent.getData().getChangeId());
+        assertEquals(source.getStageId(), sourceEvent.getData().getStageId());
+        assertFalse(STAGE_ONE.equals(source.getStageId()));
+        List<AuditEntry> audit = store.getAuditReader().getAuditHistory();
+        assertEquals(1, audit.size());
+        assertEquals(applied.getState(), audit.get(0).getState());
+    }
+
+    @Test
+    void journalOffAllowsNormalAndHistoricalAuditWithoutJournalTable() {
+        DynamoDBAuditStore store = initializeStore(newContext());
+        CommunityAuditPersistence persistence = store.getPersistenceFactory().get(STAGE_ONE);
+        persistence.writeEntry(auditEntry("normal"));
+        assertFalse(((AuditHistoryAppender) persistence).append(auditEntry("historical")).isError());
+        JournalHistoryAppender journal = persistence;
+        assertThrows(IllegalStateException.class, () -> journal.appendEventFrom(auditEntry("disabled")));
+        assertEquals(2, persistence.getAuditHistory().size());
+        assertFalse(client.listTables().tableNames().contains(journalTableName));
     }
 
     private List<JournalEvent<AuditEntry>> storedEvents() {
