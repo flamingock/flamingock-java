@@ -139,6 +139,19 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         return getSelf();
     }
 
+    /**
+     * Registers dependencies that only one edition can supply.
+     * <p>
+     * Separate from {@link #updateContextSpecific()} because of when it runs: that one is called from
+     * {@code buildContext}, before {@code configureStoreAndTargetSystem(...)} has initialized the audit
+     * store, and it writes to the base context rather than the hierarchical one. Anything that needs an
+     * initialized store, or needs to land in the hierarchical context, belongs here.
+     *
+     * @param hierarchicalContext the context the pipeline and changes resolve against
+     */
+    protected void contributeEditionDependencies(PriorityContext hierarchicalContext) {
+    }
+
     protected abstract void updateContextSpecific();
 
     protected abstract ExecutionPlanner buildExecutionPlanner(RunnerId runnerId);
@@ -227,6 +240,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         // of Dependency's "dependency instance cannot be null", when a store supplies no factory.
         hierarchicalContext.addDependency(
                 new Dependency(AuditPersistenceFactory.class, auditStore.getPersistenceFactory()));
+
+        contributeEditionDependencies(hierarchicalContext);
 
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
