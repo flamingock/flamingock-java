@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.util.dynamodb.entities.journal;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
@@ -124,7 +126,12 @@ public final class DynamoDBJournalEventMapper {
 
     private static String serializePayload(AuditEntry auditEntry) {
         try {
-            return JsonObjectMapper.DEFAULT_INSTANCE.writeValueAsString(new AuditEntryEntity(auditEntry));
+            ObjectMapper mapper = JsonObjectMapper.DEFAULT_INSTANCE;
+            ObjectNode payload = mapper.valueToTree(new AuditEntryEntity(auditEntry));
+            if (auditEntry.getMetadata() != null) {
+                payload.set("metadata", mapper.valueToTree(auditEntry.getMetadata()));
+            }
+            return mapper.writeValueAsString(payload);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to serialize journal event payload", e);
         }
@@ -132,7 +139,29 @@ public final class DynamoDBJournalEventMapper {
 
     private static AuditEntry deserializePayload(String payload) {
         try {
-            return JsonObjectMapper.DEFAULT_INSTANCE.readValue(payload, AuditEntryEntity.class).toAuditEntry();
+            AuditEntryEntity entity = JsonObjectMapper.DEFAULT_INSTANCE.readValue(payload, AuditEntryEntity.class);
+            AuditEntry entry = entity.toAuditEntry();
+            return new AuditEntry(
+                    entry.getExecutionId(),
+                    entry.getStageId(),
+                    entry.getChangeId(),
+                    entry.getAuthor(),
+                    entry.getCreatedAt(),
+                    entry.getState(),
+                    entry.getType(),
+                    entry.getClassName(),
+                    entry.getMethodName(),
+                    entry.getSourceFile(),
+                    entry.getExecutionMillis(),
+                    entry.getExecutionHostname(),
+                    entry.getMetadata(),
+                    entry.getSystemChange(),
+                    entity.getErrorTrace(),
+                    entry.getTxType(),
+                    entry.getTargetSystemId(),
+                    entry.getOrder(),
+                    entry.getRecoveryStrategy(),
+                    entry.getTransactionFlag());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to deserialize journal event payload", e);
         }
