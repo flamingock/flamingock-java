@@ -24,7 +24,6 @@ import io.flamingock.internal.core.configuration.community.CommunityConfigurable
 import io.flamingock.internal.core.context.BasicRuntimeContext;
 import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
-import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
