@@ -37,8 +37,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
 
     private final DynamoDBAuditRepository auditRepository;
     private final DynamoDBJournalEventStore journalEventStore;
-    private final JournalEventSequencerFactory journalEventSequencerFactory;
-    private final String stageId;
+    private final JournalEventSequencer journalEventSequencer;
     private final ExecutionWrapper txWrapper;
     private final boolean autoCreate;
 
@@ -48,23 +47,20 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
      * @param localConfiguration          community configuration
      * @param auditRepository             repository for audits
      * @param journalEventStore           journal store receiving staged events
-     * @param journalEventSequencerFactory store-shared factory for destination streams
-     * @param stageId                     stream used by normal audit writing
+     * @param journalEventSequencer       sequencer for this persistence's stage stream
      * @param txWrapper                   transaction wrapper shared with the target system
      * @param autoCreate                  whether missing tables may be created
      */
     public DynamoDBAuditPersistence(CommunityConfigurable localConfiguration,
                                     DynamoDBAuditRepository auditRepository,
                                     DynamoDBJournalEventStore journalEventStore,
-                                    JournalEventSequencerFactory journalEventSequencerFactory,
-                                    String stageId,
+                                    JournalEventSequencer journalEventSequencer,
                                     ExecutionWrapper txWrapper,
                                     boolean autoCreate) {
         super(localConfiguration);
         this.auditRepository = auditRepository;
         this.journalEventStore = journalEventStore;
-        this.journalEventSequencerFactory = journalEventSequencerFactory;
-        this.stageId = stageId;
+        this.journalEventSequencer = journalEventSequencer;
         this.txWrapper = txWrapper;
         this.autoCreate = autoCreate;
     }
@@ -85,12 +81,11 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
         if (isJournalEventsEnabled()) {
-            JournalEventSequencer journalEventSequencer = prepareJournalEventSequencer(stageId);
             RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
             Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
                 TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
                         .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
-                appendEventFrom(auditEntry, journalEventSequencer, builder);
+                appendEventFrom(auditEntry, builder);
                 Result auditResult = auditRepository.contributeToTransaction(builder, auditEntry);
                 if (auditResult.isError()) {
                     throw new IllegalStateException("DynamoDB history write failed", ((Result.Error) auditResult).getError());
@@ -115,7 +110,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     }
 
     /**
-     * Creates and durably appends a CHANGE_STATE event to the payload's stage journal without writing audits.
+     * Creates and durably appends a CHANGE_STATE event to this persistence's stage journal without writing audits.
      *
      * @param payload source audit entry preserved in the event
      * @return the journal-only transaction result after successful durable completion
@@ -123,19 +118,17 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
      */
     @Override
     public Result appendEventFrom(AuditEntry payload) {
-        JournalEventSequencer journalEventSequencer = prepareJournalEventSequencer(payload.getStageId());
         RuntimeContext context = new BasicRuntimeContext("append-journal-" + UUID.randomUUID());
         Result result = txWrapper.wrapExecution(context, runtimeContext -> {
             TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
                     .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
-            return appendEventFrom(payload, journalEventSequencer, builder);
+            return appendEventFrom(payload, builder);
         });
         journalEventSequencer.confirm();
         return result;
     }
 
     private Result appendEventFrom(AuditEntry payload,
-                                   JournalEventSequencer journalEventSequencer,
                                    TransactWriteItemsEnhancedRequest.Builder builder) {
         requireJournalEnabled();
         JournalEvent<AuditEntry> event = journalEventSequencer.newEvent(payload);
@@ -144,12 +137,6 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
             throw new IllegalStateException("DynamoDB history write failed", ((Result.Error) result).getError());
         }
         return result;
-    }
-
-    private JournalEventSequencer prepareJournalEventSequencer(String stageId) {
-        requireJournalEnabled();
-        journalEventStore.initialize(autoCreate);
-        return journalEventSequencerFactory.forStream(stageId);
     }
 
     private static void requireJournalEnabled() {

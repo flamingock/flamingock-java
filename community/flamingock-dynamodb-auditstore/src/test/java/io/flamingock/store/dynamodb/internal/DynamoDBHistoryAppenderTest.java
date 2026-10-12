@@ -96,7 +96,7 @@ class DynamoDBHistoryAppenderTest {
     }
 
     @Test
-    void sourceAppendBuildsStandardEnvelopeForPayloadStageAndCommitsOnlyJournal() {
+    void sourceAppendBuildsStandardEnvelopeForPersistenceStageAndCommitsOnlyJournal() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         JournalHistoryAppender appender = persistence();
         Instant before = Instant.now();
@@ -106,13 +106,13 @@ class DynamoDBHistoryAppenderTest {
         JournalEvent<AuditEntry> event = durable.get(0);
         assertSame(entry, event.getData(), "the source payload must not be rewritten");
         assertNotEquals(entry.getStageId(), DESTINATION);
-        assertEquals(entry.getStageId(), event.getStreamId());
+        assertEquals(DESTINATION, event.getStreamId());
         assertEquals(1L, event.getStreamSequence());
         assertEquals(JournalEventType.CHANGE_STATE, event.getEventType());
         assertEquals(JournalEvent.DEFAULT_VERSION, event.getEventVersion());
         assertFalse(event.isAcknowledged());
         assertFalse(event.getEventId().isEmpty());
-        assertEquals(factory.forStream(entry.getStageId()).newEvent(entry).getIdempotencyKey(),
+        assertEquals(factory.forStream(DESTINATION).newEvent(entry).getIdempotencyKey(),
                 event.getIdempotencyKey());
         assertFalse(event.getOccurredAt().isBefore(before));
         assertFalse(event.getOccurredAt().isAfter(Instant.now()));
@@ -120,17 +120,6 @@ class DynamoDBHistoryAppenderTest {
         assertFalse(appender.appendEventFrom(entry).isError());
         assertEquals(2L, durable.get(1).getStreamSequence());
         assertNotEquals(event.getEventId(), durable.get(1).getEventId());
-        verifyNoInteractions(audit);
-    }
-
-    @Test
-    void sourceAppendInitializesJournalBeforeReadingTailWhenEnabledAfterPersistenceInitialization() {
-        JournalHistoryAppender appender = persistence();
-        verifyNoInteractions(journal);
-        FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        assertFalse(appender.appendEventFrom(entry).isError());
-        verify(journal).initialize(true);
-        assertEquals(1L, durable.get(0).getStreamSequence());
         verifyNoInteractions(audit);
     }
 
@@ -234,7 +223,9 @@ class DynamoDBHistoryAppenderTest {
             return null;
         }).when(journal).initialize(true);
         when(journal.getLastEventByStream(anyString())).thenAnswer(invocation -> {
-            assertTrue(journalInitialized, "initialize journal before reading its durable tail");
+            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                assertTrue(journalInitialized, "initialize journal before reading its durable tail");
+            }
             return durable.isEmpty() ? Optional.empty() : Optional.of(durable.get(durable.size() - 1));
         });
         when(journal.contributeToTransaction(any(), any())).thenAnswer(invocation -> {
@@ -247,8 +238,11 @@ class DynamoDBHistoryAppenderTest {
             return contribution;
         });
         when(audit.contributeToTransaction(any(), any())).thenReturn(Result.OK());
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journal.initialize(true);
+        }
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
-                new CommunityConfiguration(), audit, journal, factory, DESTINATION, wrapper, true);
+                new CommunityConfiguration(), audit, journal, factory.forStream(DESTINATION), wrapper, true);
         persistence.initialize(RunnerId.generate());
         clearInvocations(audit, journal);
         return persistence;

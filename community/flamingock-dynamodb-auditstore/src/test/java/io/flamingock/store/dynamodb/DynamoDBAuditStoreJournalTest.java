@@ -226,19 +226,17 @@ class DynamoDBAuditStoreJournalTest {
     }
 
     @Test
-    void sameStagePersistencesRouteNormalAndSourceWritesToTheirOwnDurableStreams() {
+    void reusedStagePersistenceSharesSequenceForNormalAndSourceWrites() {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
         DynamoDBAuditStore store = initializeStore(newContext());
-        CommunityAuditPersistence first = store.getPersistenceFactory().get(STAGE_ONE);
-        CommunityAuditPersistence second = store.getPersistenceFactory().get(STAGE_ONE);
-        org.junit.jupiter.api.Assertions.assertNotSame(first, second);
+        CommunityAuditPersistence persistence = store.getPersistenceFactory().get(STAGE_ONE);
         AuditEntry started = AuditEntryTestFactory.createTestAuditEntry(
                 "normal", AuditEntry.Status.STARTED, AuditTxType.NON_TX, (Class<?>) null);
         AuditEntry applied = auditEntry("normal");
         AuditEntry source = auditEntry("historical-source");
 
-        assertFalse(first.writeEntry(started).isError());
-        JournalHistoryAppender appender = second;
+        assertFalse(persistence.writeEntry(started).isError());
+        JournalHistoryAppender appender = persistence;
         assertFalse(appender.appendEventFrom(source).isError());
         List<AuditEntry> afterJournalOnly = store.getAuditReader().getAuditHistory();
         assertEquals(1, afterJournalOnly.size());
@@ -246,7 +244,7 @@ class DynamoDBAuditStoreJournalTest {
         assertEquals(started.getState(), afterJournalOnly.get(0).getState());
         assertEquals(started.getExecutionId(), afterJournalOnly.get(0).getExecutionId());
         assertEquals(started.getCreatedAt(), afterJournalOnly.get(0).getCreatedAt());
-        assertFalse(first.writeEntry(applied).isError());
+        assertFalse(persistence.writeEntry(applied).isError());
 
         List<JournalEvent<AuditEntry>> events = storedEvents();
         assertEquals(3, events.size());
@@ -254,15 +252,16 @@ class DynamoDBAuditStoreJournalTest {
                 .filter(event -> STAGE_ONE.equals(event.getStreamId()))
                 .sorted(java.util.Comparator.comparingLong(JournalEvent::getStreamSequence))
                 .collect(Collectors.toList());
-        assertEquals(2, normalEvents.size());
+        assertEquals(3, normalEvents.size());
         assertEquals(1L, normalEvents.get(0).getStreamSequence());
         assertEquals(2L, normalEvents.get(1).getStreamSequence());
+        assertEquals(3L, normalEvents.get(2).getStreamSequence());
         assertEquals(started.getState(), normalEvents.get(0).getData().getState());
-        assertEquals(applied.getChangeId(), normalEvents.get(1).getData().getChangeId());
-        assertEquals(applied.getState(), normalEvents.get(1).getData().getState());
-        JournalEvent<AuditEntry> sourceEvent = events.stream()
-                .filter(event -> source.getStageId().equals(event.getStreamId())).findFirst().get();
-        assertEquals(1L, sourceEvent.getStreamSequence());
+        assertEquals(applied.getChangeId(), normalEvents.get(2).getData().getChangeId());
+        assertEquals(applied.getState(), normalEvents.get(2).getData().getState());
+        JournalEvent<AuditEntry> sourceEvent = normalEvents.get(1);
+        assertEquals(STAGE_ONE, sourceEvent.getStreamId());
+        assertEquals(2L, sourceEvent.getStreamSequence());
         assertEquals(source.getChangeId(), sourceEvent.getData().getChangeId());
         assertEquals(source.getStageId(), sourceEvent.getData().getStageId());
         assertFalse(STAGE_ONE.equals(source.getStageId()));

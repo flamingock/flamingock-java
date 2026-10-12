@@ -19,13 +19,16 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.FeatureFlag;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.dynamodb.entities.journal.JournalEventFieldConstants;
@@ -136,12 +139,16 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     @Override
     public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
         return stageId -> {
+            auditRepository.initialize(autoCreate);
+            if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+                journalEventStore.initialize(autoCreate);
+            }
+            JournalEventSequencer journalEventSequencer = journalEventSequencerFactory.forStream(stageId);
             persistence = new DynamoDBAuditPersistence(
                 communityConfiguration,
                 auditRepository,
                 journalEventStore,
-                journalEventSequencerFactory,
-                stageId,
+                journalEventSequencer,
                 targetSystem.getTxWrapper(),
                 autoCreate
             );

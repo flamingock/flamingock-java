@@ -290,14 +290,14 @@ class DynamoDBAuditPersistenceJournalTest {
         assertFalse(appender.appendEventFrom(payload).isError());
 
         JournalEvent<AuditEntry> stored = storedEvents().stream()
-                .filter(event -> payload.getStageId().equals(event.getStreamId())).findFirst().get();
-        assertEquals(1L, stored.getStreamSequence());
+                .filter(event -> payload.getChangeId().equals(event.getData().getChangeId())).findFirst().get();
+        assertEquals(2L, stored.getStreamSequence());
         assertFalse(stored.getEventId().isEmpty());
-        assertEquals(new JournalEventSequencerFactory(journalEventStore).forStream(payload.getStageId())
+        assertEquals(new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID)
                 .newEvent(payload).getIdempotencyKey(), stored.getIdempotencyKey());
         assertEquals(JournalEventType.CHANGE_STATE, stored.getEventType());
         assertEquals(JournalEvent.DEFAULT_VERSION, stored.getEventVersion());
-        assertEquals(payload.getStageId(), stored.getStreamId());
+        assertEquals(STREAM_ID, stored.getStreamId());
         assertFalse(stored.getOccurredAt().isBefore(before));
         assertFalse(stored.getOccurredAt().isAfter(Instant.now()));
         assertFalse(stored.isAcknowledged());
@@ -326,8 +326,9 @@ class DynamoDBAuditPersistenceJournalTest {
         assertEquals(current.getChangeId(), persistence.getAuditHistory().get(0).getChangeId());
         assertEquals(current.getState(), persistence.getAuditHistory().get(0).getState());
         assertFalse(appender.appendEventFrom(payload).isError());
-        assertTrue(storedEvents().stream().anyMatch(event -> payload.getStageId().equals(event.getStreamId())
-                && event.getStreamSequence() == 2L));
+        assertTrue(storedEvents().stream().anyMatch(event -> STREAM_ID.equals(event.getStreamId())
+                && event.getStreamSequence() == 3L
+                && payload.getChangeId().equals(event.getData().getChangeId())));
         assertEquals(1, persistence.getAuditHistory().size());
     }
 
@@ -342,7 +343,7 @@ class DynamoDBAuditPersistenceJournalTest {
 
         JournalEvent<AuditEntry> stored = storedEvents().get(0);
         assertEquals(metadata, stored.getData().getMetadata());
-        assertEquals(payload.getStageId(), stored.getStreamId());
+        assertEquals(STREAM_ID, stored.getStreamId());
         assertEquals(1L, stored.getStreamSequence());
         JournalEventEntity entity = new DynamoDBUtil(client).getEnhancedClient()
                 .table(journalTableName, TableSchema.fromBean(JournalEventEntity.class))
@@ -366,7 +367,7 @@ class DynamoDBAuditPersistenceJournalTest {
         assertThrows(DatabaseTransactionException.class, () -> appender.appendEventFrom(payload));
         assertEquals(2, storedEvents().size(), "only durable source and conflicting occupant remain");
         assertTrue(persistence.getAuditHistory().isEmpty());
-        deleteStreamPosition(payload.getStageId(), 2L);
+        deleteStreamPosition(STREAM_ID, 2L);
         assertFalse(appender.appendEventFrom(payload).isError());
         List<JournalEvent<AuditEntry>> events = storedEvents();
         assertEquals(2, events.size());
@@ -386,12 +387,14 @@ class DynamoDBAuditPersistenceJournalTest {
     }
 
     private DynamoDBAuditPersistence persistenceFor() {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true);
+        }
         DynamoDBAuditPersistence persistence = new DynamoDBAuditPersistence(
                 new CommunityConfiguration(),
                 new DynamoDBAuditRepository(client, auditTableName, 5L, 5L),
                 journalEventStore,
-                new JournalEventSequencerFactory(journalEventStore),
-                STREAM_ID,
+                new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID),
                 txWrapper,
                 true);
         persistence.initialize(io.flamingock.internal.util.id.RunnerId.generate());
