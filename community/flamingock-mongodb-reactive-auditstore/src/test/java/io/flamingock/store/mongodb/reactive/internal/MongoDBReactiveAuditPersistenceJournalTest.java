@@ -299,7 +299,8 @@ class MongoDBReactiveAuditPersistenceJournalTest {
     private MongoDBReactiveAuditPersistence persistenceFor(MongoDBReactiveAuditRepository repository,
                                                            JournalEventSequencer sequencer) {
         MongoDBReactiveAuditPersistence persistence = new MongoDBReactiveAuditPersistence(
-                new CommunityConfiguration(), repository, journalEventStore, sequencer, true, txWrapper, true);
+                new CommunityConfiguration(), repository, journalEventStore, sequencer,
+                true, txWrapper, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
@@ -309,7 +310,8 @@ class MongoDBReactiveAuditPersistenceJournalTest {
             MongoDBReactiveJournalEventStore journalStore,
             JournalEventSequencer sequencer) {
         MongoDBReactiveAuditPersistence persistence = new MongoDBReactiveAuditPersistence(
-                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
+                new CommunityConfiguration(), repository, journalStore, sequencer,
+                false, null, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }

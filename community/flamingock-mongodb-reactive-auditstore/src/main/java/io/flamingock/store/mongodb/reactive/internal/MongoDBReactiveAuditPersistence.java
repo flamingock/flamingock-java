@@ -31,6 +31,7 @@ import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -99,10 +100,6 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
             return auditRepository.append(auditEntry);
         }
 
-        if (journalEventStore == null || journalEventSequencer == null) {
-            throw new IllegalStateException("MongoDB reactive journal writes require a sequencer");
-        }
-
         if (!supportsTransactions) {
             return writeJournalAndAuditWithoutTransaction(auditEntry);
         }
@@ -114,9 +111,12 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
         RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
         Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
             ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-            journalEventStore.append(clientSession, journalEvent);
-            return auditRepository.save(clientSession, auditEntry);
+            appendEventFrom(auditEntry, clientSession);
+            Result auditResult = auditRepository.save(clientSession, auditEntry);
+            if (auditResult.isError()) {
+                throw new IllegalStateException("MongoDB history write failed", ((Result.Error) auditResult).getError());
+            }
+            return auditResult;
         });
 
         // Result cannot represent FailedStep. The transaction wrapper has therefore committed successfully
@@ -131,9 +131,60 @@ public class MongoDBReactiveAuditPersistence extends AbstractCommunityAuditPersi
      * audit state without its corresponding historical event.
      */
     private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
-        JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-        journalEventStore.append(journalEvent);
+        appendEventFrom(auditEntry, null);
         journalEventSequencer.confirm();
         return auditRepository.save(auditEntry);
+    }
+
+    /**
+     * Preserves supplied historical audit entries independently of the journal feature flag.
+     *
+     * @param entry original historical entry
+     * @return repository append result
+     */
+    @Override
+    public Result append(AuditEntry entry) {
+        return auditRepository.append(entry);
+    }
+
+    /**
+     * Durably appends only a CHANGE_STATE event to this persistence stream. Transactional deployments use
+     * an owned boundary independent of the ambient business transaction; standalone deployments use
+     * a completed journal insert. No audit projection is written.
+     *
+     * @param payload original historical entry
+     * @return durable journal write result
+     */
+    @Override
+    public Result appendEventFrom(AuditEntry payload) {
+
+        Result result;
+        if (supportsTransactions) {
+            RuntimeContext context = new BasicRuntimeContext("append-journal-" + UUID.randomUUID());
+            result = txWrapper.wrapExecution(context, runtimeContext -> {
+                ClientSession session = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+                return appendEventFrom(payload, session);
+            });
+        } else {
+            result = appendEventFrom(payload, null);
+        }
+        journalEventSequencer.confirm();
+        return result;
+    }
+
+    private Result appendEventFrom(AuditEntry payload, ClientSession session) {
+        requireJournalEnabled();
+        JournalEvent<AuditEntry> event = journalEventSequencer.newEvent(payload);
+        Result result = session == null ? journalEventStore.append(event) : journalEventStore.append(session, event);
+        if (result.isError()) {
+            throw new IllegalStateException("MongoDB history write failed", ((Result.Error) result).getError());
+        }
+        return result;
+    }
+
+    private static void requireJournalEnabled() {
+        if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            throw new IllegalStateException("Journal history requires JOURNAL_EVENTS to be enabled");
+        }
     }
 }
