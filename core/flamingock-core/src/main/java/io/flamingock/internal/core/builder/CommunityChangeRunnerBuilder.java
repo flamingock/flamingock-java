@@ -23,6 +23,9 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.core.external.store.AuditCompactor;
+import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class CommunityChangeRunnerBuilder
@@ -53,6 +56,26 @@ public class CommunityChangeRunnerBuilder
     @Override
     protected CommunityChangeRunnerBuilder getSelf() {
         return this;
+    }
+
+    /**
+     * Registers the audit store's compaction capability, which only Community has — the Cloud edition keeps
+     * no local audit store to compact, so {@code getAuditCompactor()} is declared on
+     * {@code CommunityAuditStore} rather than on {@code AuditStore}.
+     * <p>
+     * Registered as a deferring lambda rather than by calling {@code getAuditCompactor()} here, because
+     * resolving it eagerly would be wrong in two different ways: the SQL store throws until its dialect
+     * helper has been initialized, and the DynamoDB store creates its audit table as a side effect. Since
+     * {@code AuditCompactor} has a single method, a lambda pushes both to the moment compaction is actually
+     * invoked — by which point the store is fully initialized.
+     * <p>
+     * Nothing consumes this yet: {@code AuditCleanupChange} is written but not contributed to any pipeline.
+     * The registration is inert until it is, and harmless in the meantime.
+     */
+    @Override
+    protected void contributeEditionDependencies(PriorityContext hierarchicalContext) {
+        hierarchicalContext.addDependency(new Dependency(AuditCompactor.class,
+                (AuditCompactor) () -> auditStore.getAuditCompactor().compact()));
     }
 
     @Override
