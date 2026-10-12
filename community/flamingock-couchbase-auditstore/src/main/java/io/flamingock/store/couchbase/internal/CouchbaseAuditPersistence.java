@@ -30,6 +30,7 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -90,9 +91,12 @@ public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence
             RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
             Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
                 TransactionAttemptContext ctx = runtimeContext.getContext().getRequiredDependencyValue(TransactionAttemptContext.class);
-                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-                journalEventStore.contributeToTransaction(ctx, journalEvent);
-                return auditor.contributeToTransaction(ctx, auditEntry);
+                appendEventFrom(auditEntry, ctx);
+                Result auditResult = auditor.contributeToTransaction(ctx, auditEntry);
+                if (auditResult.isError()) {
+                    throw new IllegalStateException("Couchbase history write failed", ((Result.Error) auditResult).getError());
+                }
+                return auditResult;
             });
             // Spends the stream position, and only a committed transaction attempt may reach this line. A
             // normal return from wrapExecution does NOT in general mean commit — CouchbaseTxWrapper
@@ -110,4 +114,48 @@ public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence
             return auditor.append(auditEntry);
         }
     }
+
+    /**
+     * Preserves the supplied historical entry independently of the journal flag.
+     *
+     * @param entry historical audit entry
+     * @return durable audit write result
+     */
+    @Override
+    public Result append(AuditEntry entry) {
+        return auditor.append(entry);
+    }
+
+    /**
+     * Appends only a source CHANGE_STATE event in an owned transaction on this persistence stream.
+     *
+     * @param payload historical audit entry
+     * @return durable journal write result
+     */
+    @Override
+    public Result appendEventFrom(AuditEntry payload) {
+        if (!FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            throw new IllegalStateException("Journal history requires JOURNAL_EVENTS to be enabled");
+        }
+        RuntimeContext context = new BasicRuntimeContext("append-journal-" + UUID.randomUUID());
+        Result result = txWrapper.wrapExecution(context, runtimeContext -> {
+            TransactionAttemptContext ctx = runtimeContext.getContext()
+                    .getRequiredDependencyValue(TransactionAttemptContext.class);
+            return appendEventFrom(payload, ctx);
+        });
+        journalEventSequencer.confirm();
+        return result;
+    }
+
+    private Result appendEventFrom(AuditEntry payload,
+                                   TransactionAttemptContext ctx) {
+        // Build inside the attempt: SDK retries must contribute to the new attempt, without spending a position.
+        JournalEvent<AuditEntry> event = journalEventSequencer.newEvent(payload);
+        Result result = journalEventStore.contributeToTransaction(ctx, event);
+        if (result.isError()) {
+            throw new IllegalStateException("Couchbase history write failed", ((Result.Error) result).getError());
+        }
+        return result;
+    }
+
 }
