@@ -25,6 +25,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
@@ -152,6 +153,20 @@ public class MongoDBReactiveAuditRepository {
                 auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(),
                 result.wasAcknowledged());
         return Result.OK();
+    }
+
+    /**
+     * Returns the compactor bound to this repository's collection.
+     * <p>
+     * Public because {@code MongoDBReactiveAuditStore} lives in the parent package, same as
+     * {@link #getAuditHistory()}. The returned implementation stays package-private; callers only ever see
+     * the {@link AuditCompactor} contract.
+     * <p>
+     * Needs no prior {@link #initialize(boolean)}: the collection handle is built in the constructor, and
+     * compaction only deletes and addresses documents by {@code _id}, so it depends on no index existing.
+     */
+    public AuditCompactor getAuditCompactor() {
+        return new MongoDBReactiveAuditCompactor(collection, mapper);
     }
 
     public List<AuditEntry> getAuditHistory() {
