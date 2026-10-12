@@ -27,9 +27,11 @@ import com.couchbase.client.java.kv.UpsertOptions;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import com.couchbase.client.java.transactions.TransactionGetResult;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
+import io.flamingock.internal.core.external.store.AuditCompactor;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -127,6 +129,18 @@ public class CouchbaseAuditor {
         return Result.OK();
     }
 
+
+    /**
+     * @param txWrapper the Couchbase target system's transaction wrapper, used to make each change's
+     *                  rekey-and-delete atomic
+     * @return a compactor collapsing this collection to one document per change
+     */
+    public AuditCompactor getAuditCompactor(ExecutionWrapper txWrapper) {
+        if (!initialized) {
+            throw new IllegalStateException("CouchbaseAuditor not initialized - call initialize first");
+        }
+        return new CouchbaseAuditCompactor(cluster, collection, txWrapper);
+    }
 
     public List<AuditEntry> getAuditHistory() {
         return CouchbaseCollectionHelper.selectAllDocuments(cluster, collection.bucketName(), collection.scopeName(), collection.name())

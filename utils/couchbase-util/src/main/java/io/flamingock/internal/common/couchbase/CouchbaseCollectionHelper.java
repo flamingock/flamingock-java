@@ -16,7 +16,6 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.core.error.*;
-import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
@@ -39,6 +38,7 @@ public final class CouchbaseCollectionHelper {
     private final static String KEYSPACE_TEMPLATE = "`%s`.`%s`.`%s`";
     private final static String SELECT_COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) as cnt FROM `%s`.`%s`.`%s`";
     private final static String SELECT_ALL_QUERY_TEMPLATE = "SELECT %s.* FROM `%s`.`%s`.`%s`";
+    private final static String SELECT_ALL_WITH_ID_QUERY_TEMPLATE = "SELECT META(%s).id AS id, %s.* FROM `%s`.`%s`.`%s`";
     private final static String DELETE_ALL_QUERY_TEMPLATE = "DELETE FROM `%s`.`%s`.`%s`";
     private final static String CREATE_PRIMARY_INDEX_TEMPLATE = "CREATE PRIMARY INDEX IF NOT EXISTS ON `%s`.`%s`.`%s`";
     private final static String DROP_PRIMARY_INDEX_TEMPLATE = "DROP PRIMARY INDEX IF EXISTS ON `%s`.`%s`.`%s`";
@@ -155,6 +155,18 @@ public final class CouchbaseCollectionHelper {
 
     public static List<JsonObject> selectAllDocuments(Cluster cluster, String bucketName, String scopeName, String collectionName) {
         return cluster.query(String.format(SELECT_ALL_QUERY_TEMPLATE, collectionName, bucketName, scopeName, collectionName),
+                            QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS)
+        ).rowsAsObject();
+    }
+
+    /**
+     * Same as {@link #selectAllDocuments}, but with each row's physical key alongside its fields (under
+     * {@code "id"}). {@code selectAllDocuments} projects fields only, so it cannot distinguish a document
+     * at one key from a document with identical fields at another - which audit compaction, keyed by the
+     * physical id, needs to tell apart.
+     */
+    public static List<JsonObject> selectAllDocumentsWithId(Cluster cluster, String bucketName, String scopeName, String collectionName) {
+        return cluster.query(String.format(SELECT_ALL_WITH_ID_QUERY_TEMPLATE, collectionName, collectionName, bucketName, scopeName, collectionName),
                             QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS)
         ).rowsAsObject();
     }
