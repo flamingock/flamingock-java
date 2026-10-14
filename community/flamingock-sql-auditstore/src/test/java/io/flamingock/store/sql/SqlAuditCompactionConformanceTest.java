@@ -232,8 +232,9 @@ class SqlAuditCompactionConformanceTest {
         try {
             dataSource = SqlAuditTestHelper.createDataSource(container);
             testContext = new TestContext(dataSource, container, sqlDialect);
+            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
             return testContext;
-        } catch (RuntimeException exception) {
+        } catch (SQLException | RuntimeException exception) {
             TestContext cleanupContext = testContext != null
                     ? testContext
                     : new TestContext(dataSource, container, sqlDialect);

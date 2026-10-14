@@ -52,8 +52,8 @@ tasks.test {
 
     systemProperty("sql.test.dialects", enabledDialects.get())
 
-    // Parallel execution control
-    maxParallelForks = if (isCI) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    // SQL integration tests share container-backed databases and fixed table names across test classes.
+    maxParallelForks = 1
 
     // Timeout for long-running database tests
     if (isCI) {
