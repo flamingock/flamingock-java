@@ -518,7 +518,8 @@ class SqlAuditPersistenceJournalTest {
                                                 boolean journalEventsEnabled) {
         auditor.initialize(true);
         SqlAuditPersistence persistence = new SqlAuditPersistence(
-                new CommunityConfiguration(), auditor, journalStore, sequencer, txWrapper, journalEventsEnabled);
+                new CommunityConfiguration(), auditor, journalStore, sequencer,
+                txWrapper, journalEventsEnabled);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
