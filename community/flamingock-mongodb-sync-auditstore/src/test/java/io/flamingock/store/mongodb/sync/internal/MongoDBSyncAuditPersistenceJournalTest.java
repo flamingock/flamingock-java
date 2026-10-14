@@ -30,6 +30,11 @@ import io.flamingock.internal.common.core.feature.Features;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import io.flamingock.internal.common.mongodb.MongoDBJournalEventMapper;
+import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.common.mongodb.MongoDBDocumentHelper;
+import io.flamingock.internal.core.context.BasicRuntimeContext;
+import io.flamingock.internal.util.Result;
+import org.bson.Document;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.journal.JournalEventSequencer;
 import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
@@ -58,6 +63,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doCallRealMethod;
 
 /**
  * Covers the {@code Features.JOURNAL_EVENTS} gate in {@link MongoDBSyncAuditPersistence}, and the transaction
@@ -306,6 +315,109 @@ class MongoDBSyncAuditPersistenceJournalTest {
         assertEquals("change-2", auditRepository.getAuditHistory().get(0).getChangeId());
     }
 
+    @Test
+    @DisplayName("historical audit append preserves all states independently of the journal flag")
+    void historicalAppendPreservesAllStatesWithJournalOnAndOff() {
+        MongoDBSyncAuditPersistence persistence = freshPersistence(true);
+        AuditEntry started = auditEntry("history", AuditEntry.Status.STARTED);
+        AuditEntry applied = auditEntry("history", AuditEntry.Status.APPLIED);
+        assertFalse(persistence.append(started).isError());
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        assertFalse(persistence.append(applied).isError());
+        List<AuditEntry> history = persistence.getAuditHistory();
+        assertEquals(2, history.size());
+        assertTrue(history.stream().anyMatch(entry -> entry.getState() == AuditEntry.Status.STARTED));
+        assertTrue(history.stream().anyMatch(entry -> entry.getState() == AuditEntry.Status.APPLIED));
+        assertTrue(history.stream().anyMatch(entry -> started.getExecutionId().equals(entry.getExecutionId())));
+        assertTrue(history.stream().anyMatch(entry -> applied.getExecutionId().equals(entry.getExecutionId())));
+        assertFalse(persistence.append(started).isError());
+        assertEquals(2, persistence.getAuditHistory().size());
+        assertTrue(storedEvents().isEmpty());
+    }
+
+    @Test
+    @DisplayName("source journal append preserves payload and persistence stream in both transaction modes")
+    void sourceAppendPreservesPayloadAndTailInBothTransactionModes() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        AuditEntry payload = auditEntry("source-history");
+        MongoDBAuditMapper<MongoDBDocumentHelper> payloadMapper =
+                new MongoDBAuditMapper<>(() -> new MongoDBDocumentHelper(new Document()));
+        for (boolean transactional : new boolean[]{true, false}) {
+            MongoDBSyncAuditPersistence persistence = freshPersistence(transactional);
+            assertFalse(persistence.appendEventFrom(payload).isError());
+            assertTrue(persistence.getAuditHistory().isEmpty());
+        }
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        assertEquals(2, events.size());
+        events.sort(java.util.Comparator.comparingLong(JournalEvent::getStreamSequence));
+        for (int index = 0; index < events.size(); index++) {
+            JournalEvent<AuditEntry> event = events.get(index);
+            assertEquals(STREAM_ID, event.getStreamId());
+            assertEquals(index + 1L, event.getStreamSequence());
+            assertEquals(JournalEventType.CHANGE_STATE, event.getEventType());
+            assertEquals(JournalEvent.DEFAULT_VERSION, event.getEventVersion());
+            assertFalse(event.isAcknowledged());
+            assertFalse(event.getEventId().isEmpty());
+            assertFalse(event.getIdempotencyKey().isEmpty());
+            assertEquals(payloadMapper.toDocument(payload).getDocument(),
+                    payloadMapper.toDocument(event.getData()).getDocument());
+        }
+    }
+
+    @Test
+    @DisplayName("source journal commit survives rollback of the ambient business transaction")
+    void sourceAppendIsIndependentOfAmbientBusinessTransaction() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        MongoDBSyncAuditPersistence persistence = freshPersistence(true);
+        AuditEntry payload = auditEntry("independent-history");
+        assertThrows(DatabaseTransactionException.class, () -> txWrapper.wrapExecution(
+                new BasicRuntimeContext("ambient-business"), context -> {
+                    ClientSession ambient = context.getContext().getRequiredDependencyValue(ClientSession.class);
+                    database.getCollection(AUDIT_COLLECTION).insertOne(ambient, new Document("business", true));
+                    assertFalse(persistence.appendEventFrom(payload).isError());
+                    throw new IllegalStateException("rollback business");
+                }));
+        assertTrue(persistence.getAuditHistory().isEmpty());
+        assertEquals(1, storedEvents().size());
+        assertEquals(STREAM_ID, storedEvents().get(0).getStreamId());
+        assertEquals(1L, storedEvents().get(0).getStreamSequence());
+    }
+
+    @Test
+    @DisplayName("source contribution error rolls back its transaction and retry reuses the durable position")
+    void sourceContributionErrorRollsBackAndRetryLeavesNoGap() {
+        FeatureFlag.enable(Features.JOURNAL_EVENTS);
+        journalEventStore.initialize(true);
+        MongoDBSyncJournalEventStore failingJournal = spy(journalEventStore);
+        MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, failingJournal,
+                new JournalEventSequencerFactory(failingJournal).forStream(STREAM_ID), true, txWrapper, true);
+        persistence.initialize(RunnerId.generate());
+        doReturn(new Result.Error(new IllegalArgumentException("journal")))
+                .when(failingJournal).write(any(ClientSession.class), any());
+        assertThrows(DatabaseTransactionException.class,
+                () -> persistence.appendEventFrom(auditEntry("source-retry")));
+        assertTrue(storedEvents().isEmpty());
+        assertTrue(persistence.getAuditHistory().isEmpty());
+        doCallRealMethod().when(failingJournal).write(any(ClientSession.class), any());
+        assertFalse(persistence.appendEventFrom(auditEntry("source-retry")).isError());
+        assertEquals(1, storedEvents().size());
+        assertEquals(1L, storedEvents().get(0).getStreamSequence());
+        assertTrue(persistence.getAuditHistory().isEmpty());
+    }
+
+    private MongoDBSyncAuditPersistence freshPersistence(boolean transactional) {
+        if (FeatureFlag.isEnabled(Features.JOURNAL_EVENTS, false)) {
+            journalEventStore.initialize(true);
+        }
+        MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
+                new CommunityConfiguration(), auditRepository, journalEventStore,
+                new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID),
+                transactional, transactional ? txWrapper : null, true);
+        persistence.initialize(RunnerId.generate());
+        return persistence;
+    }
+
     // ----------------------------- helpers -----------------------------
 
     /**
@@ -333,7 +445,8 @@ class MongoDBSyncAuditPersistenceJournalTest {
             MongoDBSyncJournalEventStore journalStore,
             JournalEventSequencer sequencer) {
         MongoDBSyncAuditPersistence persistence = new MongoDBSyncAuditPersistence(
-                new CommunityConfiguration(), repository, journalStore, sequencer, false, null, true);
+                new CommunityConfiguration(), repository, journalStore, sequencer,
+                false, null, true);
         persistence.initialize(RunnerId.generate());
         return persistence;
     }
