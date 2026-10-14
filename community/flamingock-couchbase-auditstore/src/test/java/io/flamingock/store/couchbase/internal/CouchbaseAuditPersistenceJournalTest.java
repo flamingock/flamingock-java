@@ -239,6 +239,8 @@ class CouchbaseAuditPersistenceJournalTest {
     // ----------------------------- helpers -----------------------------
 
     private CouchbaseAuditPersistence persistenceFor(CouchbaseAuditor auditor) {
+        FeatureFlag.ifEnabled(Features.JOURNAL_EVENTS, () ->
+                journalEventStore.initialize(true, SCOPE_NAME, JOURNAL_COLLECTION));
         return persistenceFor(auditor, new JournalEventSequencerFactory(journalEventStore).forStream(STREAM_ID));
     }
 
