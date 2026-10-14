@@ -30,12 +30,13 @@ import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 
 import java.util.List;
+import java.util.UUID;
 
 public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private final DynamoDBAuditRepository auditRepository;
     private final DynamoDBJournalEventStore journalEventStore;
-    private JournalEventSequencer journalEventSequencer;
+    private final JournalEventSequencer journalEventSequencer;
     private final ExecutionWrapper txWrapper;
     private final boolean autoCreate;
 
@@ -45,7 +46,7 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
      * @param localConfiguration          community configuration
      * @param auditRepository             repository for audits
      * @param journalEventStore           journal store receiving staged events
-     * @param journalEventSequencer       sequencer for the stage journal stream
+     * @param journalEventSequencer       sequencer for this persistence's stage stream
      * @param txWrapper                   transaction wrapper shared with the target system
      * @param autoCreate                  whether missing tables may be created
      */
@@ -83,14 +84,64 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
             Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
                 TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
                         .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
-                JournalEvent<AuditEntry> journalEvent = journalEventSequencer.newEvent(auditEntry);
-                journalEventStore.contributeToTransaction(builder, journalEvent);
-                return auditRepository.contributeToTransaction(builder, auditEntry);
+                appendEventFrom(auditEntry, builder);
+                Result auditResult = auditRepository.contributeToTransaction(builder, auditEntry);
+                if (auditResult.isError()) {
+                    throw new IllegalStateException("DynamoDB history write failed", ((Result.Error) auditResult).getError());
+                }
+                return auditResult;
             });
             journalEventSequencer.confirm();
             return result;
         }
         return auditRepository.writeEntry(auditEntry);
+    }
+
+    /**
+     * Appends supplied history using the historical execution/change/state key, independently of the journal flag.
+     *
+     * @param entry historical audit entry to preserve
+     * @return the repository write result
+     */
+    @Override
+    public Result append(AuditEntry entry) {
+        return auditRepository.writeEntry(entry);
+    }
+
+    /**
+     * Creates and durably appends a CHANGE_STATE event to this persistence's stage journal without writing audits.
+     *
+     * @param payload source audit entry preserved in the event
+     * @return the journal-only transaction result after successful durable completion
+     * @throws IllegalStateException if journal events are disabled or a write result reports failure
+     */
+    @Override
+    public Result appendEventFrom(AuditEntry payload) {
+        RuntimeContext context = new BasicRuntimeContext("append-journal-" + UUID.randomUUID());
+        Result result = txWrapper.wrapExecution(context, runtimeContext -> {
+            TransactWriteItemsEnhancedRequest.Builder builder = runtimeContext.getContext()
+                    .getRequiredDependencyValue(TransactWriteItemsEnhancedRequest.Builder.class);
+            return appendEventFrom(payload, builder);
+        });
+        journalEventSequencer.confirm();
+        return result;
+    }
+
+    private Result appendEventFrom(AuditEntry payload,
+                                   TransactWriteItemsEnhancedRequest.Builder builder) {
+        requireJournalEnabled();
+        JournalEvent<AuditEntry> event = journalEventSequencer.newEvent(payload);
+        Result result = journalEventStore.contributeToTransaction(builder, event);
+        if (result.isError()) {
+            throw new IllegalStateException("DynamoDB history write failed", ((Result.Error) result).getError());
+        }
+        return result;
+    }
+
+    private static void requireJournalEnabled() {
+        if (!isJournalEventsEnabled()) {
+            throw new IllegalStateException("Journal history requires JOURNAL_EVENTS to be enabled");
+        }
     }
 
     private static boolean isJournalEventsEnabled() {
