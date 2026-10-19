@@ -16,6 +16,7 @@
 package io.flamingock.cloud.planner;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.StageMode;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.response.StageResponse;
@@ -57,6 +58,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CloudExecutionPlanMapperTest {
 
@@ -128,6 +131,31 @@ class CloudExecutionPlanMapperTest {
                 .collect(Collectors.toMap(ExecutableChange::getId, ExecutableChange::getAction));
         assertEquals(ChangeAction.APPLY, actions.get(change1.getId()));
         assertEquals(ChangeAction.SKIP, actions.get(change2.getId()));
+    }
+
+    @Test
+    @DisplayName("Should apply runAlways change when cloud response omits it")
+    void shouldApplyRunAlwaysChangeWhenCloudResponseOmitsIt() {
+        AbstractLoadedChange runAlwaysChange = mockChange("run-always", true);
+        CapturingStage stage = new CapturingStage("stage-1", runAlwaysChange);
+        ExecutionPlanResponse response = buildResponse(buildStageResponse("stage-1", 0));
+
+        List<ExecutableStage> result = CloudExecutionPlanMapper.getExecutableStages(response, Collections.singletonList(stage));
+
+        assertEquals(ChangeAction.APPLY, result.get(0).getChanges().get(0).getAction());
+    }
+
+    @Test
+    @DisplayName("Should apply runAlways change when cloud response asks to skip it")
+    void shouldApplyRunAlwaysChangeWhenCloudResponseSkipsIt() {
+        AbstractLoadedChange runAlwaysChange = mockChange("run-always", true);
+        CapturingStage stage = new CapturingStage("stage-1", runAlwaysChange);
+        ExecutionPlanResponse response = buildResponse(
+                buildStageResponse("stage-1", 0, changeResponse("run-always", CloudChangeAction.SKIP)));
+
+        List<ExecutableStage> result = CloudExecutionPlanMapper.getExecutableStages(response, Collections.singletonList(stage));
+
+        assertEquals(ChangeAction.APPLY, result.get(0).getChanges().get(0).getAction());
     }
 
     @Test
@@ -221,6 +249,19 @@ class CloudExecutionPlanMapperTest {
     }
 
     @Test
+    @DisplayName("toRequest() maps runAlways from loaded changes to ChangeRequest")
+    void shouldMapRunAlwaysToChangeRequest() {
+        AbstractLoadedChange runAlwaysChange = mockChange("run-always", true);
+        AbstractLoadedStage stage = new CapturingStage("stage-1", runAlwaysChange);
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                PipelineRun.of(Collections.singletonList(stage)), 60000L, Collections.emptyMap());
+
+        ChangeRequest changeRequest = request.getClientSubmission().getBlocks().get(0).getStages().get(0).getChanges().get(0);
+        assertTrue(changeRequest.isRunAlways());
+    }
+
+    @Test
     @DisplayName("toRequest() populates ChangeRequest.currentStatus from the operation's recorded ChangeResult statuses")
     void shouldMapCurrentStatusFromPipelineRun() {
         // Two changes in one stage; the operation has applied change1 and left change2
@@ -303,12 +344,9 @@ class CloudExecutionPlanMapperTest {
     void toRequestEmitsOneBlockPerStageRunBlock() {
         // Three stages of three different types — PipelineRun.of(...) groups them into
         // SYSTEM -> LEGACY -> DEFAULT blocks (one stage each).
-        AbstractLoadedStage systemStage = new DefaultLoadedStage("system-stage", StageType.SYSTEM,
-                Collections.singletonList(change1));
-        AbstractLoadedStage legacyStage = new DefaultLoadedStage("legacy-stage", StageType.LEGACY,
-                Collections.singletonList(change1));
-        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageType.DEFAULT,
-                Collections.singletonList(change1));
+        AbstractLoadedStage systemStage = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-stage", StageType.SYSTEM, Collections.singletonList(change1));
+        AbstractLoadedStage legacyStage = new io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage("legacy-stage", StageType.LEGACY, Collections.singletonList(change1));
+        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
 
@@ -333,12 +371,9 @@ class CloudExecutionPlanMapperTest {
     void toRequestPreservesGlobalStageOrderAcrossBlocks() {
         // Two stages in the SYSTEM block, then one in DEFAULT — verify the per-stage `order`
         // field increments globally across the flattened block sequence.
-        AbstractLoadedStage system1 = new DefaultLoadedStage("system-1", StageType.SYSTEM,
-                Collections.singletonList(change1));
-        AbstractLoadedStage system2 = new DefaultLoadedStage("system-2", StageType.SYSTEM,
-                Collections.singletonList(change2));
-        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageType.DEFAULT,
-                Collections.singletonList(change1));
+        AbstractLoadedStage system1 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-1", StageType.SYSTEM, Collections.singletonList(change1));
+        AbstractLoadedStage system2 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-2", StageType.SYSTEM, Collections.singletonList(change2));
+        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(system1, system2, user1));
 
@@ -368,7 +403,39 @@ class CloudExecutionPlanMapperTest {
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {
-        return new DefaultLoadedStage(name, StageType.DEFAULT, Arrays.asList(changes));
+        return new DefaultLoadedStage(name, StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+    }
+
+    private static AbstractLoadedChange mockChange(String id, boolean runAlways) {
+        AbstractLoadedChange change = mock(AbstractLoadedChange.class);
+        when(change.getId()).thenReturn(id);
+        when(change.isRunAlways()).thenReturn(runAlways);
+        when(change.isTransactional()).thenReturn(false);
+        when(change.isStandard()).thenReturn(true);
+        return change;
+    }
+
+    private static class CapturingStage extends DefaultLoadedStage {
+
+        CapturingStage(String name, AbstractLoadedChange... changes) {
+            super(name, StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+        }
+
+        @Override
+        public ExecutableStage applyActions(io.flamingock.internal.common.core.recovery.action.ChangeActionMap actionPlan) {
+            List<ExecutableChange> executableChanges = getChanges().stream()
+                    .map(change -> executableChange(change.getId(), actionPlan.getActionFor(change.getId())))
+                    .collect(Collectors.toList());
+            return new ExecutableStage(getName(), executableChanges);
+        }
+    }
+
+    private static ExecutableChange executableChange(String id, ChangeAction action) {
+        ExecutableChange executableChange = mock(ExecutableChange.class);
+        when(executableChange.getId()).thenReturn(id);
+        when(executableChange.getAction()).thenReturn(action);
+        when(executableChange.isAlreadyApplied()).thenReturn(action == ChangeAction.SKIP);
+        return executableChange;
     }
 
     private static ExecutionPlanResponse buildResponse(StageResponse... stages) {

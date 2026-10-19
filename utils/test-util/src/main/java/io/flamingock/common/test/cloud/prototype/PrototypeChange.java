@@ -52,11 +52,11 @@ public class PrototypeChange {
         CloudTargetSystemAuditMarkType cloudStatus = ongoingStatus != null
                 ? CloudTargetSystemAuditMarkType.valueOf(ongoingStatus.name())
                 : CloudTargetSystemAuditMarkType.NONE;
-        return new ChangeRequest(changeId, cloudStatus, transactional);
+        return new ChangeRequest(changeId, cloudStatus, null, transactional, false);
     }
 
     public ChangeRequest toExecutionPlanChangeRequest() {
-        return new ChangeRequest(changeId, CloudTargetSystemAuditMarkType.NONE, transactional);
+        return new ChangeRequest(changeId, CloudTargetSystemAuditMarkType.NONE, null, transactional, false);
     }
 
     public ChangeResponse toExecutionPlanChangeResponse(CloudChangeAction state) {
