@@ -59,6 +59,10 @@ public class CommunityChangeActionBuilder {
                 log.debug("Change[{}] action={} | Reason: No previous audit entry (first execution)",
                         change.getId(), ChangeAction.APPLY);
                 actionMap.put(change.getId(), ChangeAction.APPLY);
+            } else if (change.isRunAlways() && isSuccessfullyApplied(auditEntry)) {
+                log.debug("Change[{}] action={} | Reason: runAlways change with previous successful audit entry",
+                        change.getId(), ChangeAction.APPLY);
+                actionMap.put(change.getId(), ChangeAction.APPLY);
             } else {
                 ChangeAction action = ChangeActionResolver.resolve(auditEntry);
                 actionMap.put(change.getId(), action);
@@ -67,6 +71,11 @@ public class CommunityChangeActionBuilder {
         }
 
         return new ChangeActionMap(actionMap);
+    }
+
+    private static boolean isSuccessfullyApplied(AuditEntry auditEntry) {
+        return auditEntry.getState() == AuditEntry.Status.APPLIED
+                || auditEntry.getState() == AuditEntry.Status.MANUAL_MARKED_AS_APPLIED;
     }
 
 

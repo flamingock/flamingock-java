@@ -115,7 +115,7 @@ public final class CloudExecutionPlanMapper {
                 : CloudTargetSystemAuditMarkType.NONE;
         CloudChangeStatus currentStatus = CloudApiMapper.toCloud(
                 currentStatusByChangeId.get(descriptor.getId()));
-        return new ChangeRequest(descriptor.getId(), cloudStatus, currentStatus, descriptor.isTransactional());
+        return new ChangeRequest(descriptor.getId(), cloudStatus, currentStatus, descriptor.isTransactional(), descriptor.isRunAlways());
     }
 
     static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<AbstractLoadedStage> loadedStages) {
@@ -153,8 +153,10 @@ public final class CloudExecutionPlanMapper {
             String changeId = change.getId();
             CloudChangeAction cloudAction = actionsMapByChangeId.get(changeId);
 
-            // If change not in response, assume it's already applied (cloud orchestrator decision)
-            if (cloudAction == null) {
+            if (change.isRunAlways() && (cloudAction == null || cloudAction == CloudChangeAction.SKIP)) {
+                actionMap.put(changeId, ChangeAction.APPLY);
+            } else if (cloudAction == null) {
+                // If change not in response, assume it's already applied (cloud orchestrator decision)
                 actionMap.put(changeId, ChangeAction.SKIP);
             } else {
                 // Use anti-corruption layer to map cloud domain to internal domain

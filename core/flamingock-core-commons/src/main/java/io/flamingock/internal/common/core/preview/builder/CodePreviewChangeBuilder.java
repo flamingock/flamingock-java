@@ -144,7 +144,7 @@ public class CodePreviewChangeBuilder implements PreviewChangeBuilder<CodePrevie
             setConstructor(getPreviewConstructor(typeElement));
             setApplyMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
-            setRunAlways(false); //TODO: how to set runAlways
+            setRunAlways(false);
             setTransactionalFlag(changeAnnotation.transactional());
             setSystem(false);
         }

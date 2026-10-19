@@ -281,6 +281,9 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
     private static List<String> alreadyAppliedChangeIds(StageRun stageRun, Map<String, AuditEntry> auditSnapshot) {
         List<String> ids = new ArrayList<>();
         for (AbstractLoadedChange change : stageRun.getLoadedStage().getChanges()) {
+            if (change.isRunAlways()) {
+                continue;
+            }
             AuditEntry entry = auditSnapshot.get(change.getId());
             if (entry == null) {
                 continue;

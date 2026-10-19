@@ -16,6 +16,7 @@
 package io.flamingock.cloud.planner;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.StageMode;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.ChangeResponse;
@@ -115,14 +116,10 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(continueResponse);
 
         // Build a PipelineRun with three blocks: SYSTEM (1 stage), LEGACY (1 stage), DEFAULT (2 stages).
-        AbstractLoadedStage systemStage = new DefaultLoadedStage("system-stage", StageType.SYSTEM,
-                Collections.singletonList(change1));
-        AbstractLoadedStage legacyStage = new DefaultLoadedStage("legacy-stage", StageType.LEGACY,
-                Collections.singletonList(change1));
-        AbstractLoadedStage userStageA = new DefaultLoadedStage("user-a", StageType.DEFAULT,
-                Collections.singletonList(change1));
-        AbstractLoadedStage userStageB = new DefaultLoadedStage("user-b", StageType.DEFAULT,
-                Collections.singletonList(change2));
+        AbstractLoadedStage systemStage = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-stage", StageType.SYSTEM, Collections.singletonList(change1));
+        AbstractLoadedStage legacyStage = new io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage("legacy-stage", StageType.LEGACY, Collections.singletonList(change1));
+        AbstractLoadedStage userStageA = new DefaultLoadedStage("user-a", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
+        AbstractLoadedStage userStageB = new DefaultLoadedStage("user-b", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change2));
 
         planner.getNextExecution(PipelineRun.of(Arrays.asList(systemStage, legacyStage, userStageA, userStageB)));
 
@@ -162,7 +159,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
@@ -185,7 +182,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
@@ -217,7 +214,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(change1, change2)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -246,7 +243,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -276,7 +273,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(change1, change2)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -298,7 +295,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -319,7 +316,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -341,7 +338,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(change1, change2)));
 
         planner.getNextExecution(PipelineRun.of(stages));
 
@@ -401,10 +398,8 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Arrays.asList(
-                new DefaultLoadedStage("stage-a", StageType.DEFAULT,
-                        Collections.singletonList(change1)),
-                new DefaultLoadedStage("stage-b", StageType.DEFAULT,
-                        Collections.singletonList(change2)));
+                new DefaultLoadedStage("stage-a", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)),
+                new DefaultLoadedStage("stage-b", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change2)));
         PipelineRun run = PipelineRun.of(stages);
 
         planner.getNextExecution(run);
@@ -448,8 +443,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT,
-                        Arrays.asList(change1, change2)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(change1, change2)));
         PipelineRun run = PipelineRun.of(stages);
 
         planner.getNextExecution(run);
@@ -485,8 +479,7 @@ class CloudExecutionPlannerTest {
         when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
 
         List<AbstractLoadedStage> stages = Collections.singletonList(
-                new DefaultLoadedStage("stage-1", StageType.DEFAULT,
-                        Collections.singletonList(change1)));
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1)));
         PipelineRun run = PipelineRun.of(stages);
 
         ExecutionPlan plan = planner.getNextExecution(run);

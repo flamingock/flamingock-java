@@ -154,11 +154,6 @@ public class MongockCodePreviewChangeHelper {
             throw buildNotSupportedException("ChangeUnit.failFast=false expected behavior is not supported by Flamingock.");
         }
 
-        // runAlways not supported (expected the default value "false")
-        if (changeUnitAnnotation.runAlways()) {
-            throw buildNotSupportedException("ChangeUnit.runAlways=true expected behavior is not supported by Flamingock.");
-        }
-
         // systemVersion not supported (expected the default value "0")
         if (changeUnitAnnotation.systemVersion() == null || !changeUnitAnnotation.systemVersion().equals("0")) {
             throw buildNotSupportedException("ChangeUnit.systemVersion is not supported by Flamingock.");
@@ -268,11 +263,6 @@ public class MongockCodePreviewChangeHelper {
         // failFast not supported (expected the default value "true")
         if (!changeSetAnnotation.failFast()) {
             throw buildNotSupportedException("ChangeSet.failFast=false expected behavior is not supported by Flamingock.");
-        }
-
-        // runAlways not supported (expected the default value "false")
-        if (changeSetAnnotation.runAlways()) {
-            throw buildNotSupportedException("ChangeSet.runAlways=true expected behavior is not supported by Flamingock.");
         }
 
         // systemVersion not supported (expected the default value "0")

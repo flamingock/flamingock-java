@@ -19,6 +19,7 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 import io.flamingock.internal.common.core.error.validation.Validatable;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -56,14 +57,18 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final StageType type;
 
+    private final StageMode mode;
+
     private final Collection<AbstractLoadedChange> changes;
 
     public AbstractLoadedStage(String name,
                                StageType type,
+                               StageMode mode,
                                Collection<AbstractLoadedChange> changes,
                                StageValidationContext validationContext) {
         this.name = name;
         this.type = type;
+        this.mode = mode != null ? mode : StageMode.STANDARD;
         this.changes = changes;
         this.validationContext = validationContext;
     }
@@ -99,6 +104,10 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return type;
     }
 
+    public StageMode getMode() {
+        return mode;
+    }
+
     public Collection<AbstractLoadedChange> getChanges() {
         return changes;
     }
@@ -111,22 +120,13 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
      * <p>Used at runtime construction time to materialize a stage with a filtered subset
      * of changes without mutating the original {@code AbstractLoadedStage} (whose
      * {@code changes} collection is final and immutable post-construction). The copy is
-     * produced by reflecting on the concrete subclass to find its public
-     * {@code (String, StageType, Collection)} constructor — every concrete subclass
-     * ({@link DefaultLoadedStage}, {@link LegacyLoadedStage}, {@link SystemLoadedStage})
-     * exposes one.
+     * produced by the concrete subclass so each stage type can preserve exactly the state it owns.
      */
     public AbstractLoadedStage withChanges(Collection<AbstractLoadedChange> newChanges) {
-        try {
-            return getClass()
-                    .getConstructor(String.class, StageType.class, Collection.class)
-                    .newInstance(getName(), getType(), newChanges);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException(
-                    "Cannot copy stage [" + getName() + "] of type " + getClass().getName()
-                            + " with filtered changes", e);
-        }
+        return copyWithChanges(newChanges);
     }
+
+    protected abstract AbstractLoadedStage copyWithChanges(Collection<AbstractLoadedChange> newChanges);
 
 
 
@@ -177,6 +177,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
     @Override
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
+                ", mode=" + getMode() +
                 ", loadedChanges=" + changes +
                 '}';
     }
@@ -226,7 +227,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                     return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
                 case DEFAULT:
                 default:
-                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
+                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), previewStage.getMode(), loadedChanges);
             }
 
         }

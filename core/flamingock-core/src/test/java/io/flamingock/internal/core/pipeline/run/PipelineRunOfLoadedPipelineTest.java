@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.pipeline.run;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.StageMode;
 import io.flamingock.internal.core.change.filter.ChangeFilter;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -300,7 +301,7 @@ class PipelineRunOfLoadedPipelineTest {
         for (String id : changeIds) {
             changes.add(mockChange(id));
         }
-        return new DefaultLoadedStage(name, type, changes);
+        return new DefaultLoadedStage(name, type, StageMode.STANDARD, changes);
     }
 
     private static AbstractLoadedChange mockChange(String id) {

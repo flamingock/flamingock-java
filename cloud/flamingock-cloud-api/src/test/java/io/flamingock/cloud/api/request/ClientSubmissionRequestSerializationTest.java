@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.flamingock.api.StageType;
+import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import org.junit.jupiter.api.DisplayName;
@@ -49,12 +50,10 @@ class ClientSubmissionRequestSerializationTest {
     void serializesBlocksWithTypeAndStages() throws Exception {
         StageRequest sysStage = new StageRequest(
                 "system-stage", 0, CloudStageStatus.NOT_STARTED,
-                Collections.singletonList(new ChangeRequest("sys-c1",
-                        CloudTargetSystemAuditMarkType.NONE, false)));
+                Collections.singletonList(new ChangeRequest("sys-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
         StageRequest userStage = new StageRequest(
                 "user-stage", 1, CloudStageStatus.NOT_STARTED,
-                Collections.singletonList(new ChangeRequest("user-c1",
-                        CloudTargetSystemAuditMarkType.NONE, false)));
+                Collections.singletonList(new ChangeRequest("user-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
 
         ClientSubmissionRequest request = new ClientSubmissionRequest(Arrays.asList(
                 new StageBlockRequest(StageType.SYSTEM, Collections.singletonList(sysStage)),
@@ -82,15 +81,12 @@ class ClientSubmissionRequestSerializationTest {
         ClientSubmissionRequest original = new ClientSubmissionRequest(Arrays.asList(
                 new StageBlockRequest(StageType.LEGACY, Collections.singletonList(
                         new StageRequest("legacy", 0, CloudStageStatus.COMPLETED,
-                                Collections.singletonList(new ChangeRequest("legacy-c1",
-                                        CloudTargetSystemAuditMarkType.APPLIED, true))))),
+                                Collections.singletonList(new ChangeRequest("legacy-c1", CloudTargetSystemAuditMarkType.APPLIED, null, true, false))))),
                 new StageBlockRequest(StageType.DEFAULT, Arrays.asList(
                         new StageRequest("user-a", 1, CloudStageStatus.STARTED,
-                                Collections.singletonList(new ChangeRequest("user-a-c1",
-                                        CloudTargetSystemAuditMarkType.NONE, false))),
+                                Collections.singletonList(new ChangeRequest("user-a-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false))),
                         new StageRequest("user-b", 2, CloudStageStatus.NOT_STARTED,
-                                Collections.singletonList(new ChangeRequest("user-b-c1",
-                                        CloudTargetSystemAuditMarkType.NONE, false)))))));
+                                Collections.singletonList(new ChangeRequest("user-b-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)))))));
 
         String json = MAPPER.writeValueAsString(original);
         ClientSubmissionRequest deserialized = MAPPER.readValue(json, ClientSubmissionRequest.class);
@@ -109,11 +105,9 @@ class ClientSubmissionRequestSerializationTest {
     @DisplayName("Same StageType repeated across multiple blocks is preserved on the wire (multi-block-same-type lock-in)")
     void sameStageTypeAcrossMultipleBlocksIsPreserved() throws Exception {
         StageRequest a = new StageRequest("user-a", 0, CloudStageStatus.NOT_STARTED,
-                Collections.singletonList(new ChangeRequest("a-c1",
-                        CloudTargetSystemAuditMarkType.NONE, false)));
+                Collections.singletonList(new ChangeRequest("a-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
         StageRequest b = new StageRequest("user-b", 1, CloudStageStatus.NOT_STARTED,
-                Collections.singletonList(new ChangeRequest("b-c1",
-                        CloudTargetSystemAuditMarkType.NONE, false)));
+                Collections.singletonList(new ChangeRequest("b-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
 
         ClientSubmissionRequest request = new ClientSubmissionRequest(Arrays.asList(
                 new StageBlockRequest(StageType.DEFAULT, Collections.singletonList(a)),
@@ -140,6 +134,23 @@ class ClientSubmissionRequestSerializationTest {
 
         assertNotNull(deserialized.getBlocks());
         assertTrue(deserialized.getBlocks().isEmpty());
+    }
+
+    @Test
+    @DisplayName("ChangeRequest round-trips runAlways flag")
+    void changeRequestRoundTripsRunAlwaysFlag() throws Exception {
+        ChangeRequest change = new ChangeRequest(
+                "repeatable-c1",
+                CloudTargetSystemAuditMarkType.APPLIED,
+                CloudChangeStatus.ALREADY_APPLIED,
+                false,
+                true);
+
+        String json = MAPPER.writeValueAsString(change);
+        ChangeRequest deserialized = MAPPER.readValue(json, ChangeRequest.class);
+
+        assertTrue(deserialized.isRunAlways());
+        assertEquals(change, deserialized);
     }
 
     @Test
