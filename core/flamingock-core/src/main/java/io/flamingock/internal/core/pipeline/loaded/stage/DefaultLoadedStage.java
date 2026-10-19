@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
@@ -32,6 +33,8 @@ import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationC
 public class DefaultLoadedStage extends AbstractLoadedStage {
 
     private final static String INVALID_CHANGE_TYPE_MSG = "Invalid change detected: a non-standard change was found while processing a standard stage";
+    private final static String RUN_ALWAYS_NOT_ALLOWED_MSG = "Invalid change detected: runAlways changes are only allowed in RUN_ALWAYS stages";
+    private final static String RUN_ALWAYS_REQUIRED_MSG = "Invalid change detected: RUN_ALWAYS stages can only contain runAlways changes";
 
     private static final StageValidationContext validationContext = StageValidationContext.builder()
             .setSorted(SEQUENTIAL_FORMATTED)
@@ -39,8 +42,14 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
 
     public DefaultLoadedStage(String name,
                               StageType type,
+                              StageMode mode,
                               Collection<AbstractLoadedChange> loadedChanges) {
-        super(name, type, loadedChanges, validationContext);
+        super(name, type, mode, loadedChanges, validationContext);
+    }
+
+    @Override
+    protected AbstractLoadedStage copyWithChanges(Collection<AbstractLoadedChange> newChanges) {
+        return new DefaultLoadedStage(getName(), getType(), getMode(), newChanges);
     }
 
     @Override
@@ -51,6 +60,12 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
             if (change != null) {
                 if (!change.isStandard()) {
                     errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, change.getId(), "change"));
+                }
+                if (getMode() == StageMode.STANDARD && change.isRunAlways()) {
+                    errors.add(new ValidationError(RUN_ALWAYS_NOT_ALLOWED_MSG, change.getId(), "change"));
+                }
+                if (getMode() == StageMode.RUN_ALWAYS && !change.isRunAlways()) {
+                    errors.add(new ValidationError(RUN_ALWAYS_REQUIRED_MSG, change.getId(), "change"));
                 }
             } else {
                 errors.add(new ValidationError("Null changes are not allowed in default stage", "unknown", "change"));

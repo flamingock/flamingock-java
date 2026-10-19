@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.preview.builder.PreviewChangeBuilder;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
@@ -41,6 +42,8 @@ public class PreviewStage {
 
     private StageType type;
 
+    private StageMode mode = StageMode.STANDARD;
+
     private String description;
 
     private String sourcesPackage;
@@ -56,12 +59,14 @@ public class PreviewStage {
     //TODO it shouldn't be public
     public PreviewStage(String name,
                         StageType type,
+                        StageMode mode,
                         String description,
                         String sourcesPackage,
                         String resourcesDir,
                         Collection<? extends AbstractPreviewChange> changes) {
         this.name = name;
         this.type = type;
+        this.mode = mode;
         this.description = description;
         this.sourcesPackage = sourcesPackage;
         this.resourcesDir = resourcesDir;
@@ -93,6 +98,14 @@ public class PreviewStage {
 
     public void setType(StageType type) {
         this.type = type;
+    }
+
+    public StageMode getMode() {
+        return mode;
+    }
+
+    public void setMode(StageMode mode) {
+        this.mode = mode;
     }
 
     public String getDescription() {
@@ -145,6 +158,7 @@ public class PreviewStage {
     public String toString() {
         return "PreviewStage{" + "name='" + name + '\'' +
                 ", type=" + type +
+                ", mode=" + getMode() +
                 ", description='" + description + '\'' +
                 ", sourcesPackage='" + sourcesPackage + '\'' +
                 ", resourcesDir='" + resourcesDir + '\'' +
@@ -169,7 +183,11 @@ public class PreviewStage {
                                              String sourcesPackage,
                                              String resourcesDir,
                                              Collection<AbstractPreviewChange> allDescriptors) {
-            return new PreviewStage(name, type, description, sourcesPackage, resourcesDir, allDescriptors);
+            StageMode effectiveMode = type == StageType.DEFAULT ? getMode() : StageMode.STANDARD;
+            if (effectiveMode == StageMode.RUN_ALWAYS && allDescriptors != null) {
+                allDescriptors.forEach(change -> change.setRunAlways(true));
+            }
+            return new PreviewStage(name, type, effectiveMode, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }
 
@@ -199,6 +217,7 @@ public class PreviewStage {
         private String resourcesRoot;
         private Collection<String> sourcesRoots;
         private Collection<? extends AbstractPreviewChange> changes;
+        private StageMode mode = StageMode.STANDARD;
         private boolean parallel = false;
 
         protected AbstractBuilder() {
@@ -225,6 +244,15 @@ public class PreviewStage {
         public AbstractBuilder<T> setDescription(String description) {
             this.description = description;
             return this;
+        }
+
+        public AbstractBuilder<T> setMode(StageMode mode) {
+            this.mode = mode;
+            return this;
+        }
+
+        protected StageMode getMode() {
+            return mode;
         }
 
         /**
@@ -336,7 +364,6 @@ public class PreviewStage {
             Collection<AbstractPreviewChange> templatedChangesDescriptors = getTemplatedChangeDescriptors(resourcesDirectories);
             Collection<AbstractPreviewChange> allDescriptors = Stream.concat(templatedChangesDescriptors.stream(), changeClassesList.stream())
                     .collect(Collectors.toList());
-
 
             return buildInstance(name, description, sourcesPackage, resourcesDir, allDescriptors);
         }

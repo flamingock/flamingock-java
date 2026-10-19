@@ -16,6 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.StageMode;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
@@ -23,6 +24,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -323,6 +325,40 @@ class FlamingockMetadataMergerTest {
     }
 
     @Test
+    @DisplayName("RUN_ALWAYS mode is applied after routing a sub-package change")
+    void runAlwaysModeIsAppliedAfterRoutingSubPackageChange() {
+        FlamingockMetadata target = new FlamingockMetadata();
+        PreviewPipeline freshStructure = pipeline(stage("changes", "com.example.changes",
+                StageMode.RUN_ALWAYS));
+        CodePreviewChange subPackageChange = change("id-sub", "com.example.changes.sub.MyChange");
+
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
+                Collections.singletonList(subPackageChange), false);
+
+        PreviewStage placed = first(target.getPipeline().getStages());
+        assertTrue(first(placed.getChanges()).isRunAlways());
+    }
+
+    @Test
+    @DisplayName("RUN_ALWAYS mode is preserved for template changes kept during merge")
+    void runAlwaysModeIsAppliedToTemplateChanges() {
+        FlamingockMetadata target = new FlamingockMetadata();
+        TemplatePreviewChange template = new TemplatePreviewChange(
+                "change.yaml", "template-1", "001", "author", "template",
+                Collections.emptyList(), null, false, false,
+                null, null, null, null, null, null);
+        PreviewPipeline freshStructure = pipeline(new PreviewStage(
+                "templates", StageType.DEFAULT, StageMode.RUN_ALWAYS, null,
+                null, "resources/migrations", Collections.singletonList(template)));
+
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
+                Collections.emptyList(), false);
+
+        AbstractPreviewChange placed = first(first(target.getPipeline().getStages()).getChanges());
+        assertTrue(placed.isRunAlways());
+    }
+
+    @Test
     @DisplayName("F3: longest-prefix wins when multiple stages cover a change's package")
     void mergePipelineLongestPrefixWins() {
         FlamingockMetadata target = new FlamingockMetadata();
@@ -436,7 +472,11 @@ class FlamingockMetadataMergerTest {
     }
 
     private static PreviewStage stage(String name, String sourcesPackage, AbstractPreviewChange... changes) {
-        return new PreviewStage(name, StageType.DEFAULT, null, sourcesPackage, null, Arrays.asList(changes));
+        return new PreviewStage(name, StageType.DEFAULT, StageMode.STANDARD, null, sourcesPackage, null, Arrays.asList(changes));
+    }
+
+    private static PreviewStage stage(String name, String sourcesPackage, StageMode mode) {
+        return new PreviewStage(name, StageType.DEFAULT, mode, null, sourcesPackage, null, new ArrayList<>());
     }
 
     private static PreviewPipeline pipeline(PreviewStage... stages) {

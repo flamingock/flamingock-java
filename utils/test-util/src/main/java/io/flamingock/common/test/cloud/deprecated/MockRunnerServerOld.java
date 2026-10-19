@@ -190,7 +190,7 @@ public final class MockRunnerServerOld {
                     CloudTargetSystemAuditMarkType cloudStatus = operation != null
                             ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
                             : CloudTargetSystemAuditMarkType.NONE;
-                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, auditEntryExpectation.isTransactional());
+                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, null, auditEntryExpectation.isTransactional(), false);
                 })
                 .collect(Collectors.toList());
 
@@ -218,7 +218,7 @@ public final class MockRunnerServerOld {
                     CloudTargetSystemAuditMarkType cloudStatus = operation != null
                             ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
                             : CloudTargetSystemAuditMarkType.NONE;
-                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, auditEntryExpectation.isTransactional());
+                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, null, auditEntryExpectation.isTransactional(), false);
                 })
                 .collect(Collectors.toList());
 

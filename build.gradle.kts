@@ -24,7 +24,7 @@ allprojects {
 
     extra["generalUtilVersion"] = "1.6.0"
     extra["templateApiVersion"] = "1.3.4"
-    extra["coreApiVersion"] = "1.3.3"
+    extra["coreApiVersion"] = "1.4.0-SNAPSHOT"
     extra["sqlVersion"] = "1.3.2"
     extra["mongodbTemplateVersion"] = "1.3.2"
 

@@ -195,6 +195,32 @@ class CommunityExecutionPlannerTest {
     }
 
     @Test
+    @DisplayName("Should execute runAlways change even when audit says already applied")
+    void shouldExecuteRunAlwaysChangeWhenAlreadyApplied() {
+        AbstractLoadedChange change = mockLoadedChange("change-1");
+        when(change.isRunAlways()).thenReturn(true);
+        AbstractLoadedStage stage = mockStage("stage-1", change);
+
+        Map<String, AuditEntry> snapshot = new HashMap<>();
+        snapshot.put("change-1", buildAuditEntry("change-1", AuditEntry.Status.APPLIED, null));
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        PipelineRun pipelineRun = PipelineRun.of(Collections.singletonList(stage));
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        assertEquals(io.flamingock.internal.common.core.recovery.action.ChangeAction.APPLY,
+                plan.getExecutableStages().get(0).getChanges().get(0).getAction());
+        assertEquals(io.flamingock.internal.common.core.response.data.ChangeStatus.NOT_REACHED,
+                pipelineRun.getStageRun("stage-1").getResult().getChanges().get(0).getStatus(),
+                "runAlways changes must not be stamped as ALREADY_APPLIED from audit");
+        verify(lockService).upsert(any(), any(), anyLong());
+    }
+
+    @Test
     @DisplayName("Should return CONTINUE when every block is terminal+successful (multi-block, all done)")
     void shouldReturnContinueWhenAllBlocksAreSuccessful() {
         AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");

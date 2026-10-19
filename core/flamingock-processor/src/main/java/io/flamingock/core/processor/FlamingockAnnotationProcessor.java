@@ -101,9 +101,8 @@ import java.util.regex.Pattern;
  * <ul>
  *     <li>@EnableFlamingock annotation is mandatory</li>
  *     <li>Must specify either {@code configFile} OR {@code stages} (mutually exclusive)</li>
- *     <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
- *     <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
- *     <li>Unlimited stages with type {@code StageType.DEFAULT} are allowed</li>
+ *     <li>User-declared stages are standard Flamingock stages</li>
+ *     <li>System and legacy stages are generated internally by Flamingock</li>
  * </ul>
  *
  * <h2>Supported Annotations</h2>

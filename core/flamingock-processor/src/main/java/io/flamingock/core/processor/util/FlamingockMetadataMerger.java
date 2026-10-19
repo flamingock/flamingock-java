@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -27,7 +28,6 @@ import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -139,6 +139,12 @@ public final class FlamingockMetadataMerger {
                 orphans.add(c);
             }
         }
+        
+        // 7. Apply the repeatability policy after every code change has been routed to its
+        //    definitive stage. Orphans must not inherit a stage policy.
+        normalizeRunAlwaysChanges(effective);
+
+        // 8. Persist candidates that could not be assigned to any stage as orphans.
         if (!orphans.isEmpty()) {
             addOrphansInternal(target, orphans);
         }
@@ -309,6 +315,7 @@ public final class FlamingockMetadataMerger {
             if (c.isLegacy()) {
                 PreviewStage legacy = new PreviewStage(
                         PipelineHelper.LEGACY_STAGE_ID, StageType.LEGACY,
+                        StageMode.STANDARD,
                         "Flamingock legacy stage", null, null, new ArrayList<>());
                 List<PreviewStage> mutable = (stages == null)
                         ? new ArrayList<>() : new ArrayList<>(stages);
@@ -381,6 +388,22 @@ public final class FlamingockMetadataMerger {
         if (current != null) next.addAll(current);
         next.add(change);
         stage.setChanges(next);
+    }
+
+    /** Apply the native stage repeatability policy after all code changes have been routed. */
+    private static void normalizeRunAlwaysChanges(PreviewPipeline pipeline) {
+        if (pipeline == null || pipeline.getStages() == null) {
+            return;
+        }
+        for (PreviewStage stage : pipeline.getStages()) {
+            if (stage.getType() == StageType.DEFAULT
+                    && stage.getMode() == StageMode.RUN_ALWAYS
+                    && stage.getChanges() != null) {
+                for (AbstractPreviewChange change : stage.getChanges()) {
+                    change.setRunAlways(true);
+                }
+            }
+        }
     }
 
     private static boolean pruneStage(PreviewStage stage, java.util.function.Predicate<String> typeExists) {

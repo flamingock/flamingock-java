@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +38,7 @@ public class SystemPreviewStage extends PreviewStage {
                               String sourcesPackage,
                               String resourcesDir,
                               Collection<? extends AbstractPreviewChange> changes) {
-        super(name, StageType.SYSTEM, description, sourcesPackage, resourcesDir, changes);
+        super(name, StageType.SYSTEM, StageMode.STANDARD, description, sourcesPackage, resourcesDir, changes);
 
     }
 

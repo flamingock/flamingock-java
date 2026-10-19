@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
@@ -58,8 +59,7 @@ import java.util.stream.Collectors;
  *       not declarable in YAML or annotations.</li>
  *   <li>Legacy stage: built from changes flagged {@link CodePreviewChange#isLegacy()};
  *       inserted before all DEFAULT stages.</li>
- *   <li>DEFAULT stages: declared inline (annotation) or in YAML; YAML may also declare
- *       LEGACY stages (max 1).</li>
+ *   <li>DEFAULT stages: declared inline (annotation) or in YAML.</li>
  * </ul>
  */
 public final class PipelineStructureBuilder {
@@ -132,7 +132,7 @@ public final class PipelineStructureBuilder {
                 : stageAnnotation.name();
         String description = stageAnnotation.description().isEmpty()
                 ? null : stageAnnotation.description();
-        return buildStage(name, description, StageType.DEFAULT, location, changesByPackage);
+        return buildStage(name, description, StageType.DEFAULT, stageAnnotation.mode(), location, changesByPackage);
     }
 
     // ---------------------------------------------------------------- YAML source
@@ -149,7 +149,7 @@ public final class PipelineStructureBuilder {
             @SuppressWarnings("unchecked")
             List<Map<String, String>> stageList = (List<Map<String, String>>) pipelineMap.get("stages");
 
-            validateYamlStageTypes(stageList);
+            validateYamlDoesNotDeclareStageType(stageList);
 
             List<PreviewStage> stages = new ArrayList<>();
             for (Map<String, String> stageMap : stageList) {
@@ -171,7 +171,10 @@ public final class PipelineStructureBuilder {
                 ? PathResolver.deriveNameFromLocation(location)
                 : rawName;
         return buildStage(name, stageMap.get("description"),
-                StageType.from(stageMap.get("type")), location, changesByPackage);
+                StageType.DEFAULT,
+                StageMode.from(stageMap.get("mode")),
+                location,
+                changesByPackage);
     }
 
     // ---------------------------------------------------------------- shared stage build
@@ -184,6 +187,7 @@ public final class PipelineStructureBuilder {
     private PreviewStage buildStage(String name,
                                     String description,
                                     StageType type,
+                                    StageMode mode,
                                     String location,
                                     Map<String, List<CodePreviewChange>> changesByPackage) {
         logger.verbose("Building stage: " + name);
@@ -207,6 +211,7 @@ public final class PipelineStructureBuilder {
         return PreviewStage.defaultBuilder(type)
                 .setName(name)
                 .setDescription(description)
+                .setMode(mode)
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
@@ -286,20 +291,14 @@ public final class PipelineStructureBuilder {
         }
     }
 
-    private static void validateYamlStageTypes(List<Map<String, String>> stageList) {
-        int system = 0;
-        int legacy = 0;
+    private static void validateYamlDoesNotDeclareStageType(List<Map<String, String>> stageList) {
         for (Map<String, String> stageMap : stageList) {
-            StageType type = StageType.from(stageMap.get("type"));
-            if (type == StageType.SYSTEM && ++system > 1) {
+            String type = stageMap.get("type");
+            if (type != null && !type.trim().isEmpty()) {
                 throw new RuntimeException(
-                        "Multiple SYSTEM stages are not allowed in YAML pipeline. "
-                                + "Only one stage with type 'system' is permitted.");
-            }
-            if (type == StageType.LEGACY && ++legacy > 1) {
-                throw new RuntimeException(
-                        "Multiple LEGACY stages are not allowed in YAML pipeline. "
-                                + "Only one stage with type 'legacy' is permitted.");
+                        "Stage field 'type' is not supported in YAML pipeline configuration. "
+                                + "StageType is internal; declared YAML stages are always DEFAULT. "
+                                + "Use 'mode' to configure stage repeatability.");
             }
         }
     }

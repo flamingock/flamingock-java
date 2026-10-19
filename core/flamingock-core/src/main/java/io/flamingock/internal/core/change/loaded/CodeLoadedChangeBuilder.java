@@ -217,6 +217,7 @@ public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedCh
         setConstructor(getConstructor(sourceClass));
         setApplyMethod(getApplyMethodFromAnnotation(sourceClass));
         setRollbackMethod(getRollbackMethodFromAnnotation(sourceClass));
+        setRunAlways(false);
         setTransactionalFlag(annotation.transactional());
         setSystem(false);
         setRecoveryFromClass(sourceClass);

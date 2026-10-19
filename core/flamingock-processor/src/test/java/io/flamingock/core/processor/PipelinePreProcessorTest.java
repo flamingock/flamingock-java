@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.processor;
 
+import io.flamingock.api.StageMode;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
@@ -89,6 +90,7 @@ public class PipelinePreProcessorTest {
         PreviewStage uniqueStage = stages[0];
         assertEquals("migrations", uniqueStage.getName()); // Should be derived from location
         assertEquals(StageType.DEFAULT, uniqueStage.getType());
+        assertEquals(StageMode.STANDARD, uniqueStage.getMode());
         assertEquals("com.example.migrations", uniqueStage.getSourcesPackage());
     }
 
@@ -171,6 +173,41 @@ public class PipelinePreProcessorTest {
         PreviewStage firstStage = stages[0];
         assertEquals("migrations", firstStage.getName());
         assertEquals(StageType.DEFAULT, firstStage.getType());
+        assertEquals(StageMode.STANDARD, firstStage.getMode());
+    }
+
+    @Test
+    @DisplayName("Should apply RUN_ALWAYS mode from annotation stages")
+    void shouldApplyRunAlwaysModeFromAnnotationStages() throws Exception {
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages(createMockStage("", "com.example.migrations", StageMode.RUN_ALWAYS))
+            .build();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
+
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(newBuilder(), annotation, changes);
+
+        PreviewStage stage = pipeline.getStages().iterator().next();
+        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertTrue(stage.getChanges().stream().allMatch(AbstractPreviewChange::isRunAlways));
+    }
+
+    @Test
+    @DisplayName("Should apply RUN_ALWAYS mode from YAML stages")
+    void shouldApplyRunAlwaysModeFromYamlStages() throws Exception {
+        Path configFile = tempDir.resolve("pipeline.yaml");
+        String yamlContent = "pipeline:\n" +
+            "  stages:\n" +
+            "    - location: com.example.migrations\n" +
+            "      mode: RUN_ALWAYS\n";
+        Files.write(configFile, yamlContent.getBytes());
+        EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
+
+        PreviewPipeline pipeline = buildPipelineFromFile(newBuilder(), annotation, changes);
+
+        PreviewStage stage = pipeline.getStages().iterator().next();
+        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertTrue(stage.getChanges().stream().allMatch(AbstractPreviewChange::isRunAlways));
     }
 
     /**
@@ -199,83 +236,49 @@ public class PipelinePreProcessorTest {
         assertNull(pipeline.getSystemStage(), "Should not have system stage");
     }
 
-    /**
-     * Test that YAML stages are ordered correctly regardless of declaration order.
-     */
     @Test
-    @DisplayName("Should order YAML stages by type priority: LEGACY before DEFAULT")
-    void shouldOrderYamlStagesByTypePriorityLegacyBeforeDefault() throws Exception {
-        // Given - create YAML file with stages in reverse order (DEFAULT first, LEGACY second)
+    @DisplayName("Should reject stage type in YAML configuration")
+    void shouldRejectStageTypeInYamlConfiguration() throws Exception {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.migrations\n" +
-            "    - location: com.example.init\n" +
-            "      type: legacy\n" +
-            "    - location: com.example.cleanup\n";
+            "      type: legacy\n";
         Files.write(configFile, yamlContent.getBytes());
-        
+
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         PipelineStructureBuilder builder = newBuilder();
 
-        // When - build pipeline from file
-        PreviewPipeline pipeline = buildPipelineFromFile(builder, annotation, changes);
+        Exception exception = assertThrows(Exception.class, () ->
+                buildPipelineFromFile(builder, annotation, changes));
 
-        // Then - verify stages are sorted by type priority
-        assertNotNull(pipeline, "Pipeline should be created");
-        assertEquals(3, pipeline.getStages().size(), "Should have 3 stages");
-        
-        PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
-        
-        // First stage should be LEGACY (highest priority)
-        assertEquals(StageType.LEGACY, stages[0].getType());
-        assertEquals("init", stages[0].getName());
-        assertEquals("com.example.init", stages[0].getSourcesPackage());
-        
-        // Second and third stages should be DEFAULT (lower priority)
-        assertEquals(StageType.DEFAULT, stages[1].getType());
-        assertEquals("migrations", stages[1].getName());
-        assertEquals("com.example.migrations", stages[1].getSourcesPackage());
-        
-        assertEquals(StageType.DEFAULT, stages[2].getType());
-        assertEquals("cleanup", stages[2].getName());
-        assertEquals("com.example.cleanup", stages[2].getSourcesPackage());
+        Throwable cause = exception.getCause();
+        String message = cause instanceof RuntimeException ? cause.getMessage() : exception.getMessage();
+        assertTrue(message.contains("Stage field 'type' is not supported in YAML pipeline configuration"),
+                "Should reject YAML stage type explicitly");
     }
 
-    /**
-     * Test validation for YAML pipeline with multiple SYSTEM stages.
-     */
     @Test
-    @DisplayName("Should throw error for multiple SYSTEM stages in YAML configuration")
-    void shouldThrowErrorForMultipleSystemStagesInYaml() throws Exception {
-        // Given - create YAML file with multiple system stages
+    @DisplayName("Should treat all YAML stages as DEFAULT when type is omitted")
+    void shouldTreatAllYamlStagesAsDefaultWhenTypeIsOmitted() throws Exception {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
-            "    - location: com.example.system1\n" +
-            "      type: importer\n" +
-            "    - location: com.example.system2\n" +
-            "      type: importer\n" +
-            "    - location: com.example.changes\n";
+            "    - location: com.example.migrations\n" +
+            "    - location: com.example.cleanup\n";
         Files.write(configFile, yamlContent.getBytes());
-        
+
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         PipelineStructureBuilder builder = newBuilder();
 
-        // When & Then - should throw RuntimeException
-        Exception exception = assertThrows(Exception.class, () ->
-            buildPipelineFromFile(builder, annotation, changes));
-        
-        Throwable cause = exception.getCause();
-        if (cause instanceof RuntimeException) {
-            assertTrue(cause.getMessage().contains("Multiple SYSTEM stages are not allowed"),
-                    "Should have error about multiple SYSTEM stages in YAML");
-        } else {
-            assertTrue(exception.getMessage().contains("Multiple SYSTEM stages are not allowed"),
-                    "Should have error about multiple SYSTEM stages in YAML");
-        }
+        PreviewPipeline pipeline = buildPipelineFromFile(builder, annotation, changes);
+
+        assertNotNull(pipeline, "Pipeline should be created");
+        assertEquals(2, pipeline.getStages().size(), "Should have 2 YAML stages");
+        assertTrue(pipeline.getStages().stream().allMatch(stage -> stage.getType() == StageType.DEFAULT),
+                "All user-declared YAML stages should be DEFAULT");
     }
 
     // The validateAllChangesAreMappedToStages helper was removed in Phase 3 — its job is now
@@ -439,10 +442,15 @@ public class PipelinePreProcessorTest {
     }
 
     private Stage createMockStage(String name, String location) {
+        return createMockStage(name, location, StageMode.STANDARD);
+    }
+
+    private Stage createMockStage(String name, String location, StageMode mode) {
         return new Stage() {
             @Override public String name() { return name; }
             @Override public String description() { return ""; }
             @Override public String location() { return location; }
+            @Override public StageMode mode() { return mode; }
             @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return Stage.class; }
         };
     }
