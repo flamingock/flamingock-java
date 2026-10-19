@@ -75,4 +75,20 @@ class TemplatePreviewChangeBuilderTest {
         assertEquals(Optional.of(false), preview.getTransactionalFlag());
         assertEquals("_0001__test.yaml", preview.getSourceFile());
     }
+
+    @Test
+    @DisplayName("Should default runAlways to false when omitted")
+    void shouldDefaultRunAlwaysToFalseWhenOmitted() {
+        ChangeTemplateFileContent content = new ChangeTemplateFileContent(
+                "test-id", "author", "SqlTemplate", null,
+                null, null, "CREATE TABLE", null,
+                TargetSystemDescriptor.fromId("postgresql"), null);
+
+        TemplatePreviewChange preview = TemplatePreviewChangeBuilder.builder(content)
+                .setFileName("_0001__test.yaml")
+                .build();
+
+        assertFalse(preview.isRunAlways());
+    }
+
 }

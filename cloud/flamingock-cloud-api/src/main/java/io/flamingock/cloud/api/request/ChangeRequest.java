@@ -44,35 +44,33 @@ public class ChangeRequest {
 
     private boolean transactional;
 
+    private boolean runAlways;
+
     public ChangeRequest() {
     }
 
     public static ChangeRequest change(String id, boolean transactional) {
-        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.NONE, null, transactional);
+        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.NONE, null, transactional, false);
     }
 
     public static ChangeRequest ongoingExecution(String id, boolean transactional) {
-        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.APPLIED, null, transactional);
+        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.APPLIED, null, transactional, false);
     }
 
     public static ChangeRequest ongoingRollback(String id, boolean transactional) {
-        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.ROLLED_BACK, null, transactional);
-    }
-
-    public ChangeRequest(String id,
-                         CloudTargetSystemAuditMarkType ongoingStatus,
-                         boolean transactional) {
-        this(id, ongoingStatus, null, transactional);
+        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.ROLLED_BACK, null, transactional, false);
     }
 
     public ChangeRequest(String id,
                          CloudTargetSystemAuditMarkType ongoingStatus,
                          CloudChangeStatus currentStatus,
-                         boolean transactional) {
+                         boolean transactional,
+                         boolean runAlways) {
         this.id = id;
         this.ongoingStatus = ongoingStatus;
         this.currentStatus = currentStatus;
         this.transactional = transactional;
+        this.runAlways = runAlways;
     }
 
     public String getId() {
@@ -91,6 +89,10 @@ public class ChangeRequest {
         return transactional;
     }
 
+    public boolean isRunAlways() {
+        return runAlways;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -107,12 +109,17 @@ public class ChangeRequest {
         this.transactional = transactional;
     }
 
+    public void setRunAlways(boolean runAlways) {
+        this.runAlways = runAlways;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ChangeRequest that = (ChangeRequest) o;
         return transactional == that.transactional
+                && runAlways == that.runAlways
                 && java.util.Objects.equals(id, that.id)
                 && java.util.Objects.equals(ongoingStatus, that.ongoingStatus)
                 && java.util.Objects.equals(currentStatus, that.currentStatus);
@@ -120,6 +127,6 @@ public class ChangeRequest {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, ongoingStatus, currentStatus, transactional);
+        return java.util.Objects.hash(id, ongoingStatus, currentStatus, transactional, runAlways);
     }
 }

@@ -16,6 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.StageMode;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -123,6 +124,23 @@ class FlamingockMetadataStoreTest {
     }
 
     @Test
+    void commitPreservesRunAlwaysModeAndChangeFlag() throws IOException {
+        Path readPath = tempDir.resolve("does-not-exist.json");
+        FakeFiler filer = new FakeFiler(readPath, tempDir);
+        ProcessingEnvironment env = mockEnv(filer);
+        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env), METADATA_PATH, REFLECT_PATH);
+
+        store.update(metadata -> metadata.setPipeline(runAlwaysPipeline()));
+        store.commit();
+
+        Path metadataOut = tempDir.resolve(METADATA_PATH);
+        FlamingockMetadata read = JsonObjectMapper.DEFAULT_INSTANCE.readValue(metadataOut.toFile(), FlamingockMetadata.class);
+        PreviewStage stage = read.getPipeline().getStages().iterator().next();
+        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertTrue(stage.getChanges().iterator().next().isRunAlways());
+    }
+
+    @Test
     void peekDoesNotMarkDirty() {
         FakeFiler filer = new FakeFiler(tempDir.resolve("does-not-exist.json"), tempDir);
         ProcessingEnvironment env = mockEnv(filer);
@@ -151,7 +169,16 @@ class FlamingockMetadataStoreTest {
         CodePreviewChange c = new CodePreviewChange("id-1", null, "author",
                 "com.example.changes.A", "com.example.changes.A",
                 null, null, null, false, null, false, null, null, false);
-        PreviewStage stage = new PreviewStage("default", StageType.DEFAULT, null,
+        PreviewStage stage = new PreviewStage("default", StageType.DEFAULT, StageMode.STANDARD, null,
+                "com.example.changes", null, java.util.Collections.singletonList(c));
+        return new PreviewPipeline(Arrays.asList(stage));
+    }
+
+    private static PreviewPipeline runAlwaysPipeline() {
+        CodePreviewChange c = new CodePreviewChange("id-run-always", null, "author",
+                "com.example.changes.A", "com.example.changes.A",
+                null, null, null, true, null, false, null, null, false);
+        PreviewStage stage = new PreviewStage("repeatable", StageType.DEFAULT, StageMode.RUN_ALWAYS, null,
                 "com.example.changes", null, java.util.Collections.singletonList(c));
         return new PreviewPipeline(Arrays.asList(stage));
     }
