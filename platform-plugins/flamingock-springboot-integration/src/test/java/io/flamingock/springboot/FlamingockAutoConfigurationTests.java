@@ -28,6 +28,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 
 
 class FlamingockAutoConfigurationTests {
@@ -115,7 +117,12 @@ class FlamingockAutoConfigurationTests {
 
         @Bean
         public CommunityAuditStore auditStore() {
-            return mock(CommunityAuditStore.class);
+            CommunityAuditStore auditStore = mock(CommunityAuditStore.class);
+            // The builder registers the audit store's own target system under a reserved id, so a store
+            // that supplies none fails the build. A bare mock returns null, hence the stub.
+            when(auditStore.getExternalSystem())
+                    .thenReturn(new NonTransactionalTargetSystem("test-audit-store"));
+            return auditStore;
         }
     }
 }

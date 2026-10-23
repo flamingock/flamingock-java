@@ -90,6 +90,17 @@ public class MongoDBReactiveAuditStore implements CommunityAuditStore {
         return new MongoDBReactiveAuditStore(targetSystem);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The system this store was handed by {@code from(...)} - not to be confused with
+     * {@link #getId()}, which names the store itself.
+     */
+    @Override
+    public MongoDBReactiveExternalSystem getExternalSystem() {
+        return mongoDBTargetSystem;
+    }
+
     @Override
     public String getId() {
         return Constants.DEFAULT_MONGODB_AUDIT_STORE;

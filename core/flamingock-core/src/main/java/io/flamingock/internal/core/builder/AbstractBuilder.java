@@ -82,6 +82,12 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     protected abstract HOLDER getSelf();
 
     protected void configureStoreAndTargetSystem(PriorityContext dependencyContext) {
+        // Before initialize(), and that order is load-bearing on two counts: the manager rejects
+        // registrations once initialized, and registering now is what gets the audit store's target system
+        // initialized along with the rest when the user never added it themselves. Safe this early because
+        // getExternalSystem() only hands back a constructor field - the audit store itself need not be
+        // initialized yet.
+        targetSystemManager.registerAuditStoreTargetSystem(auditStore.getExternalSystem());
         //remove this, targetSystem should be mandatory
         targetSystemManager.initialize(dependencyContext);
         auditStore.initialize(dependencyContext);

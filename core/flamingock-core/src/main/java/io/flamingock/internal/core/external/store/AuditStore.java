@@ -29,6 +29,23 @@ import java.util.Set;
 
 public interface AuditStore<PERSISTENCE extends AuditPersistence> extends ExternalSystem, ContextInitializable {
 
+    /**
+     * Returns the external system this audit store was built from.
+     * <p>
+     * Not to be confused with {@link #getId()}, which this store inherits from {@code ExternalSystem} and
+     * which identifies <em>the store</em> (for example {@code mongodb-audit-store}). This returns the
+     * system the store's data actually lives in - the one a {@code from(...)} factory was handed.
+     * <p>
+     * Used to register the reserved {@code PipelineHelper.AUDIT_STORE_TARGET_SYSTEM} id, so that system
+     * changes operating on the audit store can be resolved against a real target system.
+     * <p>
+     * Abstract rather than defaulted: a store that genuinely has no external system must say so by
+     * returning a non-transactional stand-in, not by inheriting a silent {@code null}.
+     *
+     * @return the external system backing this store; never {@code null}
+     */
+    ExternalSystem getExternalSystem();
+
     @Deprecated
     default PERSISTENCE getPersistence() {
         throw new IllegalStateException("Audit stores must provide persistence through getPersistenceFactory(stageId)");

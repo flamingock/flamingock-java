@@ -27,6 +27,8 @@ import io.flamingock.internal.core.journal.JournalEventSequencerFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 
 public class InternalInMemoryTestAuditStore implements CommunityAuditStore {
 
@@ -48,6 +50,25 @@ public class InternalInMemoryTestAuditStore implements CommunityAuditStore {
         this.lockStorage = lockStorage;
         this.journalEventStore = journalEventStore;
         this.journalEventSequencerFactory = new JournalEventSequencerFactory(journalEventStore);
+    }
+
+    /** Lazily created stand-in; see {@link #getExternalSystem()}. */
+    private NonTransactionalTargetSystem externalSystem;
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This store has no external system of its own - it keeps everything in memory. A
+     * non-transactional stand-in is returned rather than {@code null} so that the reserved
+     * {@code AUDIT_STORE_TARGET_SYSTEM} id still resolves, letting system changes run against this store.
+     * Cached because the identity of the instance matters once it is registered.
+     */
+    @Override
+    public synchronized ExternalSystem getExternalSystem() {
+        if (externalSystem == null) {
+            externalSystem = new NonTransactionalTargetSystem(getId());
+        }
+        return externalSystem;
     }
 
     @Override
