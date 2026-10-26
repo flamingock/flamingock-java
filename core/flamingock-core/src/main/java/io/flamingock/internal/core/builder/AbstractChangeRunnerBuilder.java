@@ -58,6 +58,7 @@ import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.builder.runner.RunnerFactory;
 import io.flamingock.internal.core.change.filter.ChangeFilter;
+import io.flamingock.internal.core.system.CoreSystemChangeFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
@@ -278,6 +279,11 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 .map(Plugin::getChangeFilters)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
+
+        // Keeps the journal-backfill / audit-cleanup system changes out of the runtime pipeline while
+        // JOURNAL_EVENTS is disabled - see CoreSystemChangeFilter for why this can't be done where they're
+        // contributed (compile time, a different process from where the flag actually lives).
+        changeFiltersFromPlugins.add(CoreSystemChangeFilter.instance());
 
         return LoadedPipeline.builder()
                 .addFilters(changeFiltersFromPlugins)

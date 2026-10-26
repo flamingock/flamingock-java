@@ -101,7 +101,9 @@ class MultiModuleProcessingIT {
         List<String> stageNames = stageNames(composite.getPipeline());
         assertTrue(stageNames.contains("changes"),
                 "the 'changes' stage from at least one module should appear: " + stageNames);
-        assertEquals(2, totalChanges(composite.getPipeline()),
+        // +2: the two core system changes, contributed unconditionally by each module and
+        // deduplicated to one pair in the composite system stage.
+        assertEquals(4, totalChanges(composite.getPipeline()),
                 "composite contains both modules' changes");
         List<String> ids = changeIds(composite.getPipeline());
         assertTrue(ids.contains("id-A1"));

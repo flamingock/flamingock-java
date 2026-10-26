@@ -17,6 +17,7 @@ package io.flamingock.internal.core.system;
 
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
@@ -33,15 +34,20 @@ import static io.flamingock.internal.common.core.pipeline.PipelineHelper.SYSTEM_
 
 /**
  * Copies historical audit entries into local journal streams without modifying audit history.
- * Registration and execution order are separate concerns; this change only retains its identity to
- * exclude its own audit records.
+ * This change only retains its identity to exclude its own audit records.
+ * <p>
+ * Contributed unconditionally by {@code CoreSystemChangeProvider}, consumed by
+ * {@code FlamingockAnnotationProcessorPlugin#findAnnotatedChanges()} with {@code setSystem(true)} and
+ * {@code order = "00200"} — after the Mongock importer's {@code "00100"} and before audit cleanup's
+ * {@code "00300"}. Resolved against the reserved {@code PipelineHelper#AUDIT_STORE_TARGET_SYSTEM} target
+ * system, since this change operates on the audit store itself.
  */
 public class JournalBackfillChange {
     public static final String CHANGE_ID = "backfill-audit-history-to-journal";
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("JournalBackfill");
 
-    private final Map<String, JournalHistoryAppender> journalPersistenceByStage = new HashMap<>();
+    private final Map<String, AuditPersistence> persistenceByStage = new HashMap<>();
     private AuditPersistenceFactory<?> persistenceFactory;
 
     /**
@@ -62,11 +68,17 @@ public class JournalBackfillChange {
 
         logger.info("Backfilling audit history into journal streams");
         this.persistenceFactory = persistenceFactory;
-        for (AuditEntry auditEntry : persistenceFactory.get(SYSTEM_STAGE_ID).getAuditHistory()) {
+        // Routed through the same cache as every per-entry lookup below - not just the general
+        // "one less instantiation" saving the review comment on PR #982 flagged, but required for
+        // correctness on DynamoDB: a persistence instance owns a journal-sequence baseline, and a second,
+        // independently-built instance for this same stage starts from a stale baseline, handing out a
+        // sequence number a later write (e.g. the next system change's own STARTED entry) has already
+        // consumed - a hard DynamoDB transaction conflict, not a mere inefficiency.
+        for (AuditEntry auditEntry : getPersistence(SYSTEM_STAGE_ID).getAuditHistory()) {
             if (CHANGE_ID.equals(auditEntry.getChangeId())) {
                 continue;
             }
-            JournalHistoryAppender persistence = getJournalPersistence(auditEntry);
+            JournalHistoryAppender persistence = (JournalHistoryAppender) getPersistence(auditEntry.getStageId());
             Result result = persistence.appendEventFrom(auditEntry);
             if (!(result instanceof Result.Ok)) {
                 Throwable cause = result instanceof Result.Error ? ((Result.Error) result).getError() : null;
@@ -76,8 +88,7 @@ public class JournalBackfillChange {
         logger.info("Audit history backfilled into journal streams");
     }
 
-    private JournalHistoryAppender getJournalPersistence(AuditEntry auditEntry) {
-        return journalPersistenceByStage.computeIfAbsent(auditEntry.getStageId(),
-                stageId -> (JournalHistoryAppender) persistenceFactory.get(stageId));
+    private AuditPersistence getPersistence(String stageId) {
+        return persistenceByStage.computeIfAbsent(stageId, persistenceFactory::get);
     }
 }

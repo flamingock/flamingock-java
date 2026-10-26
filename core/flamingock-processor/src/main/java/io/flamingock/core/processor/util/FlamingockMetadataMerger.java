@@ -219,7 +219,7 @@ public final class FlamingockMetadataMerger {
         if (target.getOrphanChanges() != null && !target.getOrphanChanges().isEmpty()) {
             List<CodePreviewChange> kept = new ArrayList<>();
             for (CodePreviewChange c : target.getOrphanChanges()) {
-                if (c.getSource() != null && typeExists.test(c.getSource())) {
+                if (isResolvable(c.getSource(), typeExists)) {
                     kept.add(c);
                 } else {
                     pruned = true;
@@ -383,6 +383,23 @@ public final class FlamingockMetadataMerger {
         stage.setChanges(next);
     }
 
+    /**
+     * Package of the core-contributed system changes ({@code CoreSystemChangeProvider}) - journal backfill
+     * and audit cleanup. Exempt from the resolvability check below: unlike a user's own {@code @Change}
+     * class, their source lives in {@code flamingock-core}, not in the module being compiled, so a module
+     * that depends only on {@code flamingock-core-api} (common in multi-module projects where one module
+     * declares changes and another assembles the runner) would never resolve them and see them wrongly
+     * pruned as "deleted" on every round. They need no staleness detection anyway: unlike a deleted
+     * {@code @Change} class, which stops appearing in-round, these are re-contributed unconditionally by
+     * every round of every module, so they are never actually stale.
+     */
+    private static final String CORE_SYSTEM_CHANGE_PACKAGE = "io.flamingock.internal.core.system.";
+
+    /** Resolvable if its class exists in the compiled module, or it's a core system change - see above. */
+    private static boolean isResolvable(String src, java.util.function.Predicate<String> typeExists) {
+        return src != null && (src.startsWith(CORE_SYSTEM_CHANGE_PACKAGE) || typeExists.test(src));
+    }
+
     private static boolean pruneStage(PreviewStage stage, java.util.function.Predicate<String> typeExists) {
         Collection<? extends AbstractPreviewChange> current = stage.getChanges();
         if (current == null || current.isEmpty()) return false;
@@ -390,8 +407,7 @@ public final class FlamingockMetadataMerger {
         boolean pruned = false;
         for (AbstractPreviewChange c : current) {
             if (c instanceof CodePreviewChange) {
-                String src = c.getSource();
-                if (src == null || !typeExists.test(src)) {
+                if (!isResolvable(c.getSource(), typeExists)) {
                     pruned = true;
                     continue;
                 }
