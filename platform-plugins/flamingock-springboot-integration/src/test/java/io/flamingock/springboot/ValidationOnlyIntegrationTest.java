@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 
 /**
  * Spring Boot end-to-end integration tests for the {@code validationOnly} mode.
@@ -111,6 +112,11 @@ class ValidationOnlyIntegrationTest {
 
         CommunityAuditStore auditStore = mock(CommunityAuditStore.class);
         CommunityAuditPersistence persistence = mock(CommunityAuditPersistence.class);
+
+        // The builder registers the audit store's own target system under a reserved id, so a store that
+        // supplies none fails the build. A bare mock returns null, hence the stub.
+        when(auditStore.getExternalSystem())
+                .thenReturn(new NonTransactionalTargetSystem("test-audit-store"));
         CommunityLockService lockService = mock(CommunityLockService.class);
 
         // Stub audit history — determines whether changes are "pending"

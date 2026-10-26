@@ -76,6 +76,17 @@ public class SqlAuditStore implements CommunityAuditStore {
         return new SqlAuditStore(targetSystem);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The system this store was handed by {@code from(...)} - not to be confused with
+     * {@link #getId()}, which names the store itself.
+     */
+    @Override
+    public SqlExternalSystem getExternalSystem() {
+        return targetSystem;
+    }
+
     @Override
     public String getId() {
         return Constants.DEFAULT_SQL_AUDIT_STORE;
