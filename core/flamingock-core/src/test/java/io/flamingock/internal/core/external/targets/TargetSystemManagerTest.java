@@ -18,6 +18,7 @@ package io.flamingock.internal.core.external.targets;
 import io.flamingock.internal.common.core.context.RuntimeContext;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
+import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +85,111 @@ class TargetSystemManagerTest {
         manager.add(new StubTransactionalTargetSystem("tx-default"));
 
         assertEquals(OperationType.TX_NON_SYNC, manager.getTargetSystem("tx-default").getOperationType());
+    }
+
+    // -----------------------------------------------------------------------------------------------
+    // The reserved audit-store alias
+    // -----------------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("The reserved alias resolves to the audit store's target system")
+    void aliasResolvesToTheAuditStoreTargetSystem() {
+        TargetSystemManager manager = new TargetSystemManager();
+        StubTransactionalTargetSystem auditStoreSystem = new StubTransactionalTargetSystem("audit-db");
+        manager.add(auditStoreSystem);
+        manager.registerAuditStoreTargetSystem(auditStoreSystem);
+
+        assertEquals("audit-db",
+                manager.getTargetSystem(PipelineHelper.AUDIT_STORE_TARGET_SYSTEM).getId());
+    }
+
+    @Test
+    @DisplayName("The alias does not duplicate the target system")
+    void aliasDoesNotDuplicateTheTargetSystem() {
+        TargetSystemManager manager = new TargetSystemManager();
+        StubTransactionalTargetSystem auditStoreSystem = new StubTransactionalTargetSystem("audit-db");
+        manager.add(auditStoreSystem);
+        manager.registerAuditStoreTargetSystem(auditStoreSystem);
+
+        // The reason the alias is an indirection rather than a second map entry: initialize() and this
+        // method both iterate the map's values, so a duplicate would be initialized twice and counted
+        // twice - and the duplicate count reaches CloudAuditStoreImpl as duplicate audit markers.
+        assertEquals(1, manager.getTransactionalTargetSystems().size());
+    }
+
+    @Test
+    @DisplayName("The alias registers the target system when the user did not")
+    void aliasRegistersTheTargetSystemWhenTheUserDidNot() {
+        TargetSystemManager manager = new TargetSystemManager();
+        // An audit store built with from(targetSystem) does not require that system to be added to the
+        // builder, so this is the ordinary case, not an edge one.
+        manager.registerAuditStoreTargetSystem(new StubTransactionalTargetSystem("audit-db"));
+
+        assertEquals("audit-db",
+                manager.getTargetSystem(PipelineHelper.AUDIT_STORE_TARGET_SYSTEM).getId());
+        assertEquals(1, manager.getTransactionalTargetSystems().size());
+    }
+
+    @Test
+    @DisplayName("The alias does not override an instance the user already registered")
+    void aliasDoesNotOverrideAUserRegisteredInstance() {
+        TargetSystemManager manager = new TargetSystemManager();
+        StubTransactionalTargetSystem userRegistered = new StubTransactionalTargetSystem("shared-id");
+        StubTransactionalTargetSystem auditStoreBuiltFrom = new StubTransactionalTargetSystem("shared-id");
+        manager.add(userRegistered);
+        manager.registerAuditStoreTargetSystem(auditStoreBuiltFrom);
+
+        // Overwriting would silently change what the user's own changes execute against, so theirs wins
+        // and the mismatch is logged instead.
+        assertSame(userRegistered, manager.getTransactionalTargetSystems().get(0));
+        assertEquals(1, manager.getTransactionalTargetSystems().size());
+    }
+
+    @Test
+    @DisplayName("A null external system fails with a message naming the audit store")
+    void aliasRejectsANullExternalSystem() {
+        TargetSystemManager manager = new TargetSystemManager();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> manager.registerAuditStoreTargetSystem(null));
+
+        // A bare "Target system null not allowed" says nothing about where the null came from. Test
+        // doubles of an audit store return null here, so this message is the one someone will actually
+        // read when they hit it.
+        assertTrue(exception.getMessage().contains("audit store"), exception.getMessage());
+        assertTrue(exception.getMessage().contains("getExternalSystem"), exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("The alias rejects an external system that is not a target system")
+    void aliasRejectsANonTargetSystem() {
+        TargetSystemManager manager = new TargetSystemManager();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> manager.registerAuditStoreTargetSystem(() -> "not-a-target-system"));
+
+        assertTrue(exception.getMessage().contains("AbstractTargetSystem"), exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("The alias cannot be registered once the manager is initialized")
+    void aliasCannotBeRegisteredAfterInitialize() {
+        TargetSystemManager manager = new TargetSystemManager();
+        manager.initialize(new io.flamingock.internal.core.context.SimpleContext());
+
+        // Why the builder registers the alias before initialize(): registering later would also leave an
+        // otherwise-unregistered system uninitialized.
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.registerAuditStoreTargetSystem(new StubTransactionalTargetSystem("audit-db")));
+    }
+
+    @Test
+    @DisplayName("An unknown id still fails, alias or not")
+    void unknownIdStillThrows() {
+        TargetSystemManager manager = new TargetSystemManager();
+        manager.registerAuditStoreTargetSystem(new StubTransactionalTargetSystem("audit-db"));
+
+        assertThrows(RuntimeException.class, () -> manager.getTargetSystem("nope"));
     }
 
     private static class StubNonTransactionalTargetSystem extends AbstractTargetSystem<StubNonTransactionalTargetSystem> {

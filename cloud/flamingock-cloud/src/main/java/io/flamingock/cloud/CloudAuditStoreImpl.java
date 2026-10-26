@@ -49,10 +49,31 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 
 public class CloudAuditStoreImpl implements CloudAuditStore {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAuditStore");
     private CloudAuditPersistenceImpl persistence;
+
+    /** Lazily created stand-in; see {@link #getExternalSystem()}. */
+    private NonTransactionalTargetSystem externalSystem;
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This store has no external system of its own - it keeps everything in Flamingock Cloud. A
+     * non-transactional stand-in is returned rather than {@code null} so that the reserved
+     * {@code AUDIT_STORE_TARGET_SYSTEM} id still resolves, letting system changes run against this store.
+     * Cached because the identity of the instance matters once it is registered.
+     */
+    @Override
+    public synchronized ExternalSystem getExternalSystem() {
+        if (externalSystem == null) {
+            externalSystem = new NonTransactionalTargetSystem(getId());
+        }
+        return externalSystem;
+    }
 
     @Override
     public String getId() {

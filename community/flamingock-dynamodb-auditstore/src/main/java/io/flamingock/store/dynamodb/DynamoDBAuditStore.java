@@ -77,6 +77,17 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         return new DynamoDBAuditStore(targetSystem);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The system this store was handed by {@code from(...)} - not to be confused with
+     * {@link #getId()}, which names the store itself.
+     */
+    @Override
+    public DynamoDBExternalSystem getExternalSystem() {
+        return targetSystem;
+    }
+
     @Override
     public String getId() {
         return Constants.DEFAULT_DYNAMODB_AUDIT_STORE;

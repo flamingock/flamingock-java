@@ -2,6 +2,7 @@ dependencies {
 
     api(project(":cloud:flamingock-cloud-api"))
     api(project(":core:flamingock-core"))
+    api(project(":core:target-systems:flamingock-nontransactional-targetsystem"))
     implementation(project(":core:flamingock-processor"))
 
     implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")

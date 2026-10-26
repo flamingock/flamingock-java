@@ -24,6 +24,22 @@ public class PipelineHelper {
     public static final String SYSTEM_STAGE_ID = "flamingock-system-stage";
     public static final String LEGACY_STAGE_ID = "flamingock-legacy-stage";
 
+    /**
+     * Reserved target-system id resolving to whatever target system the audit store was built from.
+     * <p>
+     * System changes that operate on the audit store itself - compaction, journal backfill - have no target
+     * system of their own to name, yet every change is resolved against one
+     * ({@code ChangeProcessStrategyFactory} asks {@code TargetSystemManager}, which throws on an unknown
+     * id). Declaring this id lets them reach the audit store's own target system without the user having to
+     * name it, and without the framework inventing a default.
+     * <p>
+     * Lives here rather than in {@code io.flamingock.internal.util.Constants} because that class ships from
+     * the external {@code flamingock-general-util} artifact, so adding to it needs a cross-repo release.
+     * This module is reachable from both the annotation processor and the runtime, which is what a reserved
+     * id needs.
+     */
+    public static final String AUDIT_STORE_TARGET_SYSTEM = "flamingock-audit-store-target-system";
+
     private final PipelineDescriptor pipelineDescriptor;
 
     public PipelineHelper(PipelineDescriptor pipelineDescriptor) {
