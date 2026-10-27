@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -315,7 +315,7 @@ public final class FlamingockMetadataMerger {
             if (c.isLegacy()) {
                 PreviewStage legacy = new PreviewStage(
                         PipelineHelper.LEGACY_STAGE_ID, StageCategory.LEGACY,
-                        StageMode.STANDARD,
+                        StageType.STANDARD,
                         "Flamingock legacy stage", null, null, new ArrayList<>());
                 List<PreviewStage> mutable = (stages == null)
                         ? new ArrayList<>() : new ArrayList<>(stages);
@@ -397,7 +397,7 @@ public final class FlamingockMetadataMerger {
         }
         for (PreviewStage stage : pipeline.getStages()) {
             if (stage.getCategory() == StageCategory.DEFAULT
-                    && stage.getMode() == StageMode.RUN_ALWAYS
+                    && stage.getType() == StageType.RUN_ALWAYS
                     && stage.getChanges() != null) {
                 for (AbstractPreviewChange change : stage.getChanges()) {
                     change.setRunAlways(true);

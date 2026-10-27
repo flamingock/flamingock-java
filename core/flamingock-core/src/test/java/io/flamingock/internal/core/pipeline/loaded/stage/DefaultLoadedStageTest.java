@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -41,7 +41,7 @@ class DefaultLoadedStageTest {
         DefaultLoadedStage stage = new DefaultLoadedStage(
                 "standard",
                 StageCategory.DEFAULT,
-                StageMode.STANDARD,
+                StageType.STANDARD,
                 Collections.singletonList(change("change-1", true)));
 
         List<ValidationError> errors = stage.getValidationErrors(mock(PipelineValidationContext.class));
@@ -55,7 +55,7 @@ class DefaultLoadedStageTest {
         DefaultLoadedStage stage = new DefaultLoadedStage(
                 "repeatable",
                 StageCategory.DEFAULT,
-                StageMode.RUN_ALWAYS,
+                StageType.RUN_ALWAYS,
                 Collections.singletonList(change("change-1", false)));
 
         List<ValidationError> errors = stage.getValidationErrors(mock(PipelineValidationContext.class));

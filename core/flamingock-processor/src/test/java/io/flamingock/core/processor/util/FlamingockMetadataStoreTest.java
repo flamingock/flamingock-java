@@ -16,7 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageCategory;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -136,7 +136,7 @@ class FlamingockMetadataStoreTest {
         Path metadataOut = tempDir.resolve(METADATA_PATH);
         FlamingockMetadata read = JsonObjectMapper.DEFAULT_INSTANCE.readValue(metadataOut.toFile(), FlamingockMetadata.class);
         PreviewStage stage = read.getPipeline().getStages().iterator().next();
-        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertEquals(StageType.RUN_ALWAYS, stage.getType());
         assertTrue(stage.getChanges().iterator().next().isRunAlways());
     }
 
@@ -169,7 +169,7 @@ class FlamingockMetadataStoreTest {
         CodePreviewChange c = new CodePreviewChange("id-1", null, "author",
                 "com.example.changes.A", "com.example.changes.A",
                 null, null, null, false, null, false, null, null, false);
-        PreviewStage stage = new PreviewStage("default", StageCategory.DEFAULT, StageMode.STANDARD, null,
+        PreviewStage stage = new PreviewStage("default", StageCategory.DEFAULT, StageType.STANDARD, null,
                 "com.example.changes", null, java.util.Collections.singletonList(c));
         return new PreviewPipeline(Arrays.asList(stage));
     }
@@ -178,7 +178,7 @@ class FlamingockMetadataStoreTest {
         CodePreviewChange c = new CodePreviewChange("id-run-always", null, "author",
                 "com.example.changes.A", "com.example.changes.A",
                 null, null, null, true, null, false, null, null, false);
-        PreviewStage stage = new PreviewStage("repeatable", StageCategory.DEFAULT, StageMode.RUN_ALWAYS, null,
+        PreviewStage stage = new PreviewStage("repeatable", StageCategory.DEFAULT, StageType.RUN_ALWAYS, null,
                 "com.example.changes", null, java.util.Collections.singletonList(c));
         return new PreviewPipeline(Arrays.asList(stage));
     }

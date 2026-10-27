@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
@@ -41,7 +41,7 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
     public LegacyLoadedStage(String name,
                              StageCategory category,
                              Collection<AbstractLoadedChange> loadedChanges) {
-        super(name, category, StageMode.STANDARD, loadedChanges, validationContext);
+        super(name, category, StageType.STANDARD, loadedChanges, validationContext);
 
     }
 

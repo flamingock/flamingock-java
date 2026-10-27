@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
@@ -90,7 +90,7 @@ public class PipelinePreProcessorTest {
         PreviewStage uniqueStage = stages[0];
         assertEquals("migrations", uniqueStage.getName()); // Should be derived from location
         assertEquals(StageCategory.DEFAULT, uniqueStage.getCategory());
-        assertEquals(StageMode.STANDARD, uniqueStage.getMode());
+        assertEquals(StageType.STANDARD, uniqueStage.getType());
         assertEquals("com.example.migrations", uniqueStage.getSourcesPackage());
     }
 
@@ -173,32 +173,32 @@ public class PipelinePreProcessorTest {
         PreviewStage firstStage = stages[0];
         assertEquals("migrations", firstStage.getName());
         assertEquals(StageCategory.DEFAULT, firstStage.getCategory());
-        assertEquals(StageMode.STANDARD, firstStage.getMode());
+        assertEquals(StageType.STANDARD, firstStage.getType());
     }
 
     @Test
-    @DisplayName("Should apply RUN_ALWAYS mode from annotation stages")
+    @DisplayName("Should apply RUN_ALWAYS type from annotation stages")
     void shouldApplyRunAlwaysModeFromAnnotationStages() throws Exception {
         EnableFlamingock annotation = new MockFlamingockBuilder()
-            .withStages(createMockStage("", "com.example.migrations", StageMode.RUN_ALWAYS))
+            .withStages(createMockStage("", "com.example.migrations", StageType.RUN_ALWAYS))
             .build();
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
 
         PreviewPipeline pipeline = buildPipelineFromAnnotation(newBuilder(), annotation, changes);
 
         PreviewStage stage = pipeline.getStages().iterator().next();
-        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertEquals(StageType.RUN_ALWAYS, stage.getType());
         assertTrue(stage.getChanges().stream().allMatch(AbstractPreviewChange::isRunAlways));
     }
 
     @Test
-    @DisplayName("Should apply RUN_ALWAYS mode from YAML stages")
+    @DisplayName("Should apply RUN_ALWAYS type from YAML stages")
     void shouldApplyRunAlwaysModeFromYamlStages() throws Exception {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.migrations\n" +
-            "      mode: RUN_ALWAYS\n";
+            "      type: RUN_ALWAYS\n";
         Files.write(configFile, yamlContent.getBytes());
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
@@ -206,7 +206,7 @@ public class PipelinePreProcessorTest {
         PreviewPipeline pipeline = buildPipelineFromFile(newBuilder(), annotation, changes);
 
         PreviewStage stage = pipeline.getStages().iterator().next();
-        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertEquals(StageType.RUN_ALWAYS, stage.getType());
         assertTrue(stage.getChanges().stream().allMatch(AbstractPreviewChange::isRunAlways));
     }
 
@@ -237,13 +237,13 @@ public class PipelinePreProcessorTest {
     }
 
     @Test
-    @DisplayName("Should reject stage type in YAML configuration")
-    void shouldRejectStageCategoryInYamlConfiguration() throws Exception {
+    @DisplayName("Should reject the legacy mode field in YAML configuration")
+    void shouldRejectLegacyModeInYamlConfiguration() throws Exception {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.migrations\n" +
-            "      type: legacy\n";
+            "      mode: RUN_ALWAYS\n";
         Files.write(configFile, yamlContent.getBytes());
 
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
@@ -255,8 +255,8 @@ public class PipelinePreProcessorTest {
 
         Throwable cause = exception.getCause();
         String message = cause instanceof RuntimeException ? cause.getMessage() : exception.getMessage();
-        assertTrue(message.contains("Stage field 'type' is not supported in YAML pipeline configuration"),
-                "Should reject YAML stage type explicitly");
+        assertTrue(message.contains("Stage field 'mode' is no longer supported in YAML pipeline configuration"),
+                "Should reject the legacy YAML stage mode explicitly");
     }
 
     @Test
@@ -442,15 +442,15 @@ public class PipelinePreProcessorTest {
     }
 
     private Stage createMockStage(String name, String location) {
-        return createMockStage(name, location, StageMode.STANDARD);
+        return createMockStage(name, location, StageType.STANDARD);
     }
 
-    private Stage createMockStage(String name, String location, StageMode mode) {
+    private Stage createMockStage(String name, String location, StageType type) {
         return new Stage() {
             @Override public String name() { return name; }
             @Override public String description() { return ""; }
             @Override public String location() { return location; }
-            @Override public StageMode mode() { return mode; }
+            @Override public StageType type() { return type; }
             @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return Stage.class; }
         };
     }

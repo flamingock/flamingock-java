@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
@@ -42,14 +42,14 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
 
     public DefaultLoadedStage(String name,
                               StageCategory category,
-                              StageMode mode,
+                              StageType type,
                               Collection<AbstractLoadedChange> loadedChanges) {
-        super(name, category, mode, loadedChanges, validationContext);
+        super(name, category, type, loadedChanges, validationContext);
     }
 
     @Override
     protected AbstractLoadedStage copyWithChanges(Collection<AbstractLoadedChange> newChanges) {
-        return new DefaultLoadedStage(getName(), getCategory(), getMode(), newChanges);
+        return new DefaultLoadedStage(getName(), getCategory(), getType(), newChanges);
     }
 
     @Override
@@ -61,10 +61,10 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
                 if (!change.isStandard()) {
                     errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, change.getId(), "change"));
                 }
-                if (getMode() == StageMode.STANDARD && change.isRunAlways()) {
+                if (getType() == StageType.STANDARD && change.isRunAlways()) {
                     errors.add(new ValidationError(RUN_ALWAYS_NOT_ALLOWED_MSG, change.getId(), "change"));
                 }
-                if (getMode() == StageMode.RUN_ALWAYS && !change.isRunAlways()) {
+                if (getType() == StageType.RUN_ALWAYS && !change.isRunAlways()) {
                     errors.add(new ValidationError(RUN_ALWAYS_REQUIRED_MSG, change.getId(), "change"));
                 }
             } else {

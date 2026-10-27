@@ -16,7 +16,7 @@
 package io.flamingock.store.dynamodb;
 
 import io.flamingock.api.StageCategory;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
@@ -108,7 +108,7 @@ public class PipelineTestHelper {
         PreviewStage stage = new PreviewStage(
                 stageName,
                 StageCategory.DEFAULT,
-                StageMode.STANDARD,
+                StageType.STANDARD,
                 "some description",
                 null,
                 null,
