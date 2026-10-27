@@ -230,12 +230,14 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
     /**
      * Eligible loaded stages within the active block: every stage in the block whose runtime
-     * state is not yet a terminal failed shape ({@code Failed} / {@code BlockedForMI}). Within
-     * a non-terminal block these are the stages still candidates for execution.
+     * state is not yet terminal ({@code Completed}, {@code Failed}, or
+     * {@code BlockedForMI}). Within a non-terminal block these are the stages still candidates
+     * for execution.
      */
     private static List<AbstractLoadedStage> eligibleLoadedStagesFor(StageRunBlock activeBlock) {
         return activeBlock.getStageRuns().stream()
-                .filter(stageRun -> !stageRun.getState().isFailed())
+                .filter(stageRun -> !stageRun.getState().isFailed()
+                        && !stageRun.getState().isCompleted())
                 .map(StageRun::getLoadedStage)
                 .collect(Collectors.toList());
     }
