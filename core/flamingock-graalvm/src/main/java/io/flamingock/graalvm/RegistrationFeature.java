@@ -127,10 +127,22 @@ public class RegistrationFeature implements Feature {
         logger.startRegistrationProcess("user classes");
         providers.stream()
                 .flatMap(p -> p.reflectionClasses().stream())
-                .forEach(RegistrationFeature::registerClassForReflection);
+                .forEach(RegistrationFeature::registerUserClassForReflection);
         logger.completedRegistrationProcess("user classes");
 
         logger.completedRegistrationProcess("provider info");
+    }
+
+    private static void registerUserClassForReflection(String className) {
+        try {
+            // Runtime preview lookup also visits ancestors of generated user classes.
+            for (Class<?> clazz = getClass(className); clazz != null && clazz != Object.class;
+                 clazz = clazz.getSuperclass()) {
+                registerClassForReflection(clazz);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void registerClassForReflection(String className) {

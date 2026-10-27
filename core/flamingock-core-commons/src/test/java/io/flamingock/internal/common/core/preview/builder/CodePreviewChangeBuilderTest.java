@@ -16,26 +16,63 @@
 package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.api.annotations.Change;
+import io.flamingock.common.test.processor.AnnotatedElementProcessor;
+import io.flamingock.common.test.processor.JavacHelper;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
-import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.flamingock.common.test.processor.JavacHelper.getSourcePath;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class CodePreviewChangeBuilderTest {
+
+    private final CodePreviewChangeBuilder codePreviewChangeBuilder = CodePreviewChangeBuilder.instance();
+    private final JavacHelper javacHelper = new JavacHelper();
+
+    @Test
+    @DisplayName("inherits apply and rollback methods from its template superclass")
+    void inheritsApplyAndRollbackMethodsFromTemplateSuperclass() throws IOException, URISyntaxException {
+        // Arrange
+        Path sourcePath = getSourcePath(getClass(), "/changes/_0001__ChangeUnderTest.java");
+        String expectedRollbackPreviewMethodName = "rollback";
+        String expectedApplyPreviewMethodName = "apply";
+        AtomicInteger changeCount = new AtomicInteger(0);
+
+        // Act
+        javacHelper.compile(
+                sourcePath,
+                new AnnotatedElementProcessor(Change.class, element -> {
+                    changeCount.incrementAndGet();
+                    codePreviewChangeBuilder.setTypeElement(element);
+                })
+        );
+
+        // Assert
+        assertEquals(1, changeCount.get());
+
+        CodePreviewChange previewChange = codePreviewChangeBuilder.build();
+        assertNotNull(previewChange.getApplyPreviewMethod());
+        assertEquals(expectedApplyPreviewMethodName, previewChange.getApplyPreviewMethod().getName());
+        assertNotNull(previewChange.getRollbackPreviewMethod());
+        assertEquals(expectedRollbackPreviewMethodName, previewChange.getRollbackPreviewMethod().getName());
+    }
 
     @Test
     void shouldBuildNullSourceFileForCodeChanges() {
