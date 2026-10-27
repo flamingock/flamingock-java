@@ -18,7 +18,12 @@ package io.flamingock.internal.core.plan.community;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
+import io.flamingock.internal.common.core.response.data.StageResult;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -338,6 +343,50 @@ class CommunityExecutionPlannerTest {
         // The completed system stage was skipped — only the user-block stage was action-built.
         verify(systemStage, never()).applyActions(any());
         verify(userStage, atLeastOnce()).applyActions(any());
+    }
+
+    @Test
+    @DisplayName("Should not re-plan a completed runAlways stage before a later stage in the same block")
+    void shouldNotReplanCompletedRunAlwaysStageBeforeLaterStageInSameBlock() {
+        AbstractLoadedChange runAlwaysChange = mockLoadedChange("run-always-c1");
+        when(runAlwaysChange.isRunAlways()).thenReturn(true);
+        AbstractLoadedChange standardChange = mockLoadedChange("standard-c1");
+        AbstractLoadedStage runAlwaysStage = mockTypedStage("run-always", StageCategory.DEFAULT, runAlwaysChange);
+        AbstractLoadedStage standardStage = mockTypedStage("standard", StageCategory.DEFAULT, standardChange);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(runAlwaysStage, standardStage));
+
+        Map<String, AuditEntry> snapshot = new HashMap<>();
+        snapshot.put("run-always-c1", buildAuditEntry("run-always-c1", AuditEntry.Status.APPLIED, null));
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan firstPlan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(firstPlan.isAborted());
+        assertTrue(firstPlan.isExecutionRequired());
+        assertEquals("run-always", firstPlan.getExecutableStages().get(0).getName());
+        firstPlan.close();
+        verify(runAlwaysStage, times(2)).applyActions(any());
+
+        pipelineRun.markStageCompleted("run-always", StageResult.builder()
+                .stageId("run-always").stageName("run-always")
+                .state(StageState.COMPLETED)
+                .addChange(ChangeResult.builder()
+                        .changeId("run-always-c1")
+                        .status(ChangeStatus.APPLIED)
+                        .build())
+                .build());
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        assertEquals("standard", plan.getExecutableStages().get(0).getName());
+        verify(runAlwaysStage, times(2)).applyActions(any());
+        verify(standardStage, atLeastOnce()).applyActions(any());
+        plan.close();
     }
 
     @Test
