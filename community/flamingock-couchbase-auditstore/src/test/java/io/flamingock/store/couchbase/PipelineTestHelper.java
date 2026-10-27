@@ -15,7 +15,7 @@
  */
 package io.flamingock.store.couchbase;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.StageMode;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -106,7 +106,7 @@ public class PipelineTestHelper {
 
         PreviewStage stage = new PreviewStage(
                 stageName,
-                StageType.DEFAULT,
+                StageCategory.DEFAULT,
                 StageMode.STANDARD,
                 "some description",
                 null,

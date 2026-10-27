@@ -16,7 +16,7 @@
 package io.flamingock.core.processor;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.PipelineStructureBuilder;
@@ -89,7 +89,7 @@ public class PipelinePreProcessorTest {
 
         PreviewStage uniqueStage = stages[0];
         assertEquals("migrations", uniqueStage.getName()); // Should be derived from location
-        assertEquals(StageType.DEFAULT, uniqueStage.getType());
+        assertEquals(StageCategory.DEFAULT, uniqueStage.getCategory());
         assertEquals(StageMode.STANDARD, uniqueStage.getMode());
         assertEquals("com.example.migrations", uniqueStage.getSourcesPackage());
     }
@@ -172,7 +172,7 @@ public class PipelinePreProcessorTest {
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage firstStage = stages[0];
         assertEquals("migrations", firstStage.getName());
-        assertEquals(StageType.DEFAULT, firstStage.getType());
+        assertEquals(StageCategory.DEFAULT, firstStage.getCategory());
         assertEquals(StageMode.STANDARD, firstStage.getMode());
     }
 
@@ -238,7 +238,7 @@ public class PipelinePreProcessorTest {
 
     @Test
     @DisplayName("Should reject stage type in YAML configuration")
-    void shouldRejectStageTypeInYamlConfiguration() throws Exception {
+    void shouldRejectStageCategoryInYamlConfiguration() throws Exception {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
@@ -277,7 +277,7 @@ public class PipelinePreProcessorTest {
 
         assertNotNull(pipeline, "Pipeline should be created");
         assertEquals(2, pipeline.getStages().size(), "Should have 2 YAML stages");
-        assertTrue(pipeline.getStages().stream().allMatch(stage -> stage.getType() == StageType.DEFAULT),
+        assertTrue(pipeline.getStages().stream().allMatch(stage -> stage.getCategory() == StageCategory.DEFAULT),
                 "All user-declared YAML stages should be DEFAULT");
     }
 

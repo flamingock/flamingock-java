@@ -409,7 +409,7 @@ public final class MockRunnerServerOld {
         // wire shape. Existing deprecated-flow tests preserve behaviour; multi-block tests use
         // MockExecutionPlanBuilder / MockRunnerServer directly.
         List<io.flamingock.cloud.api.request.StageBlockRequest> blocks = Collections.singletonList(
-                new io.flamingock.cloud.api.request.StageBlockRequest(io.flamingock.api.StageType.DEFAULT, stages));
+                new io.flamingock.cloud.api.request.StageBlockRequest(io.flamingock.api.StageCategory.DEFAULT, stages));
         return new ExecutionPlanRequest(executionPlanRequestResponse.getAcquiredForMillis(), blocks);
     }
 

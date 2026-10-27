@@ -402,7 +402,7 @@ class MultiModuleProcessingIT {
 
     /**
      * Locate the module's generated metadata.json, parse it, append a {@link PreviewStage}
-     * of type {@link io.flamingock.api.StageType#LEGACY} carrying one stub change per supplied
+     * of type {@link io.flamingock.api.StageCategory#LEGACY} carrying one stub change per supplied
      * id, and persist back. Mirrors {@link #injectIdenticalSystemChange} but for the legacy
      * branch of the aggregator.
      */
@@ -434,7 +434,7 @@ class MultiModuleProcessingIT {
 
         PreviewStage legacyStage = new PreviewStage(
                 stageName,
-                io.flamingock.api.StageType.LEGACY,
+                io.flamingock.api.StageCategory.LEGACY,
                 StageMode.STANDARD,
                 "Synthetic legacy stage for tests",
                 null, null,
@@ -457,7 +457,7 @@ class MultiModuleProcessingIT {
     private static List<PreviewStage> legacyStagesOf(PreviewPipeline pipeline) {
         if (pipeline == null || pipeline.getStages() == null) return Collections.emptyList();
         return pipeline.getStages().stream()
-                .filter(s -> s.getType() == io.flamingock.api.StageType.LEGACY)
+                .filter(s -> s.getCategory() == io.flamingock.api.StageCategory.LEGACY)
                 .collect(Collectors.toList());
     }
 

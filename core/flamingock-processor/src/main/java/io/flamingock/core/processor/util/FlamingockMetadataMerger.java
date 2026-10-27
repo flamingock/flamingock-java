@@ -16,7 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
@@ -308,13 +308,13 @@ public final class FlamingockMetadataMerger {
         Collection<PreviewStage> stages = pipeline.getStages();
         if (stages != null) {
             for (PreviewStage s : stages) {
-                if (s.getType() == StageType.LEGACY) return;
+                if (s.getCategory() == StageCategory.LEGACY) return;
             }
         }
         for (CodePreviewChange c : candidates) {
             if (c.isLegacy()) {
                 PreviewStage legacy = new PreviewStage(
-                        PipelineHelper.LEGACY_STAGE_ID, StageType.LEGACY,
+                        PipelineHelper.LEGACY_STAGE_ID, StageCategory.LEGACY,
                         StageMode.STANDARD,
                         "Flamingock legacy stage", null, null, new ArrayList<>());
                 List<PreviewStage> mutable = (stages == null)
@@ -356,7 +356,7 @@ public final class FlamingockMetadataMerger {
     private static PreviewStage findLegacyStage(PreviewPipeline pipeline) {
         if (pipeline.getStages() == null) return null;
         for (PreviewStage s : pipeline.getStages()) {
-            if (s.getType() == StageType.LEGACY) return s;
+            if (s.getCategory() == StageCategory.LEGACY) return s;
         }
         return null;
     }
@@ -370,7 +370,7 @@ public final class FlamingockMetadataMerger {
         if (changePkg == null || pipeline.getStages() == null) return null;
         List<PreviewStage> candidates = new ArrayList<>();
         for (PreviewStage s : pipeline.getStages()) {
-            if (s.getType() == StageType.DEFAULT
+            if (s.getCategory() == StageCategory.DEFAULT
                     && covers(s.getSourcesPackage(), changePkg)) {
                 candidates.add(s);
             }
@@ -396,7 +396,7 @@ public final class FlamingockMetadataMerger {
             return;
         }
         for (PreviewStage stage : pipeline.getStages()) {
-            if (stage.getType() == StageType.DEFAULT
+            if (stage.getCategory() == StageCategory.DEFAULT
                     && stage.getMode() == StageMode.RUN_ALWAYS
                     && stage.getChanges() != null) {
                 for (AbstractPreviewChange change : stage.getChanges()) {

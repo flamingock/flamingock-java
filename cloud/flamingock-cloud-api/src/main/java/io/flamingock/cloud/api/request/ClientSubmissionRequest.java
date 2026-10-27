@@ -23,7 +23,7 @@ import java.util.List;
  * dependency order — {@code blocks.get(0)} must complete before {@code blocks.get(1)} may run.
  *
  * <p>Block membership is owned by the client's {@code PipelineRun.getStageBlocks()}; the server
- * consumes the list as-is, with no {@code StageType}-based regrouping.
+ * consumes the list as-is, with no {@code StageCategory}-based regrouping.
  */
 public class ClientSubmissionRequest {
 

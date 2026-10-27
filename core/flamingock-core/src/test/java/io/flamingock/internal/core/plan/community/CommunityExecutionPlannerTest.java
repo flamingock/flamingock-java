@@ -225,8 +225,8 @@ class CommunityExecutionPlannerTest {
     void shouldReturnContinueWhenAllBlocksAreSuccessful() {
         AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
         AbstractLoadedChange userChange = mockLoadedChange("user-c1");
-        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
-        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageCategory.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageCategory.DEFAULT, userChange);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
         // Both stages completed in this run.
@@ -254,8 +254,8 @@ class CommunityExecutionPlannerTest {
     void shouldReturnAbortWhenAnEarlierBlockHasFailures() {
         AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
         AbstractLoadedChange userChange = mockLoadedChange("user-c1");
-        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
-        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageCategory.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageCategory.DEFAULT, userChange);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
         // System block fails — earlier block's failure must block downstream work.
@@ -274,8 +274,8 @@ class CommunityExecutionPlannerTest {
     void shouldMarkUpToDateBlockAndPlanFromNextBlock() {
         AbstractLoadedChange legacyChange = mockLoadedChange("legacy-c1");
         AbstractLoadedChange userChange = mockLoadedChange("user-c1");
-        AbstractLoadedStage legacyStage = mockTypedStage("flamingock-legacy-stage", io.flamingock.api.StageType.LEGACY, legacyChange);
-        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+        AbstractLoadedStage legacyStage = mockTypedStage("flamingock-legacy-stage", io.flamingock.api.StageCategory.LEGACY, legacyChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageCategory.DEFAULT, userChange);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(legacyStage, userStage));
         // Legacy stages are NOT_STARTED in the runtime view but the audit says their changes are
@@ -318,8 +318,8 @@ class CommunityExecutionPlannerTest {
     void shouldPlanFromActiveBlockSkippingEarlierSuccessfulBlock() {
         AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
         AbstractLoadedChange userChange = mockLoadedChange("user-c1");
-        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
-        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageCategory.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageCategory.DEFAULT, userChange);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
         // System block done; DEFAULT block (user stages) still pending.
@@ -350,7 +350,7 @@ class CommunityExecutionPlannerTest {
         // the operation's c1=APPLIED record or the stage's state.
         AbstractLoadedChange c1 = mockLoadedChange("c1");
         AbstractLoadedChange c2 = mockLoadedChange("c2");
-        AbstractLoadedStage stage = mockTypedStage("only-stage", io.flamingock.api.StageType.DEFAULT, c1, c2);
+        AbstractLoadedStage stage = mockTypedStage("only-stage", io.flamingock.api.StageCategory.DEFAULT, c1, c2);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
         // Simulate operation's view: stage finished with only c1 recorded as APPLIED.
@@ -412,12 +412,12 @@ class CommunityExecutionPlannerTest {
     }
 
     private static AbstractLoadedStage mockTypedStage(String name,
-                                                      io.flamingock.api.StageType type,
+                                                      io.flamingock.api.StageCategory category,
                                                       AbstractLoadedChange... changes) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
-        if (type != null) {
-            when(stage.getType()).thenReturn(type);
+        if (category != null) {
+            when(stage.getCategory()).thenReturn(category);
         }
         List<AbstractLoadedChange> changeList = java.util.Arrays.asList(changes);
         when(stage.getChanges()).thenReturn(changeList);

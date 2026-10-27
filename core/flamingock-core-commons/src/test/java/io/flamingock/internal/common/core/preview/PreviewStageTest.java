@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class PreviewStageTest {
     void runAlwaysDefaultStageMarksAllChanges() {
         AbstractPreviewChange change = previewChange("change-1", false);
 
-        PreviewStage stage = PreviewStage.defaultBuilder(StageType.DEFAULT)
+        PreviewStage stage = PreviewStage.defaultBuilder(StageCategory.DEFAULT)
                 .setName("repeatable")
                 .setMode(StageMode.RUN_ALWAYS)
                 .setChanges(Collections.singletonList(change))
@@ -49,7 +49,7 @@ class PreviewStageTest {
     void standardDefaultStageKeepsChangesNonRunAlways() {
         AbstractPreviewChange change = previewChange("change-1", false);
 
-        PreviewStage stage = PreviewStage.defaultBuilder(StageType.DEFAULT)
+        PreviewStage stage = PreviewStage.defaultBuilder(StageCategory.DEFAULT)
                 .setName("standard")
                 .setChanges(Collections.singletonList(change))
                 .build();
@@ -63,7 +63,7 @@ class PreviewStageTest {
     void legacyStageIgnoresStageModeRunAlways() {
         AbstractPreviewChange change = previewChange("change-1", false);
 
-        PreviewStage stage = PreviewStage.defaultBuilder(StageType.LEGACY)
+        PreviewStage stage = PreviewStage.defaultBuilder(StageCategory.LEGACY)
                 .setName("legacy")
                 .setMode(StageMode.RUN_ALWAYS)
                 .setChanges(Collections.singletonList(change))

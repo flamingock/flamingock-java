@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.StageMode;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -348,7 +348,7 @@ class FlamingockMetadataMergerTest {
                 Collections.emptyList(), null, false, false,
                 null, null, null, null, null, null);
         PreviewPipeline freshStructure = pipeline(new PreviewStage(
-                "templates", StageType.DEFAULT, StageMode.RUN_ALWAYS, null,
+                "templates", StageCategory.DEFAULT, StageMode.RUN_ALWAYS, null,
                 null, "resources/migrations", Collections.singletonList(template)));
 
         FlamingockMetadataMerger.applyRound(target, freshStructure,
@@ -472,11 +472,11 @@ class FlamingockMetadataMergerTest {
     }
 
     private static PreviewStage stage(String name, String sourcesPackage, AbstractPreviewChange... changes) {
-        return new PreviewStage(name, StageType.DEFAULT, StageMode.STANDARD, null, sourcesPackage, null, Arrays.asList(changes));
+        return new PreviewStage(name, StageCategory.DEFAULT, StageMode.STANDARD, null, sourcesPackage, null, Arrays.asList(changes));
     }
 
     private static PreviewStage stage(String name, String sourcesPackage, StageMode mode) {
-        return new PreviewStage(name, StageType.DEFAULT, mode, null, sourcesPackage, null, new ArrayList<>());
+        return new PreviewStage(name, StageCategory.DEFAULT, mode, null, sourcesPackage, null, new ArrayList<>());
     }
 
     private static PreviewPipeline pipeline(PreviewStage... stages) {
