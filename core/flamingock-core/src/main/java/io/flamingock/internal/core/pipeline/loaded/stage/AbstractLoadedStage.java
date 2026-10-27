@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.error.validation.Validatable;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -55,19 +55,19 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final String name;
 
-    private final StageType type;
+    private final StageCategory category;
 
     private final StageMode mode;
 
     private final Collection<AbstractLoadedChange> changes;
 
     public AbstractLoadedStage(String name,
-                               StageType type,
+                               StageCategory category,
                                StageMode mode,
                                Collection<AbstractLoadedChange> changes,
                                StageValidationContext validationContext) {
         this.name = name;
-        this.type = type;
+        this.category = category;
         this.mode = mode != null ? mode : StageMode.STANDARD;
         this.changes = changes;
         this.validationContext = validationContext;
@@ -100,8 +100,8 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return name;
     }
 
-    public StageType getType() {
-        return type;
+    public StageCategory getCategory() {
+        return category;
     }
 
     public StageMode getMode() {
@@ -113,14 +113,14 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
     }
 
     /**
-     * Returns a new instance of the same concrete stage type carrying the provided changes
-     * instead of this stage's current changes. Name, type, and the per-subclass validation
+     * Returns a new instance of the same concrete stage category carrying the provided changes
+     * instead of this stage's current changes. Name, category, and the per-subclass validation
      * context are preserved.
      *
      * <p>Used at runtime construction time to materialize a stage with a filtered subset
      * of changes without mutating the original {@code AbstractLoadedStage} (whose
      * {@code changes} collection is final and immutable post-construction). The copy is
-     * produced by the concrete subclass so each stage type can preserve exactly the state it owns.
+     * produced by the concrete subclass so each stage category can preserve exactly the state it owns.
      */
     public AbstractLoadedStage withChanges(Collection<AbstractLoadedChange> newChanges) {
         return copyWithChanges(newChanges);
@@ -220,14 +220,14 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                     .map(LoadedChangeBuilder::build)
                     .sorted()
                     .collect(Collectors.toList());
-            switch(previewStage.getType()) {
+            switch(previewStage.getCategory()) {
                 case LEGACY:
-                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
+                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getCategory(), loadedChanges);
                 case SYSTEM:
-                    return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
+                    return new SystemLoadedStage(previewStage.getName(), previewStage.getCategory(), loadedChanges);
                 case DEFAULT:
                 default:
-                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), previewStage.getMode(), loadedChanges);
+                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getCategory(), previewStage.getMode(), loadedChanges);
             }
 
         }

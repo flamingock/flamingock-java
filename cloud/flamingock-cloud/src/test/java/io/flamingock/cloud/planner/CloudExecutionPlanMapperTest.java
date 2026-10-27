@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud.planner;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.StageMode;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
@@ -340,13 +340,13 @@ class CloudExecutionPlanMapperTest {
     }
 
     @Test
-    @DisplayName("toRequest() emits one block per StageRunBlock in dependency order with the right type and stage contents")
+    @DisplayName("toRequest() emits one block per StageRunBlock in dependency order with the right category and stage contents")
     void toRequestEmitsOneBlockPerStageRunBlock() {
         // Three stages of three different types — PipelineRun.of(...) groups them into
         // SYSTEM -> LEGACY -> DEFAULT blocks (one stage each).
-        AbstractLoadedStage systemStage = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-stage", StageType.SYSTEM, Collections.singletonList(change1));
-        AbstractLoadedStage legacyStage = new io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage("legacy-stage", StageType.LEGACY, Collections.singletonList(change1));
-        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
+        AbstractLoadedStage systemStage = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-stage", StageCategory.SYSTEM, Collections.singletonList(change1));
+        AbstractLoadedStage legacyStage = new io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage("legacy-stage", StageCategory.LEGACY, Collections.singletonList(change1));
+        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageCategory.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
 
@@ -357,12 +357,12 @@ class CloudExecutionPlanMapperTest {
         List<io.flamingock.cloud.api.request.StageBlockRequest> blocks =
                 request.getClientSubmission().getBlocks();
         assertEquals(3, blocks.size());
-        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals(StageCategory.SYSTEM, blocks.get(0).getCategory());
         assertEquals(1, blocks.get(0).getStages().size());
         assertEquals("system-stage", blocks.get(0).getStages().get(0).getName());
-        assertEquals(StageType.LEGACY, blocks.get(1).getType());
+        assertEquals(StageCategory.LEGACY, blocks.get(1).getCategory());
         assertEquals("legacy-stage", blocks.get(1).getStages().get(0).getName());
-        assertEquals(StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals(StageCategory.DEFAULT, blocks.get(2).getCategory());
         assertEquals("user-stage", blocks.get(2).getStages().get(0).getName());
     }
 
@@ -371,9 +371,9 @@ class CloudExecutionPlanMapperTest {
     void toRequestPreservesGlobalStageOrderAcrossBlocks() {
         // Two stages in the SYSTEM block, then one in DEFAULT — verify the per-stage `order`
         // field increments globally across the flattened block sequence.
-        AbstractLoadedStage system1 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-1", StageType.SYSTEM, Collections.singletonList(change1));
-        AbstractLoadedStage system2 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-2", StageType.SYSTEM, Collections.singletonList(change2));
-        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageType.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
+        AbstractLoadedStage system1 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-1", StageCategory.SYSTEM, Collections.singletonList(change1));
+        AbstractLoadedStage system2 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-2", StageCategory.SYSTEM, Collections.singletonList(change2));
+        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageCategory.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(system1, system2, user1));
 
@@ -383,10 +383,10 @@ class CloudExecutionPlanMapperTest {
         List<io.flamingock.cloud.api.request.StageBlockRequest> blocks =
                 request.getClientSubmission().getBlocks();
         assertEquals(2, blocks.size());
-        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals(StageCategory.SYSTEM, blocks.get(0).getCategory());
         assertEquals(0, blocks.get(0).getStages().get(0).getOrder());
         assertEquals(1, blocks.get(0).getStages().get(1).getOrder());
-        assertEquals(StageType.DEFAULT, blocks.get(1).getType());
+        assertEquals(StageCategory.DEFAULT, blocks.get(1).getCategory());
         assertEquals(2, blocks.get(1).getStages().get(0).getOrder());
     }
 
@@ -403,7 +403,7 @@ class CloudExecutionPlanMapperTest {
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {
-        return new DefaultLoadedStage(name, StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+        return new DefaultLoadedStage(name, StageCategory.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
     }
 
     private static AbstractLoadedChange mockChange(String id, boolean runAlways) {
@@ -418,7 +418,7 @@ class CloudExecutionPlanMapperTest {
     private static class CapturingStage extends DefaultLoadedStage {
 
         CapturingStage(String name, AbstractLoadedChange... changes) {
-            super(name, StageType.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+            super(name, StageCategory.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
         }
 
         @Override

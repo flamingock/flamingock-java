@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.StageMode;
 import io.flamingock.internal.core.change.filter.ChangeFilter;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -59,7 +59,7 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD keep all changes WHEN no filters are present")
     void noFiltersKeepsAllChangesInAllStages() {
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1", "u2");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1", "u2");
         LoadedPipeline pipeline = mockPipeline(Optional.empty(), Arrays.asList(userStage), Collections.emptyList());
 
         PipelineRun run = PipelineRun.of(pipeline);
@@ -74,7 +74,7 @@ class PipelineRunOfLoadedPipelineTest {
         // The validate() call must happen before filtering. We assert it is invoked exactly
         // once regardless of whether filters are present. This pins down the contract that
         // validation operates on the unfiltered pipeline (consistent with builder-time checks).
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1");
         LoadedPipeline pipeline = mock(LoadedPipeline.class);
         when(pipeline.getSystemStage()).thenReturn(Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(userStage));
@@ -97,7 +97,7 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD exclude a change WHEN a filter rejects it")
     void singleFilterExcludesTheRejectedChange() {
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1", "u2", "u3");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1", "u2", "u3");
         ChangeFilter rejectU2 = descriptor -> !"u2".equals(descriptor.getId());
         LoadedPipeline pipeline = mockPipeline(Optional.empty(), Arrays.asList(userStage), Arrays.asList(rejectU2));
 
@@ -113,7 +113,7 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD keep a change WHEN all filters accept it (AND semantics across filters)")
     void multipleFiltersAreAnded() {
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1", "u2");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1", "u2");
         // Filter A: drop u1. Filter B: drop u2. Both must drop together, but a change is
         // kept only if BOTH filters keep it. So neither u1 nor u2 survives.
         ChangeFilter dropU1 = descriptor -> !"u1".equals(descriptor.getId());
@@ -130,7 +130,7 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD keep a change WHEN one filter keeps it and another also keeps it (intersection)")
     void multipleFiltersAllowOverlap() {
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "shared", "onlyA", "onlyB");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "shared", "onlyA", "onlyB");
         // Filter A keeps "shared" and "onlyA"; Filter B keeps "shared" and "onlyB".
         // Intersection = "shared".
         ChangeFilter filterA = descriptor -> {
@@ -159,8 +159,8 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD drop a stage WHEN filtering removes all its changes")
     void emptyStageAfterFilteringIsDropped() {
-        DefaultLoadedStage alpha = newStage("alpha", StageType.DEFAULT, "a1", "a2");
-        DefaultLoadedStage beta = newStage("beta", StageType.DEFAULT, "b1", "b2");
+        DefaultLoadedStage alpha = newStage("alpha", StageCategory.DEFAULT, "a1", "a2");
+        DefaultLoadedStage beta = newStage("beta", StageCategory.DEFAULT, "b1", "b2");
         // Filter rejects every change in 'alpha' but lets 'beta' through.
         ChangeFilter dropAllAlpha = descriptor -> !descriptor.getId().startsWith("a");
         LoadedPipeline pipeline = mockPipeline(Optional.empty(), Arrays.asList(alpha, beta), Arrays.asList(dropAllAlpha));
@@ -175,9 +175,9 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD drop a stage WHEN filtering removes every change in it, even mid-block")
     void emptyStageInTheMiddleIsDropped() {
-        DefaultLoadedStage first = newStage("first", StageType.DEFAULT, "f1");
-        DefaultLoadedStage doomed = newStage("doomed", StageType.DEFAULT, "d1", "d2");
-        DefaultLoadedStage last = newStage("last", StageType.DEFAULT, "l1");
+        DefaultLoadedStage first = newStage("first", StageCategory.DEFAULT, "f1");
+        DefaultLoadedStage doomed = newStage("doomed", StageCategory.DEFAULT, "d1", "d2");
+        DefaultLoadedStage last = newStage("last", StageCategory.DEFAULT, "l1");
         ChangeFilter dropDoomed = descriptor -> !descriptor.getId().startsWith("d");
         LoadedPipeline pipeline = mockPipeline(
                 Optional.empty(),
@@ -196,8 +196,8 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD yield an empty run WHEN every stage is filtered out")
     void allStagesFilteredOutYieldsEmptyRun() {
-        DefaultLoadedStage alpha = newStage("alpha", StageType.DEFAULT, "a1");
-        DefaultLoadedStage beta = newStage("beta", StageType.DEFAULT, "b1");
+        DefaultLoadedStage alpha = newStage("alpha", StageCategory.DEFAULT, "a1");
+        DefaultLoadedStage beta = newStage("beta", StageCategory.DEFAULT, "b1");
         ChangeFilter rejectAll = descriptor -> false;
         LoadedPipeline pipeline = mockPipeline(Optional.empty(), Arrays.asList(alpha, beta), Arrays.asList(rejectAll));
 
@@ -214,9 +214,9 @@ class PipelineRunOfLoadedPipelineTest {
     @Test
     @DisplayName("SHOULD preserve SYSTEM -> LEGACY -> DEFAULT block ordering after filtering")
     void blockOrderingPreservedAfterFiltering() {
-        DefaultLoadedStage systemStage = newStage("system", StageType.SYSTEM, "s1", "s2");
-        DefaultLoadedStage legacyStage = newStage("legacy", StageType.LEGACY, "l1");
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1", "u2", "u3");
+        DefaultLoadedStage systemStage = newStage("system", StageCategory.SYSTEM, "s1", "s2");
+        DefaultLoadedStage legacyStage = newStage("legacy", StageCategory.LEGACY, "l1");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1", "u2", "u3");
         // Drop s2 (SYSTEM), keep l1 (LEGACY), drop u2 (DEFAULT).
         ChangeFilter customFilter = descriptor -> {
             String id = descriptor.getId();
@@ -236,12 +236,12 @@ class PipelineRunOfLoadedPipelineTest {
                 .collect(Collectors.toList());
         assertEquals(Arrays.asList("system", "legacy", "user"), flatStageNames);
 
-        // Block view: one block per type, in dependency order.
+        // Block view: one block per category, in dependency order.
         List<StageRunBlock> blocks = run.getStageBlocks();
         assertEquals(3, blocks.size());
-        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
-        assertEquals(StageType.LEGACY, blocks.get(1).getType());
-        assertEquals(StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals(StageCategory.SYSTEM, blocks.get(0).getCategory());
+        assertEquals(StageCategory.LEGACY, blocks.get(1).getCategory());
+        assertEquals(StageCategory.DEFAULT, blocks.get(2).getCategory());
 
         // Surviving change IDs.
         List<String> survivingIds = collectChangeIds(run);
@@ -259,9 +259,9 @@ class PipelineRunOfLoadedPipelineTest {
     void emptySystemStageIsDroppedAndLegacyTakesFoundationRole() {
         // Filtering removes every change in the system stage. The SYSTEM block should be
         // dropped (sparse), and the LEGACY block becomes the foundation in the flat view.
-        DefaultLoadedStage systemStage = newStage("system", StageType.SYSTEM, "s1", "s2");
-        DefaultLoadedStage legacyStage = newStage("legacy", StageType.LEGACY, "l1");
-        DefaultLoadedStage userStage = newStage("user", StageType.DEFAULT, "u1");
+        DefaultLoadedStage systemStage = newStage("system", StageCategory.SYSTEM, "s1", "s2");
+        DefaultLoadedStage legacyStage = newStage("legacy", StageCategory.LEGACY, "l1");
+        DefaultLoadedStage userStage = newStage("user", StageCategory.DEFAULT, "u1");
         ChangeFilter dropAllSystem = descriptor -> !descriptor.getId().startsWith("s");
         LoadedPipeline pipeline = mockPipeline(
                 Optional.of(systemStage),
@@ -277,8 +277,8 @@ class PipelineRunOfLoadedPipelineTest {
 
         List<StageRunBlock> blocks = run.getStageBlocks();
         assertEquals(2, blocks.size(), "empty SYSTEM block must be omitted");
-        assertEquals(StageType.LEGACY, blocks.get(0).getType());
-        assertEquals(StageType.DEFAULT, blocks.get(1).getType());
+        assertEquals(StageCategory.LEGACY, blocks.get(0).getCategory());
+        assertEquals(StageCategory.DEFAULT, blocks.get(1).getCategory());
     }
 
     // ---------------------------------------------------------------------------------------
@@ -296,12 +296,12 @@ class PipelineRunOfLoadedPipelineTest {
         return pipeline;
     }
 
-    private static DefaultLoadedStage newStage(String name, StageType type, String... changeIds) {
+    private static DefaultLoadedStage newStage(String name, StageCategory category, String... changeIds) {
         List<AbstractLoadedChange> changes = new ArrayList<>(changeIds.length);
         for (String id : changeIds) {
             changes.add(mockChange(id));
         }
-        return new DefaultLoadedStage(name, type, StageMode.STANDARD, changes);
+        return new DefaultLoadedStage(name, category, StageMode.STANDARD, changes);
     }
 
     private static AbstractLoadedChange mockChange(String id) {

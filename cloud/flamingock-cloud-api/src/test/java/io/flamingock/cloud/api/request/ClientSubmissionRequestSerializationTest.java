@@ -18,7 +18,7 @@ package io.flamingock.cloud.api.request;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.cloud.api.vo.CloudChangeStatus;
 import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
@@ -46,8 +46,8 @@ class ClientSubmissionRequestSerializationTest {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     @Test
-    @DisplayName("Serializes blocks in input order with type + stages")
-    void serializesBlocksWithTypeAndStages() throws Exception {
+    @DisplayName("Serializes blocks in input order with category + stages")
+    void serializesBlocksWithCategoryAndStages() throws Exception {
         StageRequest sysStage = new StageRequest(
                 "system-stage", 0, CloudStageStatus.NOT_STARTED,
                 Collections.singletonList(new ChangeRequest("sys-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
@@ -56,8 +56,8 @@ class ClientSubmissionRequestSerializationTest {
                 Collections.singletonList(new ChangeRequest("user-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
 
         ClientSubmissionRequest request = new ClientSubmissionRequest(Arrays.asList(
-                new StageBlockRequest(StageType.SYSTEM, Collections.singletonList(sysStage)),
-                new StageBlockRequest(StageType.DEFAULT, Collections.singletonList(userStage))));
+                new StageBlockRequest(StageCategory.SYSTEM, Collections.singletonList(sysStage)),
+                new StageBlockRequest(StageCategory.DEFAULT, Collections.singletonList(userStage))));
 
         JsonNode json = MAPPER.valueToTree(request);
 
@@ -65,12 +65,12 @@ class ClientSubmissionRequestSerializationTest {
         assertEquals(2, json.get("blocks").size());
 
         JsonNode block0 = json.get("blocks").get(0);
-        assertEquals("SYSTEM", block0.get("type").asText());
+        assertEquals("SYSTEM", block0.get("category").asText());
         assertEquals(1, block0.get("stages").size());
         assertEquals("system-stage", block0.get("stages").get(0).get("name").asText());
 
         JsonNode block1 = json.get("blocks").get(1);
-        assertEquals("DEFAULT", block1.get("type").asText());
+        assertEquals("DEFAULT", block1.get("category").asText());
         assertEquals(1, block1.get("stages").size());
         assertEquals("user-stage", block1.get("stages").get(0).get("name").asText());
     }
@@ -79,10 +79,10 @@ class ClientSubmissionRequestSerializationTest {
     @DisplayName("Round-trips through Jackson preserving block order and contents")
     void roundTripsPreservingBlockOrderAndContents() throws Exception {
         ClientSubmissionRequest original = new ClientSubmissionRequest(Arrays.asList(
-                new StageBlockRequest(StageType.LEGACY, Collections.singletonList(
+                new StageBlockRequest(StageCategory.LEGACY, Collections.singletonList(
                         new StageRequest("legacy", 0, CloudStageStatus.COMPLETED,
                                 Collections.singletonList(new ChangeRequest("legacy-c1", CloudTargetSystemAuditMarkType.APPLIED, null, true, false))))),
-                new StageBlockRequest(StageType.DEFAULT, Arrays.asList(
+                new StageBlockRequest(StageCategory.DEFAULT, Arrays.asList(
                         new StageRequest("user-a", 1, CloudStageStatus.STARTED,
                                 Collections.singletonList(new ChangeRequest("user-a-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false))),
                         new StageRequest("user-b", 2, CloudStageStatus.NOT_STARTED,
@@ -94,32 +94,32 @@ class ClientSubmissionRequestSerializationTest {
         assertEquals(original, deserialized);
         // Block order is significant and preserved verbatim.
         assertEquals(2, deserialized.getBlocks().size());
-        assertEquals(StageType.LEGACY, deserialized.getBlocks().get(0).getType());
-        assertEquals(StageType.DEFAULT, deserialized.getBlocks().get(1).getType());
+        assertEquals(StageCategory.LEGACY, deserialized.getBlocks().get(0).getCategory());
+        assertEquals(StageCategory.DEFAULT, deserialized.getBlocks().get(1).getCategory());
         assertEquals(2, deserialized.getBlocks().get(1).getStages().size());
         assertEquals("user-a", deserialized.getBlocks().get(1).getStages().get(0).getName());
         assertEquals("user-b", deserialized.getBlocks().get(1).getStages().get(1).getName());
     }
 
     @Test
-    @DisplayName("Same StageType repeated across multiple blocks is preserved on the wire (multi-block-same-type lock-in)")
-    void sameStageTypeAcrossMultipleBlocksIsPreserved() throws Exception {
+    @DisplayName("Same StageCategory repeated across multiple blocks is preserved on the wire (multi-block-same-category lock-in)")
+    void sameStageCategoryAcrossMultipleBlocksIsPreserved() throws Exception {
         StageRequest a = new StageRequest("user-a", 0, CloudStageStatus.NOT_STARTED,
                 Collections.singletonList(new ChangeRequest("a-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
         StageRequest b = new StageRequest("user-b", 1, CloudStageStatus.NOT_STARTED,
                 Collections.singletonList(new ChangeRequest("b-c1", CloudTargetSystemAuditMarkType.NONE, null, false, false)));
 
         ClientSubmissionRequest request = new ClientSubmissionRequest(Arrays.asList(
-                new StageBlockRequest(StageType.DEFAULT, Collections.singletonList(a)),
-                new StageBlockRequest(StageType.DEFAULT, Collections.singletonList(b))));
+                new StageBlockRequest(StageCategory.DEFAULT, Collections.singletonList(a)),
+                new StageBlockRequest(StageCategory.DEFAULT, Collections.singletonList(b))));
 
         String json = MAPPER.writeValueAsString(request);
         ClientSubmissionRequest deserialized = MAPPER.readValue(json, ClientSubmissionRequest.class);
 
-        // Two distinct blocks of the same StageType, NOT collapsed into one.
+        // Two distinct blocks of the same StageCategory, NOT collapsed into one.
         assertEquals(2, deserialized.getBlocks().size());
-        assertEquals(StageType.DEFAULT, deserialized.getBlocks().get(0).getType());
-        assertEquals(StageType.DEFAULT, deserialized.getBlocks().get(1).getType());
+        assertEquals(StageCategory.DEFAULT, deserialized.getBlocks().get(0).getCategory());
+        assertEquals(StageCategory.DEFAULT, deserialized.getBlocks().get(1).getCategory());
         assertEquals("user-a", deserialized.getBlocks().get(0).getStages().get(0).getName());
         assertEquals("user-b", deserialized.getBlocks().get(1).getStages().get(0).getName());
     }

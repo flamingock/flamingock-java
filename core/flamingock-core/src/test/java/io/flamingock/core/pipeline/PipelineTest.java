@@ -26,7 +26,7 @@ import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -130,7 +130,7 @@ public class PipelineTest {
 
         // Stage with a valid change
         PreviewStage stageWithChanges = Mockito.mock(PreviewStage.class);
-        Mockito.when(stageWithChanges.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stageWithChanges.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stageWithChanges.getName()).thenReturn("stage-with-changes");
         Mockito.when(stageWithChanges.getChanges()).thenReturn((Collection) Collections.singletonList(validChange));
 
@@ -156,7 +156,7 @@ public class PipelineTest {
 
     private static PreviewStage getPreviewStage(String name) {
         PreviewStage stage = Mockito.mock(PreviewStage.class);
-        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stage.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stage.getName()).thenReturn(name);
         Mockito.when(stage.getChanges()).thenReturn(Collections.emptyList());
         return stage;
@@ -200,7 +200,7 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
-        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stage.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stage.getName()).thenReturn("stage-with-invalid-order-changes");
         Mockito.when(stage.getChanges()).thenReturn((Collection) Arrays.asList(changeWithInvalidOrder1, changeWithInvalidOrder2));
 
@@ -288,7 +288,7 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
-        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stage.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stage.getName()).thenReturn("stage-with-valid-order-changes");
         Mockito.when(stage.getChanges()).thenReturn((Collection) Arrays.asList(
                 changeWithValidOrder1, changeWithValidOrder2, changeWithValidOrder3, changeWithValidOrder4));
@@ -358,12 +358,12 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
-        Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stage1.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stage1.getName()).thenReturn("stage1");
         Mockito.when(stage1.getChanges()).thenReturn((Collection) Arrays.asList(change1, change2));
 
         PreviewStage stage2 = Mockito.mock(PreviewStage.class);
-        Mockito.when(stage2.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stage2.getCategory()).thenReturn(StageCategory.DEFAULT);
         Mockito.when(stage2.getName()).thenReturn("stage2");
         Mockito.when(stage2.getChanges()).thenReturn((Collection) Collections.singletonList(change3));
 

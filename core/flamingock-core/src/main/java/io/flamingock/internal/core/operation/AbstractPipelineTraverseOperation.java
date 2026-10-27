@@ -104,7 +104,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
 
     private ExecuteResult execute(LoadedPipeline pipeline) {
         // Single transform point: PipelineRun.of(pipeline) validates static structure, partitions
-        // stages by type into StageRunBlocks (SYSTEM -> LEGACY -> DEFAULT, sparse), and becomes the
+        // stages by category into StageRunBlocks (SYSTEM -> LEGACY -> DEFAULT, sparse), and becomes the
         // single source of truth for the rest of this method. LoadedPipeline is not referenced again.
         PipelineRun pipelineRun = PipelineRun.of(pipeline);
 

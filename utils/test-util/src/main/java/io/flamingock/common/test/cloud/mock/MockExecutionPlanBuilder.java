@@ -20,7 +20,7 @@ import io.flamingock.common.test.cloud.prototype.PrototypeChange;
 import io.flamingock.common.test.cloud.execution.ExecutionAwaitRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.StageBlockRequest;
 import io.flamingock.cloud.api.request.StageRequest;
@@ -72,7 +72,7 @@ public class MockExecutionPlanBuilder {
         // don't model block structure preserve their behaviour; tests that need multi-block
         // scenarios should construct StageBlockRequest lists directly.
         List<StageBlockRequest> blocks = java.util.Collections.singletonList(
-                new StageBlockRequest(StageType.DEFAULT, stages));
+                new StageBlockRequest(StageCategory.DEFAULT, stages));
         return new ExecutionPlanRequest(requestResponse.getAcquiredForMillis(), blocks);
     }
 

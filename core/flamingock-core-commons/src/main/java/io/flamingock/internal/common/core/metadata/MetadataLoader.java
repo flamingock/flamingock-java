@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.core.metadata;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -200,7 +200,7 @@ public final class MetadataLoader {
 
                 if (pipeline.getStages() != null) {
                     for (PreviewStage s : pipeline.getStages()) {
-                        if (s.getType() == StageType.LEGACY) {
+                        if (s.getCategory() == StageCategory.LEGACY) {
                             legacyStages.add(s);
                         } else {
                             defaultStages.add(s);
@@ -314,7 +314,7 @@ public final class MetadataLoader {
                     }
                 }
             }
-            return new PreviewStage(first.getName(), first.getType(), first.getMode(), first.getDescription(),
+            return new PreviewStage(first.getName(), first.getCategory(), first.getMode(), first.getDescription(),
                     first.getSourcesPackage(), first.getResourcesDir(), merged);
         }
     }

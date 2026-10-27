@@ -15,21 +15,21 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Typed window over a group of {@link StageRun}s sharing the same {@link StageType}. Blocks are
+ * Typed window over a group of {@link StageRun}s sharing the same {@link StageCategory}. Blocks are
  * the structural unit of execution dependency: blocks are returned by
  * {@link PipelineRun#getStageBlocks()} in dependency order, and a later block depends on the
  * successful completion of every prior block.
  *
  * <p>This class is intentionally a thin abstraction. It exposes only:
  * <ul>
- *   <li>The block's {@link StageType}.</li>
+ *   <li>The block's {@link StageCategory}.</li>
  *   <li>The {@link StageRun}s belonging to it (shared references with {@link PipelineRun}).</li>
  *   <li>Predicates over the block's collective state: {@link #isTerminal()},
  *       {@link #isSuccessful()}, {@link #hasFailures()}.</li>
@@ -41,16 +41,16 @@ import java.util.List;
  */
 public final class StageRunBlock {
 
-    private final StageType type;
+    private final StageCategory category;
     private final List<StageRun> stageRuns;
 
-    StageRunBlock(StageType type, List<StageRun> stageRuns) {
-        this.type = type;
+    StageRunBlock(StageCategory category, List<StageRun> stageRuns) {
+        this.category = category;
         this.stageRuns = Collections.unmodifiableList(stageRuns);
     }
 
-    public StageType getType() {
-        return type;
+    public StageCategory getCategory() {
+        return category;
     }
 
     public List<StageRun> getStageRuns() {

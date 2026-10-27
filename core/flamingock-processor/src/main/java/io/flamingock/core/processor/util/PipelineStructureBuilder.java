@@ -16,7 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.internal.common.core.change.ChangeDescriptor;
@@ -132,7 +132,7 @@ public final class PipelineStructureBuilder {
                 : stageAnnotation.name();
         String description = stageAnnotation.description().isEmpty()
                 ? null : stageAnnotation.description();
-        return buildStage(name, description, StageType.DEFAULT, stageAnnotation.mode(), location, changesByPackage);
+        return buildStage(name, description, StageCategory.DEFAULT, stageAnnotation.mode(), location, changesByPackage);
     }
 
     // ---------------------------------------------------------------- YAML source
@@ -149,7 +149,7 @@ public final class PipelineStructureBuilder {
             @SuppressWarnings("unchecked")
             List<Map<String, String>> stageList = (List<Map<String, String>>) pipelineMap.get("stages");
 
-            validateYamlDoesNotDeclareStageType(stageList);
+            validateYamlDoesNotDeclareStageCategory(stageList);
 
             List<PreviewStage> stages = new ArrayList<>();
             for (Map<String, String> stageMap : stageList) {
@@ -171,7 +171,7 @@ public final class PipelineStructureBuilder {
                 ? PathResolver.deriveNameFromLocation(location)
                 : rawName;
         return buildStage(name, stageMap.get("description"),
-                StageType.DEFAULT,
+                StageCategory.DEFAULT,
                 StageMode.from(stageMap.get("mode")),
                 location,
                 changesByPackage);
@@ -186,7 +186,7 @@ public final class PipelineStructureBuilder {
      */
     private PreviewStage buildStage(String name,
                                     String description,
-                                    StageType type,
+                                    StageCategory category,
                                     StageMode mode,
                                     String location,
                                     Map<String, List<CodePreviewChange>> changesByPackage) {
@@ -208,7 +208,7 @@ public final class PipelineStructureBuilder {
             logger.verbose("Resources directory: " + resourcesDir);
         }
 
-        return PreviewStage.defaultBuilder(type)
+        return PreviewStage.defaultBuilder(category)
                 .setName(name)
                 .setDescription(description)
                 .setMode(mode)
@@ -247,7 +247,7 @@ public final class PipelineStructureBuilder {
             return Optional.empty();
         }
         logger.verbose("Building stage: " + PipelineHelper.LEGACY_STAGE_ID);
-        PreviewStage legacyStage = PreviewStage.defaultBuilder(StageType.LEGACY)
+        PreviewStage legacyStage = PreviewStage.defaultBuilder(StageCategory.LEGACY)
                 .setName(PipelineHelper.LEGACY_STAGE_ID)
                 .setDescription("Flamingock legacy stage")
                 .setSourcesRoots(sourceRoots)
@@ -260,7 +260,7 @@ public final class PipelineStructureBuilder {
     }
 
     private PreviewPipeline assemble(List<CodePreviewChange> systemChanges, List<PreviewStage> stages) {
-        stages.sort(PipelineStructureBuilder::compareStagesByTypePriority);
+        stages.sort(PipelineStructureBuilder::compareStagesByCategoryPriority);
         return buildSystemStageIfNeeded(systemChanges)
                 .map(systemStage -> new PreviewPipeline(systemStage, stages))
                 .orElseGet(() -> new PreviewPipeline(stages));
@@ -291,13 +291,13 @@ public final class PipelineStructureBuilder {
         }
     }
 
-    private static void validateYamlDoesNotDeclareStageType(List<Map<String, String>> stageList) {
+    private static void validateYamlDoesNotDeclareStageCategory(List<Map<String, String>> stageList) {
         for (Map<String, String> stageMap : stageList) {
-            String type = stageMap.get("type");
-            if (type != null && !type.trim().isEmpty()) {
+            String category = stageMap.get("type");
+            if (category != null && !category.trim().isEmpty()) {
                 throw new RuntimeException(
                         "Stage field 'type' is not supported in YAML pipeline configuration. "
-                                + "StageType is internal; declared YAML stages are always DEFAULT. "
+                                + "StageCategory is internal; declared YAML stages are always DEFAULT. "
                                 + "Use 'mode' to configure stage repeatability.");
             }
         }
@@ -305,12 +305,12 @@ public final class PipelineStructureBuilder {
 
     /** Priority: SYSTEM=0, LEGACY=1, DEFAULT=2. SYSTEM is wrapped separately so the only
      *  values that ever reach the comparator are LEGACY and DEFAULT. */
-    private static int compareStagesByTypePriority(PreviewStage a, PreviewStage b) {
-        return stageTypePriority(a.getType()) - stageTypePriority(b.getType());
+    private static int compareStagesByCategoryPriority(PreviewStage a, PreviewStage b) {
+        return stageCategoryPriority(a.getCategory()) - stageCategoryPriority(b.getCategory());
     }
 
-    private static int stageTypePriority(StageType type) {
-        switch (type) {
+    private static int stageCategoryPriority(StageCategory category) {
+        switch (category) {
             case SYSTEM:  return 0;
             case LEGACY:  return 1;
             case DEFAULT: return 2;

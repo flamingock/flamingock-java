@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud.api.request;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,31 +24,31 @@ import java.util.Objects;
  * Structural unit of a cloud execution-plan submission: a block of stages that must complete
  * before the next block in the {@code ClientSubmissionRequest.blocks} list may run. Block
  * membership is owned by the client's {@code PipelineRun}; the server consumes the block list
- * as-is and does NOT regroup stages by {@link #type}.
+ * as-is and does NOT regroup stages by {@link #category}.
  *
- * <p>The {@code type} field is metadata (diagnostics, future use). Two blocks may share the
- * same {@link StageType} — the server iterates the block list in order and never collapses by
- * type.
+ * <p>The {@code category} field is metadata (diagnostics, future use). Two blocks may share the
+ * same {@link StageCategory} — the server iterates the block list in order and never collapses by
+ * category.
  */
 public class StageBlockRequest {
 
-    private StageType type;
+    private StageCategory category;
     private List<StageRequest> stages;
 
     public StageBlockRequest() {
     }
 
-    public StageBlockRequest(StageType type, List<StageRequest> stages) {
-        this.type = type;
+    public StageBlockRequest(StageCategory category, List<StageRequest> stages) {
+        this.category = category;
         this.stages = stages;
     }
 
-    public StageType getType() {
-        return type;
+    public StageCategory getCategory() {
+        return category;
     }
 
-    public void setType(StageType type) {
-        this.type = type;
+    public void setCategory(StageCategory category) {
+        this.category = category;
     }
 
     public List<StageRequest> getStages() {
@@ -64,11 +64,11 @@ public class StageBlockRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StageBlockRequest that = (StageBlockRequest) o;
-        return type == that.type && Objects.equals(stages, that.stages);
+        return category == that.category && Objects.equals(stages, that.stages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, stages);
+        return Objects.hash(category, stages);
     }
 }

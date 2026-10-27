@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
@@ -36,12 +36,12 @@ import static org.mockito.Mockito.when;
 class StageRunBlockTest {
 
     @Test
-    void exposesTypeAndStageRuns() {
+    void exposesCategoryAndStageRuns() {
         StageRun a = newStageRun("alpha");
         StageRun b = newStageRun("beta");
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
-        assertSame(StageType.DEFAULT, block.getType());
+        assertSame(StageCategory.DEFAULT, block.getCategory());
         assertEquals(2, block.getStageRuns().size());
         assertSame(a, block.getStageRuns().get(0));
         assertSame(b, block.getStageRuns().get(1));
@@ -51,7 +51,7 @@ class StageRunBlockTest {
     void isTerminalTrueWhenAllStagesAreCompletedOrFailed() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.failed(errorInfo("boom")));
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertTrue(block.isTerminal());
     }
@@ -60,7 +60,7 @@ class StageRunBlockTest {
     void isTerminalFalseIfAnyStageNotStartedOrStarted() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.STARTED);
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertFalse(block.isTerminal());
     }
@@ -69,7 +69,7 @@ class StageRunBlockTest {
     void isSuccessfulTrueOnlyWhenEveryStageCompleted() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.COMPLETED);
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertTrue(block.isSuccessful());
     }
@@ -78,7 +78,7 @@ class StageRunBlockTest {
     void isSuccessfulFalseIfAnyStageNotCompleted() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.failed(errorInfo("boom")));
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertFalse(block.isSuccessful());
     }
@@ -87,7 +87,7 @@ class StageRunBlockTest {
     void hasFailuresTrueWhenAnyStageFailed() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.failed(errorInfo("boom")));
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertTrue(block.hasFailures());
     }
@@ -97,7 +97,7 @@ class StageRunBlockTest {
         StageRun a = newStageRun(
                 "alpha",
                 StageState.blockedManualIntervention("alpha", Collections.emptyList()));
-        StageRunBlock block = new StageRunBlock(StageType.LEGACY, Collections.singletonList(a));
+        StageRunBlock block = new StageRunBlock(StageCategory.LEGACY, Collections.singletonList(a));
 
         assertTrue(block.hasFailures());
         assertTrue(block.isTerminal());
@@ -108,14 +108,14 @@ class StageRunBlockTest {
     void hasFailuresFalseWhenAllStagesSuccessfulOrPending() {
         StageRun a = newStageRun("alpha", StageState.COMPLETED);
         StageRun b = newStageRun("beta", StageState.STARTED);
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Arrays.asList(a, b));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Arrays.asList(a, b));
 
         assertFalse(block.hasFailures());
     }
 
     @Test
     void emptyBlockPredicatesAreVacuouslyTrueForTerminalAndSuccessful() {
-        StageRunBlock block = new StageRunBlock(StageType.SYSTEM, Collections.emptyList());
+        StageRunBlock block = new StageRunBlock(StageCategory.SYSTEM, Collections.emptyList());
 
         assertTrue(block.isTerminal());
         assertTrue(block.isSuccessful());
@@ -125,7 +125,7 @@ class StageRunBlockTest {
     @Test
     void getStageRunsReturnsAnUnmodifiableList() {
         StageRun a = newStageRun("alpha");
-        StageRunBlock block = new StageRunBlock(StageType.DEFAULT, Collections.singletonList(a));
+        StageRunBlock block = new StageRunBlock(StageCategory.DEFAULT, Collections.singletonList(a));
 
         List<StageRun> stageRuns = block.getStageRuns();
         try {

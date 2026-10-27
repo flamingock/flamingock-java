@@ -64,7 +64,7 @@ public final class CloudExecutionPlanMapper {
                                                  Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
 
         // Walk the PipelineRun's block list verbatim — block grouping is owned by PipelineRun,
-        // not derived from StageType. Two blocks of the same StageType are preserved as two
+        // not derived from StageCategory. Two blocks of the same StageCategory are preserved as two
         // separate StageBlockRequests in input order.
         List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
         List<StageBlockRequest> requestBlocks = new ArrayList<>(blocks.size());
@@ -89,7 +89,7 @@ public final class CloudExecutionPlanMapper {
                 CloudStageStatus status = CloudApiMapper.toCloud(stageRun.getState());
                 blockStages.add(new StageRequest(currentStage.getName(), stageOrder++, status, stageChanges));
             }
-            requestBlocks.add(new StageBlockRequest(block.getType(), blockStages));
+            requestBlocks.add(new StageBlockRequest(block.getCategory(), blockStages));
         }
 
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestBlocks);

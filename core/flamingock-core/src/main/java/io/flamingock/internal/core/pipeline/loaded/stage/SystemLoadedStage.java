@@ -17,7 +17,7 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -40,15 +40,15 @@ public class SystemLoadedStage extends AbstractLoadedStage {
             .build();
 
     public SystemLoadedStage(String name,
-                             StageType type,
+                             StageCategory category,
                              Collection<AbstractLoadedChange> loadedChanges) {
-        super(name, type, StageMode.STANDARD, loadedChanges, validationContext);
+        super(name, category, StageMode.STANDARD, loadedChanges, validationContext);
 
     }
 
     @Override
     protected AbstractLoadedStage copyWithChanges(Collection<AbstractLoadedChange> newChanges) {
-        return new SystemLoadedStage(getName(), getType(), newChanges);
+        return new SystemLoadedStage(getName(), getCategory(), newChanges);
     }
 
 

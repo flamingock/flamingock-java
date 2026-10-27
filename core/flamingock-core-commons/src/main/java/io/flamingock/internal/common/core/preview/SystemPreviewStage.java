@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -38,7 +38,7 @@ public class SystemPreviewStage extends PreviewStage {
                               String sourcesPackage,
                               String resourcesDir,
                               Collection<? extends AbstractPreviewChange> changes) {
-        super(name, StageType.SYSTEM, StageMode.STANDARD, description, sourcesPackage, resourcesDir, changes);
+        super(name, StageCategory.SYSTEM, StageMode.STANDARD, description, sourcesPackage, resourcesDir, changes);
 
     }
 

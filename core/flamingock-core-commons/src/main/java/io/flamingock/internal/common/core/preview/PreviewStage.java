@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.api.StageMode;
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.preview.builder.PreviewChangeBuilder;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.util.FileUtil;
@@ -40,7 +40,7 @@ public class PreviewStage {
 
     private String name;
 
-    private StageType type;
+    private StageCategory category;
 
     private StageMode mode = StageMode.STANDARD;
 
@@ -58,14 +58,14 @@ public class PreviewStage {
 
     //TODO it shouldn't be public
     public PreviewStage(String name,
-                        StageType type,
+                        StageCategory category,
                         StageMode mode,
                         String description,
                         String sourcesPackage,
                         String resourcesDir,
                         Collection<? extends AbstractPreviewChange> changes) {
         this.name = name;
-        this.type = type;
+        this.category = category;
         this.mode = mode;
         this.description = description;
         this.sourcesPackage = sourcesPackage;
@@ -73,8 +73,8 @@ public class PreviewStage {
         this.changes = changes;
     }
 
-    public static DefaultBuilder defaultBuilder(StageType type) {
-        return new DefaultBuilder(type);
+    public static DefaultBuilder defaultBuilder(StageCategory category) {
+        return new DefaultBuilder(category);
     }
 
     public static SystemPreviewStage.SystemBuilder systemBuilder() {
@@ -92,12 +92,12 @@ public class PreviewStage {
         this.name = name;
     }
 
-    public StageType getType() {
-        return type;
+    public StageCategory getCategory() {
+        return category;
     }
 
-    public void setType(StageType type) {
-        this.type = type;
+    public void setCategory(StageCategory category) {
+        this.category = category;
     }
 
     public StageMode getMode() {
@@ -157,7 +157,7 @@ public class PreviewStage {
     @Override
     public String toString() {
         return "PreviewStage{" + "name='" + name + '\'' +
-                ", type=" + type +
+                ", category=" + category +
                 ", mode=" + getMode() +
                 ", description='" + description + '\'' +
                 ", sourcesPackage='" + sourcesPackage + '\'' +
@@ -169,10 +169,10 @@ public class PreviewStage {
 
     public static class DefaultBuilder extends AbstractBuilder<PreviewStage> {
 
-        private final StageType type;
+        private final StageCategory category;
 
-        protected DefaultBuilder(StageType type) {
-            this.type = type;
+        protected DefaultBuilder(StageCategory category) {
+            this.category = category;
         }
 
 
@@ -183,11 +183,11 @@ public class PreviewStage {
                                              String sourcesPackage,
                                              String resourcesDir,
                                              Collection<AbstractPreviewChange> allDescriptors) {
-            StageMode effectiveMode = type == StageType.DEFAULT ? getMode() : StageMode.STANDARD;
+            StageMode effectiveMode = category == StageCategory.DEFAULT ? getMode() : StageMode.STANDARD;
             if (effectiveMode == StageMode.RUN_ALWAYS && allDescriptors != null) {
                 allDescriptors.forEach(change -> change.setRunAlways(true));
             }
-            return new PreviewStage(name, type, effectiveMode, description, sourcesPackage, resourcesDir, allDescriptors);
+            return new PreviewStage(name, category, effectiveMode, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }
 

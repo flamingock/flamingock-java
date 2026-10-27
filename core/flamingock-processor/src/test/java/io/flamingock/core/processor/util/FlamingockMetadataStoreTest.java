@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.api.StageMode;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
@@ -169,7 +169,7 @@ class FlamingockMetadataStoreTest {
         CodePreviewChange c = new CodePreviewChange("id-1", null, "author",
                 "com.example.changes.A", "com.example.changes.A",
                 null, null, null, false, null, false, null, null, false);
-        PreviewStage stage = new PreviewStage("default", StageType.DEFAULT, StageMode.STANDARD, null,
+        PreviewStage stage = new PreviewStage("default", StageCategory.DEFAULT, StageMode.STANDARD, null,
                 "com.example.changes", null, java.util.Collections.singletonList(c));
         return new PreviewPipeline(Arrays.asList(stage));
     }
@@ -178,7 +178,7 @@ class FlamingockMetadataStoreTest {
         CodePreviewChange c = new CodePreviewChange("id-run-always", null, "author",
                 "com.example.changes.A", "com.example.changes.A",
                 null, null, null, true, null, false, null, null, false);
-        PreviewStage stage = new PreviewStage("repeatable", StageType.DEFAULT, StageMode.RUN_ALWAYS, null,
+        PreviewStage stage = new PreviewStage("repeatable", StageCategory.DEFAULT, StageMode.RUN_ALWAYS, null,
                 "com.example.changes", null, java.util.Collections.singletonList(c));
         return new PreviewPipeline(Arrays.asList(stage));
     }

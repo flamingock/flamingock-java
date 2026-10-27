@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.operation;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
@@ -261,9 +261,9 @@ class AbstractPipelineTraverseOperationTest {
     }
 
     private static LoadedPipeline mockMultiBlockPipeline() {
-        AbstractLoadedStage systemLoaded = mockNamedTypedLoadedStage("flamingock-system-stage", StageType.SYSTEM);
-        AbstractLoadedStage legacyLoaded = mockNamedTypedLoadedStage("flamingock-legacy-stage", StageType.LEGACY);
-        AbstractLoadedStage defaultLoaded = mockNamedTypedLoadedStage("changes", StageType.DEFAULT);
+        AbstractLoadedStage systemLoaded = mockNamedTypedLoadedStage("flamingock-system-stage", StageCategory.SYSTEM);
+        AbstractLoadedStage legacyLoaded = mockNamedTypedLoadedStage("flamingock-legacy-stage", StageCategory.LEGACY);
+        AbstractLoadedStage defaultLoaded = mockNamedTypedLoadedStage("changes", StageCategory.DEFAULT);
 
         LoadedPipeline pipeline = mock(LoadedPipeline.class);
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.of(systemLoaded));
@@ -272,10 +272,10 @@ class AbstractPipelineTraverseOperationTest {
         return pipeline;
     }
 
-    private static AbstractLoadedStage mockNamedTypedLoadedStage(String name, StageType type) {
+    private static AbstractLoadedStage mockNamedTypedLoadedStage(String name, StageCategory category) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
-        when(stage.getType()).thenReturn(type);
+        when(stage.getCategory()).thenReturn(category);
         when(stage.getChanges()).thenReturn(Collections.emptyList());
         return stage;
     }

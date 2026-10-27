@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.api.StageType;
+import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
@@ -49,8 +49,8 @@ public class PipelineRun {
      * Block-dependency ordering: every stage in an earlier block must succeed before the next
      * block may execute. SYSTEM is the foundation, LEGACY runs second, DEFAULT (user) runs last.
      */
-    private static final List<StageType> BLOCK_ORDER =
-            Arrays.asList(StageType.SYSTEM, StageType.LEGACY, StageType.DEFAULT);
+    private static final List<StageCategory> BLOCK_ORDER =
+            Arrays.asList(StageCategory.SYSTEM, StageCategory.LEGACY, StageCategory.DEFAULT);
 
     public static PipelineRun of(LoadedPipeline pipeline) {
         // Static-structure validation runs as part of construction. Builder-time validation in
@@ -120,23 +120,23 @@ public class PipelineRun {
     }
 
     public static PipelineRun of(List<AbstractLoadedStage> stages) {
-        // Partition by StageType in dependency order, skipping empty types (sparse). The resulting
+        // Partition by StageCategory in dependency order, skipping empty categories (sparse). The resulting
         // flat list is the concatenation of blocks in canonical order — a single source of truth
         // for stage ordering across the rest of the runtime.
-        Map<StageType, List<StageRun>> byType = new LinkedHashMap<>();
-        for (StageType type : BLOCK_ORDER) {
-            byType.put(type, new ArrayList<>());
+        Map<StageCategory, List<StageRun>> byCategory = new LinkedHashMap<>();
+        for (StageCategory category : BLOCK_ORDER) {
+            byCategory.put(category, new ArrayList<>());
         }
         for (AbstractLoadedStage stage : stages) {
-            byType.get(resolveType(stage)).add(new StageRun(stage));
+            byCategory.get(resolveCategory(stage)).add(new StageRun(stage));
         }
 
         List<StageRunBlock> blocks = new ArrayList<>();
         List<StageRun> flat = new ArrayList<>();
-        for (StageType type : BLOCK_ORDER) {
-            List<StageRun> blockRuns = byType.get(type);
+        for (StageCategory category : BLOCK_ORDER) {
+            List<StageRun> blockRuns = byCategory.get(category);
             if (!blockRuns.isEmpty()) {
-                blocks.add(new StageRunBlock(type, blockRuns));
+                blocks.add(new StageRunBlock(category, blockRuns));
                 flat.addAll(blockRuns);
             }
         }
@@ -144,13 +144,13 @@ public class PipelineRun {
     }
 
     /**
-     * Defensive null-handling: production stages always carry a {@link StageType}; legacy test
-     * mocks may not stub {@code getType()} and yield null. Treat null as DEFAULT (the most common
-     * type, what a normal user stage would be).
+     * Defensive null-handling: production stages always carry a {@link StageCategory}; legacy test
+     * mocks may not stub {@code getCategory()} and yield null. Treat null as DEFAULT (the most common
+     * category, what a normal user stage would be).
      */
-    private static StageType resolveType(AbstractLoadedStage stage) {
-        StageType type = stage.getType();
-        return type != null ? type : StageType.DEFAULT;
+    private static StageCategory resolveCategory(AbstractLoadedStage stage) {
+        StageCategory category = stage.getCategory();
+        return category != null ? category : StageCategory.DEFAULT;
     }
 
     private final List<StageRun> stageRuns;
