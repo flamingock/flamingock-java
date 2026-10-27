@@ -16,7 +16,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageCategory;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
@@ -325,11 +325,11 @@ class FlamingockMetadataMergerTest {
     }
 
     @Test
-    @DisplayName("RUN_ALWAYS mode is applied after routing a sub-package change")
+    @DisplayName("RUN_ALWAYS type is applied after routing a sub-package change")
     void runAlwaysModeIsAppliedAfterRoutingSubPackageChange() {
         FlamingockMetadata target = new FlamingockMetadata();
         PreviewPipeline freshStructure = pipeline(stage("changes", "com.example.changes",
-                StageMode.RUN_ALWAYS));
+                StageType.RUN_ALWAYS));
         CodePreviewChange subPackageChange = change("id-sub", "com.example.changes.sub.MyChange");
 
         FlamingockMetadataMerger.applyRound(target, freshStructure,
@@ -340,7 +340,7 @@ class FlamingockMetadataMergerTest {
     }
 
     @Test
-    @DisplayName("RUN_ALWAYS mode is preserved for template changes kept during merge")
+    @DisplayName("RUN_ALWAYS type is preserved for template changes kept during merge")
     void runAlwaysModeIsAppliedToTemplateChanges() {
         FlamingockMetadata target = new FlamingockMetadata();
         TemplatePreviewChange template = new TemplatePreviewChange(
@@ -348,7 +348,7 @@ class FlamingockMetadataMergerTest {
                 Collections.emptyList(), null, false, false,
                 null, null, null, null, null, null);
         PreviewPipeline freshStructure = pipeline(new PreviewStage(
-                "templates", StageCategory.DEFAULT, StageMode.RUN_ALWAYS, null,
+                "templates", StageCategory.DEFAULT, StageType.RUN_ALWAYS, null,
                 null, "resources/migrations", Collections.singletonList(template)));
 
         FlamingockMetadataMerger.applyRound(target, freshStructure,
@@ -472,11 +472,11 @@ class FlamingockMetadataMergerTest {
     }
 
     private static PreviewStage stage(String name, String sourcesPackage, AbstractPreviewChange... changes) {
-        return new PreviewStage(name, StageCategory.DEFAULT, StageMode.STANDARD, null, sourcesPackage, null, Arrays.asList(changes));
+        return new PreviewStage(name, StageCategory.DEFAULT, StageType.STANDARD, null, sourcesPackage, null, Arrays.asList(changes));
     }
 
-    private static PreviewStage stage(String name, String sourcesPackage, StageMode mode) {
-        return new PreviewStage(name, StageCategory.DEFAULT, mode, null, sourcesPackage, null, new ArrayList<>());
+    private static PreviewStage stage(String name, String sourcesPackage, StageType type) {
+        return new PreviewStage(name, StageCategory.DEFAULT, type, null, sourcesPackage, null, new ArrayList<>());
     }
 
     private static PreviewPipeline pipeline(PreviewStage... stages) {

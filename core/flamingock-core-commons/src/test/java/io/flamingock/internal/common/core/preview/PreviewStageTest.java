@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import org.junit.jupiter.api.DisplayName;
@@ -36,11 +36,11 @@ class PreviewStageTest {
 
         PreviewStage stage = PreviewStage.defaultBuilder(StageCategory.DEFAULT)
                 .setName("repeatable")
-                .setMode(StageMode.RUN_ALWAYS)
+                .setType(StageType.RUN_ALWAYS)
                 .setChanges(Collections.singletonList(change))
                 .build();
 
-        assertEquals(StageMode.RUN_ALWAYS, stage.getMode());
+        assertEquals(StageType.RUN_ALWAYS, stage.getType());
         assertTrue(stage.getChanges().iterator().next().isRunAlways());
     }
 
@@ -54,22 +54,22 @@ class PreviewStageTest {
                 .setChanges(Collections.singletonList(change))
                 .build();
 
-        assertEquals(StageMode.STANDARD, stage.getMode());
+        assertEquals(StageType.STANDARD, stage.getType());
         assertFalse(stage.getChanges().iterator().next().isRunAlways());
     }
 
     @Test
-    @DisplayName("LEGACY stage ignores stage mode runAlways")
-    void legacyStageIgnoresStageModeRunAlways() {
+    @DisplayName("LEGACY stage ignores stage type runAlways")
+    void legacyStageIgnoresStageTypeRunAlways() {
         AbstractPreviewChange change = previewChange("change-1", false);
 
         PreviewStage stage = PreviewStage.defaultBuilder(StageCategory.LEGACY)
                 .setName("legacy")
-                .setMode(StageMode.RUN_ALWAYS)
+                .setType(StageType.RUN_ALWAYS)
                 .setChanges(Collections.singletonList(change))
                 .build();
 
-        assertEquals(StageMode.STANDARD, stage.getMode());
+        assertEquals(StageType.STANDARD, stage.getType());
         assertFalse(stage.getChanges().iterator().next().isRunAlways());
     }
 

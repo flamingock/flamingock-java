@@ -19,7 +19,7 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 import io.flamingock.internal.common.core.error.validation.Validatable;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -57,18 +57,18 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final StageCategory category;
 
-    private final StageMode mode;
+    private final StageType type;
 
     private final Collection<AbstractLoadedChange> changes;
 
     public AbstractLoadedStage(String name,
                                StageCategory category,
-                               StageMode mode,
+                               StageType type,
                                Collection<AbstractLoadedChange> changes,
                                StageValidationContext validationContext) {
         this.name = name;
         this.category = category;
-        this.mode = mode != null ? mode : StageMode.STANDARD;
+        this.type = type != null ? type : StageType.STANDARD;
         this.changes = changes;
         this.validationContext = validationContext;
     }
@@ -104,8 +104,8 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return category;
     }
 
-    public StageMode getMode() {
-        return mode;
+    public StageType getType() {
+        return type;
     }
 
     public Collection<AbstractLoadedChange> getChanges() {
@@ -177,7 +177,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
     @Override
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
-                ", mode=" + getMode() +
+                ", type=" + getType() +
                 ", loadedChanges=" + changes +
                 '}';
     }
@@ -227,7 +227,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                     return new SystemLoadedStage(previewStage.getName(), previewStage.getCategory(), loadedChanges);
                 case DEFAULT:
                 default:
-                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getCategory(), previewStage.getMode(), loadedChanges);
+                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getCategory(), previewStage.getType(), loadedChanges);
             }
 
         }

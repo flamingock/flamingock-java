@@ -16,7 +16,7 @@
 package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.StageCategory;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
@@ -62,7 +62,7 @@ public class PipelineTestHelper {
         PreviewStage stage = new PreviewStage(
                 stageName,
                 StageCategory.DEFAULT,
-                StageMode.STANDARD,
+                StageType.STANDARD,
                 "some description",
                 null,
                 null,

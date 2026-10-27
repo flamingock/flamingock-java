@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.api.StageCategory;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
@@ -132,7 +132,7 @@ public final class PipelineStructureBuilder {
                 : stageAnnotation.name();
         String description = stageAnnotation.description().isEmpty()
                 ? null : stageAnnotation.description();
-        return buildStage(name, description, StageCategory.DEFAULT, stageAnnotation.mode(), location, changesByPackage);
+        return buildStage(name, description, StageCategory.DEFAULT, stageAnnotation.type(), location, changesByPackage);
     }
 
     // ---------------------------------------------------------------- YAML source
@@ -149,7 +149,7 @@ public final class PipelineStructureBuilder {
             @SuppressWarnings("unchecked")
             List<Map<String, String>> stageList = (List<Map<String, String>>) pipelineMap.get("stages");
 
-            validateYamlDoesNotDeclareStageCategory(stageList);
+            validateYamlUsesStageType(stageList);
 
             List<PreviewStage> stages = new ArrayList<>();
             for (Map<String, String> stageMap : stageList) {
@@ -172,7 +172,7 @@ public final class PipelineStructureBuilder {
                 : rawName;
         return buildStage(name, stageMap.get("description"),
                 StageCategory.DEFAULT,
-                StageMode.from(stageMap.get("mode")),
+                StageType.from(stageMap.get("type")),
                 location,
                 changesByPackage);
     }
@@ -187,7 +187,7 @@ public final class PipelineStructureBuilder {
     private PreviewStage buildStage(String name,
                                     String description,
                                     StageCategory category,
-                                    StageMode mode,
+                                    StageType type,
                                     String location,
                                     Map<String, List<CodePreviewChange>> changesByPackage) {
         logger.verbose("Building stage: " + name);
@@ -211,7 +211,7 @@ public final class PipelineStructureBuilder {
         return PreviewStage.defaultBuilder(category)
                 .setName(name)
                 .setDescription(description)
-                .setMode(mode)
+                .setType(type)
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
@@ -291,14 +291,13 @@ public final class PipelineStructureBuilder {
         }
     }
 
-    private static void validateYamlDoesNotDeclareStageCategory(List<Map<String, String>> stageList) {
+    private static void validateYamlUsesStageType(List<Map<String, String>> stageList) {
         for (Map<String, String> stageMap : stageList) {
-            String category = stageMap.get("type");
-            if (category != null && !category.trim().isEmpty()) {
+            String legacyMode = stageMap.get("mode");
+            if (legacyMode != null && !legacyMode.trim().isEmpty()) {
                 throw new RuntimeException(
-                        "Stage field 'type' is not supported in YAML pipeline configuration. "
-                                + "StageCategory is internal; declared YAML stages are always DEFAULT. "
-                                + "Use 'mode' to configure stage repeatability.");
+                        "Stage field 'mode' is no longer supported in YAML pipeline configuration. "
+                                + "Use 'type' to configure stage repeatability.");
             }
         }
     }

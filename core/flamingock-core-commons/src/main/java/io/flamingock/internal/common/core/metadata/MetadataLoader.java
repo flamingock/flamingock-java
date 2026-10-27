@@ -314,7 +314,7 @@ public final class MetadataLoader {
                     }
                 }
             }
-            return new PreviewStage(first.getName(), first.getCategory(), first.getMode(), first.getDescription(),
+            return new PreviewStage(first.getName(), first.getCategory(), first.getType(), first.getDescription(),
                     first.getSourcesPackage(), first.getResourcesDir(), merged);
         }
     }

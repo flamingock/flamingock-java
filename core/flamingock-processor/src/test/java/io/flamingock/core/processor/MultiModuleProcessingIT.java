@@ -16,7 +16,7 @@
 package io.flamingock.core.processor;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.core.processor.util.MetadataModuleIdentity;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -435,7 +435,7 @@ class MultiModuleProcessingIT {
         PreviewStage legacyStage = new PreviewStage(
                 stageName,
                 io.flamingock.api.StageCategory.LEGACY,
-                StageMode.STANDARD,
+                StageType.STANDARD,
                 "Synthetic legacy stage for tests",
                 null, null,
                 changes);

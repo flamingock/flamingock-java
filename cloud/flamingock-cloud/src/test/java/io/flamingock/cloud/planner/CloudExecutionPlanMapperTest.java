@@ -16,7 +16,7 @@
 package io.flamingock.cloud.planner;
 
 import io.flamingock.api.StageCategory;
-import io.flamingock.api.StageMode;
+import io.flamingock.api.StageType;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.response.StageResponse;
@@ -346,7 +346,7 @@ class CloudExecutionPlanMapperTest {
         // SYSTEM -> LEGACY -> DEFAULT blocks (one stage each).
         AbstractLoadedStage systemStage = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-stage", StageCategory.SYSTEM, Collections.singletonList(change1));
         AbstractLoadedStage legacyStage = new io.flamingock.internal.core.pipeline.loaded.stage.LegacyLoadedStage("legacy-stage", StageCategory.LEGACY, Collections.singletonList(change1));
-        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageCategory.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
+        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageCategory.DEFAULT, StageType.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
 
@@ -373,7 +373,7 @@ class CloudExecutionPlanMapperTest {
         // field increments globally across the flattened block sequence.
         AbstractLoadedStage system1 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-1", StageCategory.SYSTEM, Collections.singletonList(change1));
         AbstractLoadedStage system2 = new io.flamingock.internal.core.pipeline.loaded.stage.SystemLoadedStage("system-2", StageCategory.SYSTEM, Collections.singletonList(change2));
-        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageCategory.DEFAULT, StageMode.STANDARD, Collections.singletonList(change1));
+        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageCategory.DEFAULT, StageType.STANDARD, Collections.singletonList(change1));
 
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(system1, system2, user1));
 
@@ -403,7 +403,7 @@ class CloudExecutionPlanMapperTest {
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {
-        return new DefaultLoadedStage(name, StageCategory.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+        return new DefaultLoadedStage(name, StageCategory.DEFAULT, StageType.STANDARD, Arrays.asList(changes));
     }
 
     private static AbstractLoadedChange mockChange(String id, boolean runAlways) {
@@ -418,7 +418,7 @@ class CloudExecutionPlanMapperTest {
     private static class CapturingStage extends DefaultLoadedStage {
 
         CapturingStage(String name, AbstractLoadedChange... changes) {
-            super(name, StageCategory.DEFAULT, StageMode.STANDARD, Arrays.asList(changes));
+            super(name, StageCategory.DEFAULT, StageType.STANDARD, Arrays.asList(changes));
         }
 
         @Override
