@@ -284,7 +284,34 @@ public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedCh
 
     private Method getMethodFromNameAndParameters(String sourceClassName, String methodName, List<String> methodParametersTypesNames) {
         Class<?> sourceClass = getClassForName(sourceClassName);
+        // Match the preview signature at every level so unrelated overloads cannot
+        // hide the inherited lifecycle method.
+        for (Class<?> candidate = sourceClass; candidate != null && candidate != Object.class;
+             candidate = candidate.getSuperclass()) {
+            for (Method method : candidate.getDeclaredMethods()) {
+                if (method.getName().equals(methodName)
+                        && matchesPreviewParameters(method, methodParametersTypesNames)) {
+                    return ReflectionUtil.getDeclaredMethodFromParameterTypeNames(
+                            candidate, methodName, methodParametersTypesNames);
+                }
+            }
+        }
         return ReflectionUtil.getDeclaredMethodFromParameterTypeNames(sourceClass, methodName, methodParametersTypesNames);
+    }
+
+    private boolean matchesPreviewParameters(Method method, List<String> parameterNames) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (parameterTypes.length != parameterNames.size()) {
+            return false;
+        }
+        for (int i = 0; i < parameterTypes.length; i++) {
+            // Canonical names cover source-style arrays; getName also accepts binary names.
+            if (!parameterNames.get(i).equals(parameterTypes[i].getCanonicalName())
+                    && !parameterNames.get(i).equals(parameterTypes[i].getName())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Method getApplyMethodFromAnnotation(Class<?> sourceClass) {
