@@ -15,18 +15,35 @@
  */
 package io.flamingock.internal.core.journal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Owns one sequencer per stream for this factory's lifetime. Persistence instances using the same
+ * stream share confirmed sequence progress. The stage lock still serializes event writes;
+ * sharing a sequencer does not make the allocation/write/confirmation cycle concurrent-safe.
+ */
 public class JournalEventSequencerFactory {
 
     private final JournalEventReader journalEventReader;
+    private final Map<String, JournalEventSequencer> sequencersByStream = new ConcurrentHashMap<>();
 
     public JournalEventSequencerFactory(JournalEventReader journalEventReader) {
         this.journalEventReader = journalEventReader;
     }
 
+    /**
+     * Returns the shared sequencer for a stream, seeded from its durable tail on first access.
+     *
+     * @param streamId stream whose sequence positions are allocated
+     * @return the same sequencer for every request for this stream within this factory
+     */
     public JournalEventSequencer forStream(String streamId) {
-        long initialSequence = journalEventReader.getLastEventByStream(streamId)
-                .map(e -> e.getStreamSequence() + 1)
-                .orElse(1L);
-        return new JournalEventSequencer(streamId, initialSequence);
+        return sequencersByStream.computeIfAbsent(streamId, id -> {
+            long initialSequence = journalEventReader.getLastEventByStream(id)
+                    .map(e -> e.getStreamSequence() + 1)
+                    .orElse(1L);
+            return new JournalEventSequencer(id, initialSequence);
+        });
     }
 }

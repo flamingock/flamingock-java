@@ -21,12 +21,13 @@ import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
-import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+import io.flamingock.internal.core.external.store.AuditHistoryAppender;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
+import io.flamingock.internal.util.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,8 @@ public class MongockImportChange {
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
         boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntriesPropertyValue);
         validate(legacyHistory, targetSystemId, emptyOriginAllowedPropertyValue);
-        AuditWriter auditWriter = auditPersistenceFactory.get(PipelineHelper.LEGACY_STAGE_ID);
+        AuditHistoryAppender auditHistoryAppender =
+                (AuditHistoryAppender) auditPersistenceFactory.get(PipelineHelper.LEGACY_STAGE_ID);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             Optional<String> stageId = pipelineHelper.findStageId(auditEntryFromOrigin);
             if (!stageId.isPresent()) {
@@ -84,7 +86,13 @@ public class MongockImportChange {
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
                     pipelineHelper.getStorableChangeId(auditEntryFromOrigin),
                     stageId.get());
-            auditWriter.writeEntry(auditEntryWithStageId);
+            Result result = auditHistoryAppender.append(auditEntryWithStageId);
+            if (result instanceof Result.Error) {
+                throw new FlamingockException(String.format(
+                        "Error importing audit entry with changeId[%s] into stage[%s] for targetSystem[%s].",
+                        auditEntryWithStageId.getChangeId(), stageId.get(), targetSystemId),
+                        ((Result.Error) result).getError());
+            }
         });
     }
 
