@@ -42,7 +42,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Set up Java
+      - name: Set up Temurin Java 8 toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Set up GraalVM Java 17 for Gradle
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '17'
