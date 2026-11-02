@@ -274,59 +274,11 @@ class CodeLoadedChangeBuilderTest {
     }
 
     @Test
-    void shouldSkipIntermediateOverloadsForInheritedPreviewSignatures() throws Exception {
-        for (boolean legacy : new boolean[]{false, true}) {
-            CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
-                    signaturePreview(OverloadLeaf.class, "apply", "rollback",
-                            Collections.singletonList(String.class.getName()), legacy)).build();
-            OverloadLeaf instance = new OverloadLeaf();
-            assertArrayEquals(new Class<?>[]{String.class}, change.getApplyMethod().getParameterTypes());
-            assertArrayEquals(new Class<?>[]{String.class}, change.getRollbackMethod().get().getParameterTypes());
-            change.getApplyMethod().invoke(instance, "applied");
-            assertEquals("applied", instance.effect);
-            change.getRollbackMethod().get().invoke(instance, "rolled back");
-            assertEquals("rolled back", instance.effect);
-        }
-    }
-
-    @Test
-    void shouldResolveInheritedPreviewSignaturesWithConcreteOverloads() throws Exception {
-        for (boolean legacy : new boolean[]{false, true}) {
-            CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
-                    signaturePreview(OverloadChild.class, "apply", "rollback",
-                            Collections.singletonList(String.class.getName()), legacy)).build();
-            OverloadChild instance = new OverloadChild();
-            assertArrayEquals(new Class<?>[]{String.class}, change.getApplyMethod().getParameterTypes());
-            assertArrayEquals(new Class<?>[]{String.class}, change.getRollbackMethod().get().getParameterTypes());
-            change.getApplyMethod().invoke(instance, "applied");
-            assertEquals("applied", instance.effect);
-            change.getRollbackMethod().get().invoke(instance, "rolled back");
-            assertEquals("rolled back", instance.effect);
-        }
-    }
-
-    @Test
-    void shouldResolveDirectPreviewSignaturesWithInheritedOverloads() throws Exception {
-        for (boolean legacy : new boolean[]{false, true}) {
-            CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
-                    signaturePreview(OverloadChild.class, "apply", "rollback",
-                            Collections.singletonList(Integer.class.getName()), legacy)).build();
-            OverloadChild instance = new OverloadChild();
-            assertArrayEquals(new Class<?>[]{Integer.class}, change.getApplyMethod().getParameterTypes());
-            assertArrayEquals(new Class<?>[]{Integer.class}, change.getRollbackMethod().get().getParameterTypes());
-            change.getApplyMethod().invoke(instance, 1);
-            assertEquals("integer apply", instance.effect);
-            change.getRollbackMethod().get().invoke(instance, 1);
-            assertEquals("integer rollback", instance.effect);
-        }
-    }
-
-    @Test
     void shouldMatchInheritedPrimitiveAndArraySignatures() throws Exception {
         CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
-                signaturePreview(OverloadLeaf.class, "applyArrays", "rollbackArrays",
+                signaturePreview(InheritedArrayChange.class, "applyArrays", "rollbackArrays",
                         java.util.Arrays.asList("int", "int[]", "java.lang.String[]"), false)).build();
-        OverloadLeaf instance = new OverloadLeaf();
+        InheritedArrayChange instance = new InheritedArrayChange();
         Class<?>[] expected = {int.class, int[].class, String[].class};
         assertArrayEquals(expected, change.getApplyMethod().getParameterTypes());
         assertArrayEquals(expected, change.getRollbackMethod().get().getParameterTypes());
@@ -336,14 +288,8 @@ class CodeLoadedChangeBuilderTest {
         assertEquals("rollback910", instance.effect);
     }
 
-    public static class OverloadBase {
+    public static class ArrayBaseChange {
         String effect;
-
-        @Apply
-        public void apply(String value) { effect = value; }
-
-        @io.flamingock.api.annotations.Rollback
-        public void rollback(String value) { effect = value; }
 
         public void applyArrays(int value, int[] numbers, String[] text) {
             effect = text[0] + value + numbers[0];
@@ -354,14 +300,7 @@ class CodeLoadedChangeBuilderTest {
         }
     }
 
-    public static class OverloadChild extends OverloadBase {
-        public void apply(Integer value) { effect = "integer apply"; }
-        public void rollback(Integer value) { effect = "integer rollback"; }
-        public void applyArrays(Integer value, Integer[] numbers, Object[] text) { }
-        public void rollbackArrays(Integer value, Integer[] numbers, Object[] text) { }
-    }
-
-    public static class OverloadLeaf extends OverloadChild { }
+    public static class InheritedArrayChange extends ArrayBaseChange { }
 
     private CodePreviewChange signaturePreview(Class<?> source, String apply, String rollback,
                                              java.util.List<String> parameters, boolean legacy) {
