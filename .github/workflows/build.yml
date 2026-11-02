@@ -8,7 +8,13 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Temurin Java 8 toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Set up GraalVM Java 17 for Gradle
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '17'
