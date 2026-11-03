@@ -16,6 +16,7 @@
 package io.flamingock.core.processor;
 
 import io.flamingock.api.annotations.Change;
+import io.flamingock.core.processor.system.CoreSystemChangeProvider;
 import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
@@ -26,6 +27,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,13 +46,19 @@ public class FlamingockAnnotationProcessorPlugin implements AnnotationProcessorP
     @Override
     public Collection<CodePreviewChange> findAnnotatedChanges() {
         logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
-        return roundEnv.getElementsAnnotatedWith(Change.class)
+        List<CodePreviewChange> changes = roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.CLASS)
                 .map(e -> (TypeElement) e)
                 .map(this::buildCodePreviewChange)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        // Unconditional, unlike the Mongock importer: every audit store needs its history preserved to the
+        // journal and then compacted, regardless of which optional modules are present.
+        changes.addAll(CoreSystemChangeProvider.getSystemChanges());
+
+        return changes;
     }
 
     private CodePreviewChange buildCodePreviewChange(TypeElement typeElement) {

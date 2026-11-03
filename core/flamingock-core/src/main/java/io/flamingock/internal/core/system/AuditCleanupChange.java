@@ -28,32 +28,16 @@ import org.slf4j.Logger;
  * The system change that collapses the audit store to one record per change, once the journal holds the
  * history that the audit store used to carry.
  *
- * <h2>NOT YET WIRED — read this before assuming it runs</h2>
- * This class is <b>deliberately not contributed to any pipeline.</b> Nothing registers it as a system
- * change, so it never appears in a stage and never executes. It exists so that the per-store
- * {@code AuditCompactor} implementations have a consumer ready and reviewed, and so the eventual wiring is
- * a small, obvious change rather than a large one.
- * <p>
- * Two things must happen before it can be wired, in this order:
- * <ol>
- *   <li><b>The journal backfill system change must exist.</b> Compaction <em>deletes</em> the audit ledger;
- *       the backfill is what first preserves it as {@code JournalEvent}s. If this change ever runs before
- *       that one has, the change history is gone — not in the audit store, not in the journal, and
- *       unrecoverable. The ordering guarantee is real once both exist (the system stage sorts by
- *       {@code order} and runs before every other stage), but it cannot protect against a backfill that
- *       does not exist.</li>
- *   <li><b>The target-system problem must be settled.</b> Every change is resolved against a target system
- *       ({@code ChangeProcessStrategyFactory} → {@code TargetSystemManager#getTargetSystem}, which throws
- *       on an unknown id), and there is no default or null-object target system. Audit cleanup operates on
- *       the audit store, not on a target system, so it has no id to supply. The Mongock importer sidesteps
- *       this by taking one from {@code @MongockSupport(targetSystem = ...)}; there is no equivalent here.</li>
- * </ol>
- * When wiring, append a system change to {@code FlamingockAnnotationProcessorPlugin#findAnnotatedChanges()}
- * — mirroring {@code MongockAnnotationProcessorPlugin#getImporterChange()} — with
- * {@code setSystem(true)} and an {@code order} after the backfill's. Reserved sequence: Mongock import
- * {@code 00100}, journal backfill {@code 00200}, audit cleanup {@code 00300}. Those orders are compared as
- * plain strings and nothing enforces uniqueness, so the backfill's author has to be told which value is
- * taken.
+ * <h2>Wiring</h2>
+ * Contributed unconditionally by {@code CoreSystemChangeProvider}, consumed by
+ * {@code FlamingockAnnotationProcessorPlugin#findAnnotatedChanges()} — mirroring
+ * {@code MongockAnnotationProcessorPlugin#getImporterChange()} — with {@code setSystem(true)} and
+ * {@code order = "00300"}, after the journal backfill's {@code "00200"} (Mongock import is
+ * {@code "00100"}). The system stage sorts by {@code order} and runs before every other stage, so the
+ * backfill is guaranteed to run first and this change never races it. Its {@link AuditCompactor} dependency
+ * is already registered by {@code CommunityChangeRunnerBuilder#contributeEditionDependencies}. The
+ * target-system problem this javadoc used to describe is resolved: audit-store-only system changes resolve
+ * against the reserved {@code PipelineHelper#AUDIT_STORE_TARGET_SYSTEM} alias.
  *
  * <h2>Why it fails instead of skipping when the journal is off</h2>
  * With {@code Features.JOURNAL_EVENTS} disabled no journal event has ever been written, so the audit ledger
@@ -66,6 +50,8 @@ import org.slf4j.Logger;
  * uncompacted forever, which is the failure mode hardest to notice.
  */
 public class AuditCleanupChange {
+
+    public static final String CHANGE_ID = "compact-audit-store";
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("AuditCleanup");
 

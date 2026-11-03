@@ -60,6 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class IncrementalProcessingIT {
 
+    /** The journal-backfill and audit-cleanup system changes, present unconditionally alongside user changes. */
+    private static final int CORE_SYSTEM_CHANGES = 2;
+
     @TempDir
     Path workDir;
 
@@ -81,7 +84,7 @@ class IncrementalProcessingIT {
         Path metadataR1 = metadataPathIn(round1Out);
         assertTrue(Files.exists(metadataR1), "round 1 must produce metadata.json");
         FlamingockMetadata afterR1 = readMetadata(metadataR1);
-        assertEquals(2, totalChanges(afterR1.getPipeline()),
+        assertEquals(2 + CORE_SYSTEM_CHANGES, totalChanges(afterR1.getPipeline()),
                 "round 1 must record both changes");
 
         // ROUND 2: simulate incremental compile of only ChangeOne. Pre-seed CLASS_OUTPUT
@@ -96,7 +99,7 @@ class IncrementalProcessingIT {
         assertTrue(ok2, "round 2 must succeed even without @EnableFlamingock in the round");
 
         FlamingockMetadata afterR2 = readMetadata(metadataPathIn(round2Out));
-        assertEquals(2, totalChanges(afterR2.getPipeline()),
+        assertEquals(2 + CORE_SYSTEM_CHANGES, totalChanges(afterR2.getPipeline()),
                 "round 2 must preserve previously-known change id-2");
         List<String> ids = changeIds(afterR2.getPipeline());
         assertTrue(ids.contains("id-1"), "id-1 (recompiled) present");
@@ -135,8 +138,10 @@ class IncrementalProcessingIT {
         FlamingockMetadata metadata = readMetadata(metadataPath);
         assertNull(metadata.getPipeline(), "no pipeline yet — only orphans");
         assertNotNull(metadata.getOrphanChanges());
-        assertEquals(1, metadata.getOrphanChanges().size());
-        assertEquals("id-x", metadata.getOrphanChanges().get(0).getId());
+        // With no @EnableFlamingock yet, the core system changes have nowhere to be routed
+        // either, so they land as orphans alongside the user's change.
+        assertEquals(1 + CORE_SYSTEM_CHANGES, metadata.getOrphanChanges().size());
+        assertTrue(metadata.getOrphanChanges().stream().anyMatch(c -> "id-x".equals(c.getId())));
         assertFalse(metadata.isStrictStageMapping(),
                 "strictStageMapping defaults to false until @EnableFlamingock sets it");
     }
@@ -154,7 +159,7 @@ class IncrementalProcessingIT {
         boolean ok1 = compile(src, round1Out, Collections.singletonList(changeSrc));
         assertTrue(ok1);
         FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
-        assertEquals(1, r1.getOrphanChanges().size());
+        assertEquals(1 + CORE_SYSTEM_CHANGES, r1.getOrphanChanges().size());
 
         // Round 2: introduce Config.java with covering stage; only Config + previous metadata.
         writeFile(src, "com/example/Config.java", configClass());
@@ -170,7 +175,7 @@ class IncrementalProcessingIT {
         assertNotNull(r2.getPipeline(), "round 2 builds the pipeline");
         assertTrue(r2.getOrphanChanges() == null || r2.getOrphanChanges().isEmpty(),
                 "orphan should have been rehomed into the new stage");
-        assertEquals(1, totalChanges(r2.getPipeline()));
+        assertEquals(1 + CORE_SYSTEM_CHANGES, totalChanges(r2.getPipeline()));
         assertTrue(changeIds(r2.getPipeline()).contains("id-x"));
     }
 
@@ -190,7 +195,7 @@ class IncrementalProcessingIT {
         boolean ok1 = compile(src, round1Out, allJavaFilesIn(src));
         assertTrue(ok1);
         FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
-        assertEquals(2, totalChanges(r1.getPipeline()));
+        assertEquals(2 + CORE_SYSTEM_CHANGES, totalChanges(r1.getPipeline()));
 
         // Round 2: simulate deletion — remove the source file. Recompile remaining sources +
         // seed previous metadata. Last-round pruning should drop id-del.
@@ -202,7 +207,7 @@ class IncrementalProcessingIT {
         assertTrue(ok2);
 
         FlamingockMetadata r2 = readMetadata(metadataPathIn(round2Out));
-        assertEquals(1, totalChanges(r2.getPipeline()),
+        assertEquals(1 + CORE_SYSTEM_CHANGES, totalChanges(r2.getPipeline()),
                 "deleted @Change should be pruned at the last round");
         assertTrue(changeIds(r2.getPipeline()).contains("id-keep"));
         assertFalse(changeIds(r2.getPipeline()).contains("id-del"));
@@ -225,7 +230,7 @@ class IncrementalProcessingIT {
 
         FlamingockMetadata md = readMetadata(metadataPathIn(out));
         // Without the fix, the prune step would wrongly drop the nested change here.
-        assertEquals(1, totalChanges(md.getPipeline()),
+        assertEquals(1 + CORE_SYSTEM_CHANGES, totalChanges(md.getPipeline()),
                 "nested @Change must NOT be pruned (binary name with $ converts to canonical for getTypeElement)");
         assertTrue(changeIds(md.getPipeline()).contains("id-nested"));
         // Confirm the persisted source carries the binary form, so the conversion is exercised.
@@ -249,7 +254,7 @@ class IncrementalProcessingIT {
         assertTrue(ok);
 
         FlamingockMetadata md = readMetadata(metadataPathIn(out));
-        assertEquals(1, totalChanges(md.getPipeline()),
+        assertEquals(1 + CORE_SYSTEM_CHANGES, totalChanges(md.getPipeline()),
                 "sub-package change must be placed via covers semantics, not dropped");
         assertTrue(changeIds(md.getPipeline()).contains("id-sub"));
         assertTrue(md.getOrphanChanges() == null || md.getOrphanChanges().isEmpty());
@@ -270,7 +275,7 @@ class IncrementalProcessingIT {
         boolean ok1 = compile(src, round1Out, allJavaFilesIn(src));
         assertTrue(ok1);
         FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
-        assertEquals(2, totalChanges(r1.getPipeline()));
+        assertEquals(2 + CORE_SYSTEM_CHANGES, totalChanges(r1.getPipeline()));
 
         // Round 2: rewrite Config.java to drop the 'removed' stage (keeping 'kept').
         // Recompile all sources — Gradle does this when a non-isolating processor's input changes.
@@ -283,8 +288,9 @@ class IncrementalProcessingIT {
         assertTrue(ok2);
 
         FlamingockMetadata r2 = readMetadata(metadataPathIn(round2Out));
-        // 'kept' stage covers com.example.kept → id-keep stays placed there.
-        assertEquals(1, totalChanges(r2.getPipeline()));
+        // 'kept' stage covers com.example.kept → id-keep stays placed there, alongside the
+        // core system changes, which are unaffected by the stage drop.
+        assertEquals(1 + CORE_SYSTEM_CHANGES, totalChanges(r2.getPipeline()));
         assertTrue(changeIds(r2.getPipeline()).contains("id-keep"));
         // 'removed' is gone; id-rm has no covering stage → ends up in orphans.
         assertNotNull(r2.getOrphanChanges());
