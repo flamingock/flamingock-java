@@ -9,6 +9,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    testImplementation(project(":utils:test-util"))
 }
 
 description = "Shared internal utilities, preview system, and common infrastructure components"

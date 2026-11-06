@@ -36,6 +36,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
@@ -195,6 +198,9 @@ public class CodePreviewChangeBuilder implements PreviewChangeBuilder<CodePrevie
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,
                                                            Class<? extends Annotation> annotationType) {
+        if (typeElement == null) {
+            return Optional.empty();
+        }
         for (Element enclosedElement : typeElement.getEnclosedElements()) {
             if (enclosedElement.getKind() == ElementKind.METHOD &&
                     enclosedElement.getAnnotation(annotationType) != null) {
@@ -208,7 +214,18 @@ public class CodePreviewChangeBuilder implements PreviewChangeBuilder<CodePrevie
             }
         }
 
-        return Optional.empty();
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.DECLARED) {
+            return Optional.empty();
+        }
+        Element superclassElement = ((DeclaredType) superclass).asElement();
+
+        return getAnnotatedMethodInfo(
+                superclassElement instanceof TypeElement
+                        ? (TypeElement) superclassElement
+                        : null,
+                annotationType
+        );
     }
 
     private PreviewConstructor getPreviewConstructor(TypeElement typeElement) {

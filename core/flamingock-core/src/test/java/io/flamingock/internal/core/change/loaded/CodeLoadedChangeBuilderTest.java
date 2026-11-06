@@ -247,7 +247,102 @@ class CodeLoadedChangeBuilderTest {
         assertNull(result.getSourceFile());
     }
 
+    @Test
+    void shouldInvokeInheritedPreviewMethodsForBothEditions() throws Exception {
+        for (boolean legacy : new boolean[]{false, true}) {
+            CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
+                    preview(InheritedChange.class.getName(), legacy, true)).build();
+            InheritedChange instance = new InheritedChange();
+            change.getApplyMethod().invoke(instance, "applied");
+            assertEquals("applied", instance.effect);
+            change.getRollbackMethod().get().invoke(instance);
+            assertEquals("rolled back", instance.effect);
+            assertEquals(BaseChange.class, change.getApplyMethod().getDeclaringClass());
+        }
+    }
+
+    @Test
+    void shouldPreferDirectlyDeclaredPreviewMethods() throws Exception {
+        CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
+                preview(DirectChange.class.getName(), false, true)).build();
+        DirectChange instance = new DirectChange();
+        change.getApplyMethod().invoke(instance, "applied");
+        assertEquals("direct applied", instance.effect);
+        change.getRollbackMethod().get().invoke(instance);
+        assertEquals("direct rollback", instance.effect);
+        assertEquals(DirectChange.class, change.getApplyMethod().getDeclaringClass());
+    }
+
+    @Test
+    void shouldMatchInheritedPrimitiveAndArraySignatures() throws Exception {
+        CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(
+                signaturePreview(InheritedArrayChange.class, "applyArrays", "rollbackArrays",
+                        java.util.Arrays.asList("int", "int[]", "java.lang.String[]"), false)).build();
+        InheritedArrayChange instance = new InheritedArrayChange();
+        Class<?>[] expected = {int.class, int[].class, String[].class};
+        assertArrayEquals(expected, change.getApplyMethod().getParameterTypes());
+        assertArrayEquals(expected, change.getRollbackMethod().get().getParameterTypes());
+        change.getApplyMethod().invoke(instance, 7, new int[]{8}, new String[]{"apply"});
+        assertEquals("apply78", instance.effect);
+        change.getRollbackMethod().get().invoke(instance, 9, new int[]{10}, new String[]{"rollback"});
+        assertEquals("rollback910", instance.effect);
+    }
+
+    public static class ArrayBaseChange {
+        String effect;
+
+        public void applyArrays(int value, int[] numbers, String[] text) {
+            effect = text[0] + value + numbers[0];
+        }
+
+        public void rollbackArrays(int value, int[] numbers, String[] text) {
+            effect = text[0] + value + numbers[0];
+        }
+    }
+
+    public static class InheritedArrayChange extends ArrayBaseChange { }
+
+    private CodePreviewChange signaturePreview(Class<?> source, String apply, String rollback,
+                                             java.util.List<String> parameters, boolean legacy) {
+        return new CodePreviewChange("signature-change", "001", "flamingock", source.getName(), null,
+                PreviewConstructor.getDefault(), new PreviewMethod(apply, parameters),
+                new PreviewMethod(rollback, parameters), false, true, false, null,
+                RecoveryDescriptor.getDefault(), legacy);
+    }
+
+    public static class BaseChange {
+        String effect;
+
+        public void apply(String value) {
+            effect = value;
+        }
+
+        public void rollback() {
+            effect = "rolled back";
+        }
+    }
+
+    public static class MiddleChange extends BaseChange { }
+
+    public static class InheritedChange extends MiddleChange { }
+
+    public static class DirectChange extends MiddleChange {
+        @Override
+        public void apply(String value) {
+            effect = "direct " + value;
+        }
+
+        @Override
+        public void rollback() {
+            effect = "direct rollback";
+        }
+    }
+
     private CodePreviewChange preview(String sourceClassPath) {
+        return preview(sourceClassPath, false, false);
+    }
+
+    private CodePreviewChange preview(String sourceClassPath, boolean legacy, boolean rollback) {
         return new CodePreviewChange(
                 "nested-change",
                 "001",
@@ -255,14 +350,15 @@ class CodeLoadedChangeBuilderTest {
                 sourceClassPath,
                 null,
                 PreviewConstructor.getDefault(),
-                new PreviewMethod("apply", Collections.emptyList()),
-                null,
+                new PreviewMethod("apply", rollback
+                        ? Collections.singletonList(String.class.getName()) : Collections.emptyList()),
+                rollback ? new PreviewMethod("rollback", Collections.emptyList()) : null,
                 false,
                 true,
                 false,
                 null,
                 RecoveryDescriptor.getDefault(),
-                false);
+                legacy);
     }
 
     static class Group {

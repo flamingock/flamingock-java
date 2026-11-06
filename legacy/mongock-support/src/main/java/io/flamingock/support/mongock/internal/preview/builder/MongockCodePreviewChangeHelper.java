@@ -17,12 +17,12 @@ package io.flamingock.support.mongock.internal.preview.builder;
 
 import com.github.cloudyrock.mongock.ChangeLog;
 import com.github.cloudyrock.mongock.ChangeSet;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
-import io.flamingock.internal.common.core.change.RecoveryDescriptor;
-import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.util.TypeElementNameUtils;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.mongock.api.annotations.BeforeExecution;
@@ -38,6 +38,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -167,6 +169,9 @@ public class MongockCodePreviewChangeHelper {
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,
                                                            Class<? extends Annotation> annotationType) {
+        if (typeElement == null) {
+            return Optional.empty();
+        }
         for (Element enclosedElement : typeElement.getEnclosedElements()) {
             if (enclosedElement.getKind() == ElementKind.METHOD &&
                     enclosedElement.getAnnotation(annotationType) != null) {
@@ -176,7 +181,18 @@ public class MongockCodePreviewChangeHelper {
             }
         }
 
-        return Optional.empty();
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.DECLARED) {
+            return Optional.empty();
+        }
+        Element superclassElement = ((DeclaredType) superclass).asElement();
+
+        return getAnnotatedMethodInfo(
+                superclassElement instanceof TypeElement
+                        ? (TypeElement) superclassElement
+                        : null,
+                annotationType
+        );
     }
 
     private PreviewMethod previewMethodFromExecutableElement(ExecutableElement element) {
