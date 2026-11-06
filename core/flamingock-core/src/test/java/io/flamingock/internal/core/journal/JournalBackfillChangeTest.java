@@ -109,6 +109,7 @@ class JournalBackfillChangeTest {
         order.verify(systemPersistence).appendEventFrom(orderOnly);
         order.verify(legacyPersistence).appendEventFrom(legacy);
         order.verifyNoMoreInteractions();
+        verify(factory).get(SYSTEM_STAGE_ID);
     }
 
     @Test

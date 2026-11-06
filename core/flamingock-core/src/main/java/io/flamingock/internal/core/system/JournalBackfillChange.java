@@ -17,6 +17,7 @@ package io.flamingock.internal.core.system;
 
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.feature.Features;
@@ -41,12 +42,13 @@ public class JournalBackfillChange {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("JournalBackfill");
 
-    private final Map<String, JournalHistoryAppender> journalPersistenceByStage = new HashMap<>();
+    private final Map<String, AuditPersistence> journalPersistenceByStage = new HashMap<>();
     private AuditPersistenceFactory<?> persistenceFactory;
 
     /**
      * Appends every eligible entry in the history reader's order. Persistence instances are reused by
-     * stage during execution, including interleaved stages. Once successfully applied, this system change
+     * stage during execution, including the initial system-stage history read and interleaved stages.
+     * Once successfully applied, this system change
      * is not executed again. After a failure, a later application startup retries with a new change
      * instance and an empty cache; entries appended before the failure may be duplicated.
      *
@@ -62,11 +64,11 @@ public class JournalBackfillChange {
 
         logger.info("Backfilling audit history into journal streams");
         this.persistenceFactory = persistenceFactory;
-        for (AuditEntry auditEntry : persistenceFactory.get(SYSTEM_STAGE_ID).getAuditHistory()) {
+        for (AuditEntry auditEntry : getJournalPersistence(SYSTEM_STAGE_ID).getAuditHistory()) {
             if (CHANGE_ID.equals(auditEntry.getChangeId())) {
                 continue;
             }
-            JournalHistoryAppender persistence = getJournalPersistence(auditEntry);
+            JournalHistoryAppender persistence = (JournalHistoryAppender) getJournalPersistence(auditEntry.getStageId());
             Result result = persistence.appendEventFrom(auditEntry);
             if (!(result instanceof Result.Ok)) {
                 Throwable cause = result instanceof Result.Error ? ((Result.Error) result).getError() : null;
@@ -76,8 +78,7 @@ public class JournalBackfillChange {
         logger.info("Audit history backfilled into journal streams");
     }
 
-    private JournalHistoryAppender getJournalPersistence(AuditEntry auditEntry) {
-        return journalPersistenceByStage.computeIfAbsent(auditEntry.getStageId(),
-                stageId -> (JournalHistoryAppender) persistenceFactory.get(stageId));
+    private AuditPersistence getJournalPersistence(String stageId) {
+        return journalPersistenceByStage.computeIfAbsent(stageId, persistenceFactory::get);
     }
 }
