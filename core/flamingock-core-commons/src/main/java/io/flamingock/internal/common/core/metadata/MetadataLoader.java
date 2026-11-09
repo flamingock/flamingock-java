@@ -182,10 +182,16 @@ public final class MetadataLoader {
     static final class CompositePipelineBuilder {
         PreviewPipeline buildFrom(List<FlamingockMetadata> modules) {
             // Stage assembly preserves stage instances by reference — no defensive copies.
-            // Default stages are kept as-is (duplicate names across modules surface a warning
-            // because that's likely a configuration mistake). Legacy stages are merged
-            // group-by-name via collapseLegacyStagesByName; same-name legacy stages across
-            // modules are merged silently because that's the documented design.
+            // Stages with the same name across modules are collapsed group-by-name via
+            // collapseStagesByName for BOTH legacy and default stages. The collapse
+            // id-deduplicates the change set across the group; this is what makes the
+            // kapt + javac scenario in a mixed Java+Kotlin module produce one default stage
+            // with the union of changes rather than two side-by-side. Identity-field
+            // mismatches (different type / sourcesPackage / resourcesDir on stages that
+            // share a name) still surface a WARN for default stages so genuine multi-module
+            // misconfigurations stay visible; legacy stages stay silent because historical
+            // Mongock setups frequently have multiple modules legitimately producing the
+            // same legacy stage.
             List<PreviewStage> defaultStages = new ArrayList<>();
             List<PreviewStage> legacyStages = new ArrayList<>();
             SystemPreviewStage systemStage = null;
@@ -209,22 +215,12 @@ public final class MetadataLoader {
                 }
             }
 
-            // Warn on duplicate names among DEFAULT stages only — for LEGACY, collapsing
-            // same-name stages is the intended outcome and would otherwise surface false
-            // positives in any project with multiple Mongock-using modules.
-            Set<String> seenDefaultNames = new HashSet<>();
-            for (PreviewStage s : defaultStages) {
-                if (!seenDefaultNames.add(s.getName())) {
-                    logger.warn("Duplicate stage name '{}' across modules — proceeding with both.",
-                            s.getName());
-                }
-            }
-
-            List<PreviewStage> collapsedLegacy = collapseLegacyStagesByName(legacyStages);
+            List<PreviewStage> collapsedLegacy = collapseStagesByName(legacyStages);
+            List<PreviewStage> collapsedDefault = collapseStagesByName(defaultStages);
 
             List<PreviewStage> allStages = new ArrayList<>();
             allStages.addAll(collapsedLegacy);
-            allStages.addAll(defaultStages);
+            allStages.addAll(collapsedDefault);
 
             // Surface the rare case where the system stage name clashes with any
             // resolved (post-legacy-collapse) stage name in the composite.
@@ -269,53 +265,82 @@ public final class MetadataLoader {
         }
 
         /**
-         * Group legacy stages by name and merge each group independently. Returns one
-         * {@link PreviewStage} per distinct legacy-stage name, in first-seen order across
-         * modules (deterministic for a given module discovery order).
+         * Group stages by name and merge each group independently. Returns one
+         * {@link PreviewStage} per distinct stage name, in first-seen order across modules
+         * (deterministic for a given module discovery order).
          *
-         * <p>Stages with different names stay separate — historically Mongock was the only
-         * producer (always {@code flamingock-legacy-stage}), but a future legacy source can
-         * declare its own stage name and is preserved as a peer alongside Mongock's.
+         * <p>Type-agnostic: handles both legacy and default stages with the same id-dedup
+         * semantics. Same-name groups across modules are merged silently for LEGACY stages
+         * (historical Mongock setups frequently have multiple modules producing the same
+         * legacy stage) and with an identity-field mismatch WARN for DEFAULT stages (so the
+         * "two modules declared 'mainStage' with different sourcesPackage" misconfiguration
+         * stays visible).
          */
-        private static List<PreviewStage> collapseLegacyStagesByName(List<PreviewStage> legacyStages) {
-            if (legacyStages.isEmpty()) return new ArrayList<>();
+        private static List<PreviewStage> collapseStagesByName(List<PreviewStage> stages) {
+            if (stages.isEmpty()) return new ArrayList<>();
             LinkedHashMap<String, List<PreviewStage>> byName = new LinkedHashMap<>();
-            for (PreviewStage s : legacyStages) {
+            for (PreviewStage s : stages) {
                 byName.computeIfAbsent(s.getName(), k -> new ArrayList<>()).add(s);
             }
             List<PreviewStage> result = new ArrayList<>(byName.size());
             for (List<PreviewStage> group : byName.values()) {
-                result.add(group.size() == 1 ? group.get(0) : mergeSameNameLegacyStages(group));
+                result.add(group.size() == 1 ? group.get(0) : mergeSameNameStages(group));
             }
             return result;
         }
 
         /**
-         * id-deduplicated union of changes for legacy stages that already share a name. The
-         * first stage's name/description/sourcesPackage/resourcesDir wins; subsequent stages
+         * id-deduplicated union of changes for stages that already share a name. The first
+         * stage's name/type/description/sourcesPackage/resourcesDir wins; subsequent stages
          * contribute only changes whose ids haven't been seen yet.
+         *
+         * <p>Emits a WARN on identity-field mismatch (different {@code type},
+         * {@code sourcesPackage}, or {@code resourcesDir}) for DEFAULT stages — this is
+         * almost certainly a configuration mistake worth surfacing. LEGACY stages stay
+         * silent on mismatch by design: existing Mongock-using modules sometimes
+         * legitimately diverge on these fields without it being a real problem.
          */
-        private static PreviewStage mergeSameNameLegacyStages(List<PreviewStage> sameName) {
+        private static PreviewStage mergeSameNameStages(List<PreviewStage> sameName) {
             PreviewStage first = sameName.get(0);
             List<AbstractPreviewChange> merged = new ArrayList<>();
             Set<String> seenIds = new HashSet<>();
             if (first.getChanges() != null) {
                 first.getChanges().forEach(c -> { merged.add(c); seenIds.add(c.getId()); });
             }
+            boolean identityMismatch = false;
             for (int i = 1; i < sameName.size(); i++) {
                 PreviewStage extra = sameName.get(i);
+                if (!identityMismatch && hasIdentityMismatch(first, extra)) {
+                    identityMismatch = true;
+                }
                 if (extra.getChanges() == null) continue;
                 for (AbstractPreviewChange c : extra.getChanges()) {
                     if (seenIds.add(c.getId())) {
                         merged.add(c);
                     } else {
-                        logger.debug("Deduplicated legacy change id '{}' in stage '{}' (already contributed by an earlier module)",
+                        logger.debug("Deduplicated change id '{}' in stage '{}' (already contributed by an earlier module)",
                                 c.getId(), first.getName());
                     }
                 }
             }
+            if (identityMismatch && first.getType() != StageType.LEGACY) {
+                logger.warn("Stage '{}' is declared by multiple modules with mismatched identity (type / sourcesPackage / resourcesDir). "
+                        + "Merging change sets; first-seen identity wins — verify your @EnableFlamingock declarations.",
+                        first.getName());
+            }
             return new PreviewStage(first.getName(), first.getType(), first.getDescription(),
                     first.getSourcesPackage(), first.getResourcesDir(), merged);
+        }
+
+        /**
+         * Two same-name stages have a real configuration mismatch when their type,
+         * sourcesPackage, or resourcesDir differ. Description is excluded — it's free-text
+         * and can reasonably differ across modules without indicating a problem.
+         */
+        private static boolean hasIdentityMismatch(PreviewStage a, PreviewStage b) {
+            return a.getType() != b.getType()
+                    || !java.util.Objects.equals(a.getSourcesPackage(), b.getSourcesPackage())
+                    || !java.util.Objects.equals(a.getResourcesDir(), b.getResourcesDir());
         }
     }
 
