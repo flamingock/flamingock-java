@@ -284,7 +284,8 @@ public class CodeLoadedChangeBuilder implements LoadedChangeBuilder<CodeLoadedCh
 
     private Method getMethodFromNameAndParameters(String sourceClassName, String methodName, List<String> methodParametersTypesNames) {
         Class<?> sourceClass = getClassForName(sourceClassName);
-        return ReflectionUtil.getDeclaredMethodFromParameterTypeNames(sourceClass, methodName, methodParametersTypesNames);
+        return ReflectionUtil.getMethodFromParameterTypeNames(
+                sourceClass, methodName, methodParametersTypesNames, true);
     }
 
     private Method getApplyMethodFromAnnotation(Class<?> sourceClass) {
