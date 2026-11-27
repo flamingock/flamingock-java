@@ -15,6 +15,10 @@
  */
 package io.flamingock.core.e2e;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes._002__CustomTargetSystemChange;
@@ -23,6 +27,10 @@ import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
+import io.flamingock.core.kit.inmemory.InternalInMemoryTestAuditStore;
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -34,11 +42,15 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Comprehensive tests for audit entry persistence across core Flamingock functionality.
@@ -64,6 +76,64 @@ class AuditPersistenceE2ETest {
     void setUp() {
         testKit = InternalInMemoryTestKit.create();
         auditHelper = testKit.getAuditHelper();
+    }
+
+    @Test
+    void stageWriterAndInjectedFactoryShareRunnerPersistence() {
+        RecordingStore store = new RecordingStore(testKit);
+        PersistenceObservation observation = new PersistenceObservation();
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
+                    PipelineTestHelper.getPreviewPipeline("shared-stage",
+                            new CodeChangeTestDefinition(_003__ObservePersistence.class,
+                                    Arrays.asList(AuditPersistenceFactory.class, PersistenceObservation.class)))
+            );
+            testKit.createBuilderWithAuditStore(store)
+                    .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                    .addDependency(observation)
+                    .build().run();
+        }
+
+        assertEquals(Collections.singletonList("shared-stage"), store.createdStages);
+        assertSame(store.created.get(0), observation.first);
+        assertSame(observation.first, observation.second);
+        auditHelper.verifyAuditFinalStateSequence(APPLIED("observe-persistence"));
+    }
+
+    public static class RecordingStore extends InternalInMemoryTestAuditStore {
+        final List<String> createdStages = new ArrayList<>();
+        final List<AuditPersistence> created = new ArrayList<>();
+
+        RecordingStore(InternalInMemoryTestKit kit) {
+            super(kit.getAuditStorage(), kit.getLockStorage(), kit.getJournalEventStore());
+        }
+
+        @Override
+        public AuditPersistenceFactory<CommunityAuditPersistence> getPersistenceFactory() {
+            AuditPersistenceFactory<CommunityAuditPersistence> delegate = super.getPersistenceFactory();
+            return stage -> {
+                CommunityAuditPersistence persistence = delegate.get(stage);
+                createdStages.add(stage);
+                created.add(persistence);
+                return persistence;
+            };
+        }
+    }
+
+    public static class PersistenceObservation {
+        AuditPersistence first;
+        AuditPersistence second;
+    }
+
+    @Change(id = "observe-persistence", transactional = false, author = "test")
+    @TargetSystem(id = "kafka")
+    public static class _003__ObservePersistence {
+        @Apply
+        public void apply(@NonLockGuarded AuditPersistenceFactory<?> factory,
+                          @NonLockGuarded PersistenceObservation observation) {
+            observation.first = factory.get("shared-stage");
+            observation.second = factory.get("shared-stage");
+        }
     }
 
     @Test
