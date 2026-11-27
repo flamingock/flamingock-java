@@ -15,6 +15,7 @@
  */
 package io.flamingock.store.mongodb.sync.internal;
 
+import com.mongodb.MongoWriteException;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -25,6 +26,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.journal.DuplicateStreamSequenceException;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.IndexDefinition;
@@ -71,6 +73,7 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
     static final String EVENT_ID_INDEX_NAME = "unique_event_id";
 
     private final MongoCollection<Document> collection;
+    private final String sequenceCollisionPrefix;
     private final MongoDBJournalEventMapper mapper = new MongoDBJournalEventMapper();
 
     public MongoDBSyncJournalEventStore(MongoDatabase database,
@@ -82,6 +85,8 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
                 .withReadConcern(readConcern)
                 .withReadPreference(readPreference)
                 .withWriteConcern(writeConcern);
+        this.sequenceCollisionPrefix = "E11000 duplicate key error collection: " + database.getName() + "."
+                + collectionName + " index: " + UNIQUE_INDEX_NAME + " dup key:";
     }
 
     protected void initialize(boolean autoCreate) {
@@ -148,7 +153,11 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
      */
     Result write(ClientSession clientSession, JournalEvent<AuditEntry> event) {
         Document document = mapper.toDocument(event);
-        collection.insertOne(clientSession, document);
+        try {
+            collection.insertOne(clientSession, document);
+        } catch (MongoWriteException exception) {
+            throw normalizeCollision(event, exception);
+        }
         logger.debug("Journal event appended [eventId={} type={} stream={} sequence={}]",
                 event.getEventId(), event.getEventType(), event.getStreamId(), event.getStreamSequence());
         return Result.OK();
@@ -169,15 +178,39 @@ public class MongoDBSyncJournalEventStore implements JournalEventStore {
      */
     Result write(JournalEvent<AuditEntry> event) {
         Document document = mapper.toDocument(event);
-        collection.insertOne(document);
+        try {
+            collection.insertOne(document);
+        } catch (MongoWriteException exception) {
+            throw normalizeCollision(event, exception);
+        }
         logger.debug("Journal event appended [eventId={} type={} stream={} sequence={}]",
                 event.getEventId(), event.getEventType(), event.getStreamId(), event.getStreamSequence());
         return Result.OK();
     }
 
+    private RuntimeException normalizeCollision(JournalEvent<AuditEntry> event, MongoWriteException exception) {
+        String message = exception.getError().getMessage();
+        // Match the actual namespace and index in the header. Both the collection name and the
+        // rejected key can themselves include text that looks like an index or key delimiter.
+        if (exception.getError().getCode() == 11000 && message != null && message.startsWith(sequenceCollisionPrefix)) {
+            return new DuplicateStreamSequenceException(event.getStreamId(), event.getStreamSequence(), exception);
+        }
+        return exception;
+    }
+
     @Override
     public Optional<JournalEvent<AuditEntry>> getLastEventByStream(String streamId) {
-        Document document = collection.find(Filters.eq(KEY_STREAM_ID, streamId))
+        return getLastEventByStream(collection, streamId);
+    }
+
+    Optional<JournalEvent<AuditEntry>> getMajorityCommittedTail(String streamId) {
+        // A write visible only on the old primary can disappear during failover. It cannot seed a retry.
+        return getLastEventByStream(collection.withReadPreference(ReadPreference.primary())
+                .withReadConcern(ReadConcern.MAJORITY), streamId);
+    }
+
+    private Optional<JournalEvent<AuditEntry>> getLastEventByStream(MongoCollection<Document> source, String streamId) {
+        Document document = source.find(Filters.eq(KEY_STREAM_ID, streamId))
                 .sort(Sorts.descending(KEY_STREAM_SEQUENCE))
                 .limit(1)
                 .first();

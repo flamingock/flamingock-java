@@ -34,8 +34,8 @@ import io.flamingock.internal.common.core.error.FlamingockException;
  * distinction is what makes a portable retry possible: retrying a genuine infrastructure failure would
  * be wrong, and retrying nothing at all would leave a recoverable collision as a hard failure.
  * <p>
- * Nothing throws this yet. Each store translates its own exception in its own change; see
- * {@code docs/AUDIT_COMPACTION_CONTRIBUTOR_GUIDE.md} for how the journal work is split.
+ * Each store is responsible for translating only a positively identified journal position collision.
+ * MongoDB sync performs this translation at the journal insert boundary.
  *
  * <h2>Why it carries the position</h2>
  * A retry needs to know which position was rejected, and an operator reading a log needs both halves:

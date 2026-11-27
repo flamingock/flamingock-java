@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.journal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.journal.DuplicateStreamSequenceException;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.journal.JournalEventType;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Hands out stream positions for a single stream, in memory — safe because the stage lock guarantees one
@@ -35,8 +40,8 @@ import java.util.UUID;
  * beyond tidiness: a contiguous {@code streamSequence} is what lets a consumer reconstruct order and tell
  * "still in flight" from "lost", so gaps must never be produced by ordinary failure handling.
  * <p>
- * If a caller forgets to confirm a write that did land, the reused position collides with the unique
- * {@code (streamId, streamSequence)} index — a loud failure rather than a silent duplicate.
+ * A duplicate position can be resynchronized from the authoritative journal tail and retried once when
+ * the backend has established that repeating the complete write attempt is safe.
  */
 public class JournalEventSequencer {
     private final String streamId;
@@ -65,6 +70,46 @@ public class JournalEventSequencer {
             nextSequence++;
             pendingConfirmation = false;
         }
+    }
+
+    /**
+     * Runs a safely repeatable journal write and retries once after a corroborated pending-position collision.
+     * The supplier must throw a direct {@link DuplicateStreamSequenceException} only when the attempt is
+     * safe to repeat, and return only after its transaction, if any, has completed successfully. This method
+     * does not confirm writes; the caller must still call {@link #confirm()} after durable success.
+     *
+     * @param readDurableTail reads the highest durable event for the stream only after a matching collision
+     * @param write complete write attempt
+     * @param <T> result type
+     * @return the successful attempt's result
+     */
+    public <T> T retryOnceOnCollision(Function<String, Optional<JournalEvent<AuditEntry>>> readDurableTail,
+                                      Supplier<T> write) {
+        try {
+            return write.get();
+        } catch (DuplicateStreamSequenceException collision) {
+            if (!pendingConfirmation || !Objects.equals(streamId, collision.getStreamId())
+                    || nextSequence != collision.getStreamSequence()) {
+                throw collision;
+            }
+            Optional<JournalEvent<AuditEntry>> tail;
+            try {
+                tail = readDurableTail.apply(streamId);
+            } catch (RuntimeException readFailure) {
+                if (readFailure != collision) {
+                    collision.addSuppressed(readFailure);
+                }
+                throw collision;
+            }
+            if (!tail.isPresent() || !Objects.equals(streamId, tail.get().getStreamId())
+                    || tail.get().getStreamSequence() < collision.getStreamSequence()
+                    || tail.get().getStreamSequence() == Long.MAX_VALUE) {
+                throw collision;
+            }
+            nextSequence = tail.get().getStreamSequence() + 1;
+            pendingConfirmation = false;
+        }
+        return write.get();
     }
 
     @NotNull

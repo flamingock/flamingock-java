@@ -18,15 +18,25 @@ package io.flamingock.internal.core.journal;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.journal.DuplicateStreamSequenceException;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class JournalEventSequencerTest {
 
@@ -52,6 +62,121 @@ class JournalEventSequencerTest {
         assertNotEquals(first.getIdempotencyKey(), differentExecution.getIdempotencyKey());
         assertNotEquals(first.getIdempotencyKey(), differentChange.getIdempotencyKey());
         assertNotEquals(first.getIdempotencyKey(), differentState.getIdempotencyKey());
+    }
+
+    @Test
+    void successfulAttemptDoesNotReadOrConfirm() {
+        JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+        JournalEventReader reader = mock(JournalEventReader.class);
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        assertEquals(42L, retry(sequencer, reader, () -> sequencer.newEvent(payload).getStreamSequence()));
+        assertEquals(42L, sequencer.newEvent(payload).getStreamSequence());
+        verify(reader, never()).getLastEventByStream("stage-1");
+    }
+
+    @Test
+    void collisionRefreshesOnceAndRequiresConfirmation() {
+        JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+        JournalEventReader reader = mock(JournalEventReader.class);
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        when(reader.getLastEventByStream("stage-1")).thenReturn(Optional.of(
+                new JournalEventSequencer("stage-1", 45).newEvent(payload)));
+        AtomicInteger attempts = new AtomicInteger();
+        assertEquals(46L, retry(sequencer, reader, () -> {
+            long sequence = sequencer.newEvent(payload).getStreamSequence();
+            if (attempts.getAndIncrement() == 0) {
+                assertEquals(42L, sequence);
+                throw new DuplicateStreamSequenceException("stage-1", sequence);
+            }
+            return sequence;
+        }));
+        assertEquals(2, attempts.get());
+        assertEquals(46L, sequencer.newEvent(payload).getStreamSequence());
+        sequencer.confirm();
+        assertEquals(47L, sequencer.newEvent(payload).getStreamSequence());
+        verify(reader).getLastEventByStream("stage-1");
+    }
+
+    @Test
+    void mismatchedOrAbsentPendingCollisionNeverReads() {
+        JournalEventReader reader = mock(JournalEventReader.class);
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        for (int scenario = 0; scenario < 3; scenario++) {
+            JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+            if (scenario != 0) {
+                sequencer.newEvent(payload);
+            }
+            DuplicateStreamSequenceException collision = new DuplicateStreamSequenceException(
+                    scenario == 1 ? "other" : "stage-1", scenario == 2 ? 41 : 42);
+            assertSame(collision, assertThrows(DuplicateStreamSequenceException.class,
+                    () -> retry(sequencer, reader, () -> { throw collision; })));
+            assertEquals(42L, sequencer.newEvent(payload).getStreamSequence());
+        }
+        verify(reader, never()).getLastEventByStream("stage-1");
+    }
+
+    @Test
+    void missingWrongStreamOrStaleTailPreservesPendingAndCollision() {
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        for (int scenario = 0; scenario < 3; scenario++) {
+            JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+            JournalEventReader reader = mock(JournalEventReader.class);
+            Optional<JournalEvent<AuditEntry>> tail = scenario == 0 ? Optional.empty() : Optional.of(
+                    new JournalEventSequencer(scenario == 1 ? "other" : "stage-1", scenario == 1 ? 45 : 41)
+                            .newEvent(payload));
+            when(reader.getLastEventByStream("stage-1")).thenReturn(tail);
+            DuplicateStreamSequenceException collision = new DuplicateStreamSequenceException("stage-1", 42);
+            assertSame(collision, assertThrows(DuplicateStreamSequenceException.class,
+                    () -> retry(sequencer, reader, () -> {
+                        sequencer.newEvent(payload);
+                        throw collision;
+                    })));
+            sequencer.confirm();
+            assertEquals(43L, sequencer.newEvent(payload).getStreamSequence());
+        }
+    }
+
+    @Test
+    void readerFailureIsSuppressedOnOriginalCollision() {
+        JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+        JournalEventReader reader = mock(JournalEventReader.class);
+        RuntimeException readFailure = new IllegalStateException("read failed");
+        when(reader.getLastEventByStream("stage-1")).thenThrow(readFailure);
+        DuplicateStreamSequenceException collision = new DuplicateStreamSequenceException("stage-1", 42);
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        assertSame(collision, assertThrows(DuplicateStreamSequenceException.class,
+                () -> retry(sequencer, reader, () -> { sequencer.newEvent(payload); throw collision; })));
+        assertEquals(1, collision.getSuppressed().length);
+        assertSame(readFailure, collision.getSuppressed()[0]);
+        sequencer.confirm();
+        assertEquals(43L, sequencer.newEvent(payload).getStreamSequence());
+    }
+
+    @Test
+    void retryIsBoundedAndGenericFailuresPropagate() {
+        JournalEventSequencer sequencer = new JournalEventSequencer("stage-1", 42);
+        JournalEventReader reader = mock(JournalEventReader.class);
+        AuditEntry payload = auditEntry("execution", "change", AuditEntry.Status.APPLIED);
+        when(reader.getLastEventByStream("stage-1")).thenReturn(Optional.of(
+                new JournalEventSequencer("stage-1", 45).newEvent(payload)));
+        DuplicateStreamSequenceException second = new DuplicateStreamSequenceException("stage-1", 46);
+        AtomicInteger attempts = new AtomicInteger();
+        assertSame(second, assertThrows(DuplicateStreamSequenceException.class, () -> retry(sequencer, reader, () -> {
+            long sequence = sequencer.newEvent(payload).getStreamSequence();
+            if (attempts.getAndIncrement() == 0) {
+                throw new DuplicateStreamSequenceException("stage-1", sequence);
+            }
+            throw second;
+        })));
+        assertEquals(2, attempts.get());
+        verify(reader).getLastEventByStream("stage-1");
+        RuntimeException failure = new IllegalStateException("write failed");
+        assertSame(failure, assertThrows(IllegalStateException.class,
+                () -> retry(sequencer, reader, () -> { throw failure; })));
+    }
+
+    private static <T> T retry(JournalEventSequencer sequencer, JournalEventReader reader, Supplier<T> write) {
+        return sequencer.retryOnceOnCollision(reader::getLastEventByStream, write);
     }
 
     private static AuditEntry auditEntry(String executionId, String changeId, AuditEntry.Status state) {
