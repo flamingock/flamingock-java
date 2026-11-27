@@ -109,11 +109,11 @@ class JournalBackfillChangeTest {
         order.verify(systemPersistence).appendEventFrom(orderOnly);
         order.verify(legacyPersistence).appendEventFrom(legacy);
         order.verifyNoMoreInteractions();
-        verify(factory).get(SYSTEM_STAGE_ID);
+        verify(factory, times(2)).get(SYSTEM_STAGE_ID);
     }
 
     @Test
-    void interleavedStagesReuseTheirPersistenceAndPreserveHistoryOrder() {
+    void interleavedStagesDelegateEachAppendAndPreserveHistoryOrder() {
         AuditEntry first = entry("first", "stage-a");
         AuditEntry second = entry("second", "stage-b");
         AuditEntry third = entry("third", "stage-a");
@@ -128,13 +128,16 @@ class JournalBackfillChangeTest {
 
         change.journalBackfill(factory);
 
-        InOrder order = inOrder(appender, otherAppender);
+        InOrder order = inOrder(factory, reader, appender, otherAppender);
+        order.verify(factory).get(SYSTEM_STAGE_ID);
+        order.verify(reader).getAuditHistory();
+        order.verify(factory).get("stage-a");
         order.verify(appender).appendEventFrom(first);
+        order.verify(factory).get("stage-b");
         order.verify(otherAppender).appendEventFrom(second);
+        order.verify(factory).get("stage-a");
         order.verify(appender).appendEventFrom(third);
         order.verifyNoMoreInteractions();
-        verify(factory).get("stage-a");
-        verify(factory).get("stage-b");
     }
 
     @Test
@@ -160,7 +163,7 @@ class JournalBackfillChangeTest {
         new JournalBackfillChange().journalBackfill(factory);
 
         verify(factory, times(2)).get(SYSTEM_STAGE_ID);
-        verify(factory, times(2)).get("stage");
+        verify(factory, times(5)).get("stage");
         verify(appender, times(2)).appendEventFrom(first);
         verify(appender, times(2)).appendEventFrom(second);
         verify(appender).appendEventFrom(third);
