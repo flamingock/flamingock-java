@@ -118,6 +118,23 @@ public class MongoDBImporterTest {
 
         flamingock.run();
 
+        List<String> persistedSnapshot = auditHelper.getAuditEntriesSorted().stream()
+                .map(entry -> entry.getChangeId() + "|" + entry.getState() + "|"
+                        + entry.getType() + "|" + entry.getStageId())
+                .collect(java.util.stream.Collectors.toList());
+        assertEquals(java.util.Arrays.asList(
+                "system-change-00001_before|APPLIED|MONGOCK_BEFORE|flamingock-legacy-stage",
+                "system-change-00001|APPLIED|MONGOCK_EXECUTION|flamingock-legacy-stage",
+                "mongock-change-1_before|APPLIED|MONGOCK_BEFORE|flamingock-legacy-stage",
+                "mongock-change-1|APPLIED|MONGOCK_EXECUTION|flamingock-legacy-stage",
+                "mongock-change-2|APPLIED|MONGOCK_EXECUTION|flamingock-legacy-stage",
+                "migration-mongock-to-flamingock-community|STARTED|STANDARD_CODE|flamingock-system-stage",
+                "migration-mongock-to-flamingock-community|APPLIED|STANDARD_CODE|flamingock-system-stage",
+                "create-users-collection-with-index|STARTED|STANDARD_CODE|changes",
+                "create-users-collection-with-index|APPLIED|STANDARD_CODE|changes",
+                "seed-users|STARTED|STANDARD_CODE|changes",
+                "seed-users|APPLIED|STANDARD_CODE|changes"), persistedSnapshot);
+
         // Verify audit sequence: 11 total entries as shown in actual execution
         // Final state only: imported and freshly-executed changes alike, once STARTED is filtered out
         auditHelper.verifyAuditFinalStateSequence(
