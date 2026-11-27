@@ -18,7 +18,9 @@ package io.flamingock.store.mongodb.sync.internal;
 import com.mongodb.client.ClientSession;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.RuntimeContext;
+import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.common.core.feature.Features;
+import io.flamingock.internal.common.core.journal.DuplicateStreamSequenceException;
 import io.flamingock.internal.common.core.journal.JournalEvent;
 import io.flamingock.internal.common.core.external.ExecutionWrapper;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
@@ -32,6 +34,7 @@ import io.flamingock.internal.util.id.RunnerId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -113,15 +116,17 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
     }
 
     private Result writeJournalAndAuditInTransaction(AuditEntry auditEntry) {
-        RuntimeContext baseContext = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
-        Result result = txWrapper.wrapExecution(baseContext, runtimeContext -> {
-            ClientSession clientSession = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
-            appendEventFrom(auditEntry, clientSession);
-            Result auditResult = auditRepository.save(clientSession, auditEntry);
-            if (auditResult.isError()) {
-                throw new IllegalStateException("MongoDB history write failed", ((Result.Error) auditResult).getError());
-            }
-            return auditResult;
+        Result result = retryJournalTransaction(() -> {
+            RuntimeContext context = new BasicRuntimeContext("write-changeState-" + auditEntry.getChangeId());
+            return txWrapper.wrapExecution(context, runtimeContext -> {
+                ClientSession session = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
+                appendEventFrom(auditEntry, session);
+                Result auditResult = auditRepository.save(session, auditEntry);
+                if (auditResult.isError()) {
+                    throw new IllegalStateException("MongoDB history write failed", ((Result.Error) auditResult).getError());
+                }
+                return auditResult;
+            });
         });
         // Spends the stream position, and only a committed transaction may reach this line. In general a
         // normal return from wrapExecution does NOT mean commit — a FailedStep result is returned
@@ -142,9 +147,33 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
      * accepted best-effort behavior for non-transactional deployments.
      */
     private Result writeJournalAndAuditWithoutTransaction(AuditEntry auditEntry) {
-        appendEventFrom(auditEntry, null);
-        journalEventSequencer.confirm();
+        appendStandaloneAndConfirm(auditEntry);
         return auditRepository.save(auditEntry);
+    }
+
+    private Result appendStandaloneAndConfirm(AuditEntry payload) {
+        Result result = journalEventSequencer.retryOnceOnCollision(journalEventStore::getMajorityCommittedTail,
+                () -> appendEventFrom(payload, null));
+        journalEventSequencer.confirm();
+        return result;
+    }
+
+    private Result retryJournalTransaction(Supplier<Result> transaction) {
+        return journalEventSequencer.retryOnceOnCollision(journalEventStore::getMajorityCommittedTail, () -> {
+            try {
+                return transaction.get();
+            } catch (DatabaseTransactionException failure) {
+                // The wrapper has exited. Only a positively identified journal insert rejection with
+                // successful rollback and no session-close failure makes the whole attempt repeatable.
+                if (failure.getRollbackStatus() == DatabaseTransactionException.RollbackStatus.SUCCESS
+                        && failure.getSuppressed().length == 0
+                        && failure.getCause() instanceof DuplicateStreamSequenceException) {
+                    DuplicateStreamSequenceException collision = (DuplicateStreamSequenceException) failure.getCause();
+                    throw new DuplicateStreamSequenceException(collision.getStreamId(), collision.getStreamSequence(), failure);
+                }
+                throw failure;
+            }
+        });
     }
 
     /**
@@ -169,16 +198,16 @@ public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersisten
      */
     @Override
     public Result appendEventFrom(AuditEntry payload) {
-        Result result;
-        if (supportsTransactions) {
+        if (!supportsTransactions) {
+            return appendStandaloneAndConfirm(payload);
+        }
+        Result result = retryJournalTransaction(() -> {
             RuntimeContext context = new BasicRuntimeContext("append-journal-" + UUID.randomUUID());
-            result = txWrapper.wrapExecution(context, runtimeContext -> {
+            return txWrapper.wrapExecution(context, runtimeContext -> {
                 ClientSession session = runtimeContext.getContext().getRequiredDependencyValue(ClientSession.class);
                 return appendEventFrom(payload, session);
             });
-        } else {
-            result = appendEventFrom(payload, null);
-        }
+        });
         journalEventSequencer.confirm();
         return result;
     }

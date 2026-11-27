@@ -52,7 +52,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Instant;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -209,20 +214,37 @@ class MongoDBSyncAuditPersistenceJournalTest {
                 "without the journal the audit collection is itself the history");
     }
 
-    @Test
-    @DisplayName("journal enabled: a failing journal append rolls the audit entry back with it")
-    void journalFailureRollsBackAuditEntry() {
+    @ParameterizedTest
+    @CsvSource({"true, false", "true, true", "false, false", "false, true"})
+    @DisplayName("journal enabled: a stale position recovers without altering existing events")
+    void recoversFromDurableStreamPositionCollision(boolean transactional, boolean journalOnly) {
         FeatureFlag.enable(Features.JOURNAL_EVENTS);
-        // Built while the stream is empty, so its sequencer is seeded at 1. Seeding the collision first would
-        // instead make forStream() seed at 2 and no conflict would happen.
-        MongoDBSyncAuditPersistence persistence = persistenceFor(auditRepository);
+        // This persistence still expects position 1 after the other writer fills the stream.
+        MongoDBSyncAuditPersistence persistence = freshPersistence(transactional);
         occupyStreamPosition(1L);
+        occupyStreamPosition(2L);
 
-        assertThrows(DatabaseTransactionException.class, () -> persistence.writeEntry(auditEntry("change-1")));
+        if (journalOnly) {
+            assertFalse(persistence.appendEventFrom(auditEntry("change-1")).isError());
+        } else {
+            assertFalse(persistence.writeEntry(auditEntry("change-1")).isError());
+        }
+        assertFalse(persistence.appendEventFrom(auditEntry("change-2")).isError());
 
-        assertTrue(auditRepository.getAuditHistory().isEmpty(),
-                "the audit entry must not survive a failed journal append");
-        assertEquals(1, storedEvents().size(), "only the pre-existing event remains");
+        List<JournalEvent<AuditEntry>> events = storedEvents();
+        events.sort(Comparator.comparingLong(JournalEvent::getStreamSequence));
+        assertEquals(4, events.size());
+        assertEquals(Arrays.asList("pre-existing-event-1", "pre-existing-event-2"),
+                Arrays.asList(events.get(0).getEventId(), events.get(1).getEventId()));
+        assertEquals(Arrays.asList(1L, 2L, 3L, 4L), Arrays.asList(events.get(0).getStreamSequence(),
+                events.get(1).getStreamSequence(), events.get(2).getStreamSequence(), events.get(3).getStreamSequence()));
+        assertEquals("change-1", events.get(2).getData().getChangeId());
+        assertEquals("change-2", events.get(3).getData().getChangeId());
+        List<AuditEntry> audit = auditRepository.getAuditHistory();
+        assertEquals(journalOnly ? 0 : 1, audit.size());
+        if (!journalOnly) {
+            assertEquals("change-1", audit.get(0).getChangeId());
+        }
     }
 
     @Test
@@ -457,7 +479,8 @@ class MongoDBSyncAuditPersistenceJournalTest {
      */
     private void occupyStreamPosition(long streamSequence) {
         JournalEvent<AuditEntry> squatter = new JournalEvent<>(
-                "pre-existing-event", "key-pre-existing-event", JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
+                "pre-existing-event-" + streamSequence, "key-pre-existing-event-" + streamSequence,
+                JournalEventType.CHANGE_STATE, JournalEvent.DEFAULT_VERSION,
                 STREAM_ID, streamSequence, Instant.now(), auditEntry("pre-existing-change"), false);
         database.getCollection(JOURNAL_COLLECTION).insertOne(mapper.toDocument(squatter));
     }
