@@ -15,13 +15,19 @@
  */
 package io.flamingock.internal.core.operation;
 
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.recovery.FixResult;
+import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.operation.audit.AuditFixResult;
 import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
@@ -32,6 +38,7 @@ import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -40,8 +47,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -171,6 +183,41 @@ class OperationResolverTest {
         boolean isValidateOp = innerOperation instanceof ValidateApplyOperation;
         org.junit.jupiter.api.Assertions.assertFalse(isValidateOp,
                 "Expected the factory NOT to route to ValidateApplyOperation when validationOnly=false");
+    }
+
+    @Test
+    void shouldWriteAuditFixThroughTheRunnerFactoryForTheOriginalStage() {
+        String changeId = "repair-me";
+        String stageId = "original-stage";
+        AuditEntry original = mock(AuditEntry.class);
+        when(original.getChangeId()).thenReturn(changeId);
+        when(original.getStageId()).thenReturn(stageId);
+        AuditEntryIssue issue = mock(AuditEntryIssue.class);
+        when(issue.getAuditEntry()).thenReturn(original);
+        AuditReader reader = mock(AuditReader.class);
+        when(reader.getAuditIssueByChangeId(changeId)).thenReturn(Optional.of(issue));
+        when(auditStore.getAuditReader()).thenReturn(reader);
+        when(auditStore.getPersistenceFactory()).thenReturn(id -> mock(AuditPersistence.class));
+        when(flamingockArgs.getOperation()).thenReturn(Optional.of(OperationType.AUDIT_FIX));
+        when(flamingockArgs.getStringOrThrow(eq("flamingock.change-id"), anyString())).thenReturn(changeId);
+        when(flamingockArgs.getEnumOrThrow(eq("flamingock.resolution"), eq(Resolution.class), anyString()))
+                .thenReturn(Resolution.APPLIED);
+
+        OperationResolver resolver = new OperationResolver(
+                runnerId, flamingockArgs, pipeline, auditStore, id -> stageId.equals(id) ? persistence : null,
+                executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext,
+                new HashSet<>(), true, noOpFinalizer);
+
+        AuditFixResult result = assertInstanceOf(AuditFixResult.class, resolver.getOperation().run());
+
+        ArgumentCaptor<AuditEntry> written = ArgumentCaptor.forClass(AuditEntry.class);
+        verify(persistence).writeEntry(written.capture());
+        assertEquals(stageId, written.getValue().getStageId());
+        assertEquals(changeId, written.getValue().getChangeId());
+        assertEquals(AuditEntry.Status.MANUAL_MARKED_AS_APPLIED, written.getValue().getState());
+        assertEquals(changeId, result.getChangeId());
+        assertEquals(Resolution.APPLIED, result.getResolution());
+        assertEquals(FixResult.APPLIED, result.getFixResult());
     }
 
     // ─────────────────────────── Helpers ───────────────────────────

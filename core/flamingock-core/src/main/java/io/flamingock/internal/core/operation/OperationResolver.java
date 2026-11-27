@@ -134,7 +134,7 @@ public class OperationResolver {
                 "Change ID is required for AUDIT_FIX operation");
         Resolution resolution = flamingockArgs.getEnumOrThrow(ARG_RESOLUTION, Resolution.class,
                 "Resolution is required for AUDIT_FIX operation.");
-        AuditFixOperation auditFixOperation = new AuditFixOperation(auditStore.getPersistenceFactory(), auditStore.getAuditReader());
+        AuditFixOperation auditFixOperation = new AuditFixOperation(persistenceFactory, auditStore.getAuditReader());
         return new RunnableOperation<>(auditFixOperation, new AuditFixArgs(changeId, resolution));
     }
 
