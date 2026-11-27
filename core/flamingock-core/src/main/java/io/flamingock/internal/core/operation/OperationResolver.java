@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.operation;
 
+import io.flamingock.internal.common.core.audit.AuditPersistence;
+import io.flamingock.internal.common.core.audit.AuditPersistenceFactory;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.recovery.Resolution;
@@ -59,6 +61,7 @@ public class OperationResolver {
     private final FlamingockArguments flamingockArgs;
     private final LoadedPipeline pipeline;
     private final AuditStore<?> auditStore;
+    private final AuditPersistenceFactory<? extends AuditPersistence> persistenceFactory;
     private final ExecutionPlanner executionPlanner;
     private final TargetSystemManager targetSystemManager;
     private final CoreConfigurable coreConfiguration;
@@ -72,6 +75,7 @@ public class OperationResolver {
                              FlamingockArguments flamingockArgs,
                              LoadedPipeline pipeline,
                              AuditStore<?> auditStore,
+                             AuditPersistenceFactory<? extends AuditPersistence> persistenceFactory,
                              ExecutionPlanner executionPlanner,
                              TargetSystemManager targetSystemManager,
                              CoreConfigurable coreConfiguration,
@@ -84,6 +88,7 @@ public class OperationResolver {
         this.flamingockArgs = flamingockArgs;
         this.pipeline = pipeline;
         this.auditStore = auditStore;
+        this.persistenceFactory = persistenceFactory;
         this.executionPlanner = executionPlanner;
         this.targetSystemManager = targetSystemManager;
         this.coreConfiguration = coreConfiguration;
@@ -146,7 +151,7 @@ public class OperationResolver {
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteApplyOperation() {
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditStore.getPersistenceFactory(), targetSystemManager, null);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistenceFactory, targetSystemManager, null);
         ExecuteApplyOperation executeApplyOperation = new ExecuteApplyOperation(
             runnerId,
             executionPlanner,
@@ -159,7 +164,7 @@ public class OperationResolver {
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateApplyOperation() {
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditStore.getPersistenceFactory(), targetSystemManager, null);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistenceFactory, targetSystemManager, null);
         ValidateApplyOperation validateApplyOperation = new ValidateApplyOperation(
             runnerId,
             executionPlanner,

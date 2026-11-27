@@ -32,6 +32,7 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
+import io.flamingock.internal.core.external.store.RunnerAuditPersistenceFactory;
 import io.flamingock.internal.common.core.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.OperationResolver;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
@@ -234,12 +235,13 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
-        // Registered under the interface, not via new Dependency(instance): the factory is a lambda,
-        // so the single-argument constructor would key it by its synthetic class and rely on the
-        // resolver's assignable-scan fallback — and would raise a bare NullPointerException, instead
-        // of Dependency's "dependency instance cannot be null", when a store supplies no factory.
-        hierarchicalContext.addDependency(
-                new Dependency(AuditPersistenceFactory.class, auditStore.getPersistenceFactory()));
+        AuditPersistenceFactory<? extends AuditPersistence> storeFactory = auditStore.getPersistenceFactory();
+        if (storeFactory == null) {
+            throw new FlamingockException("dependency instance cannot be null");
+        }
+        AuditPersistenceFactory<? extends AuditPersistence> persistenceFactory =
+                new RunnerAuditPersistenceFactory(storeFactory);
+        hierarchicalContext.addDependency(new Dependency(AuditPersistenceFactory.class, persistenceFactory));
 
         contributeEditionDependencies(hierarchicalContext);
 
@@ -257,6 +259,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 flamingockArgs,
                 pipeline,
                 auditStore,
+                persistenceFactory,
                 buildExecutionPlanner(runnerId),
                 targetSystemManager,
                 coreConfiguration,
